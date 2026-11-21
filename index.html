@@ -1,0 +1,3311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#020617" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>MITRAZ AttendGuard Enterprise</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- SheetJS for Multi-Tab .XLSX Matrix Export/Import -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- QRCode.js for Admin Signed Checkpoint QR Generation -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <!-- HTML5-QRCode for Android Live Camera Scanning -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #020617;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    @keyframes scanLine {
+      0% { top: 8%; opacity: 0.2; }
+      50% { top: 88%; opacity: 1; }
+      100% { top: 8%; opacity: 0.2; }
+    }
+    .scanner-laser {
+      animation: scanLine 2.4s ease-in-out infinite;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #printable-qr-badge, #printable-qr-badge * { visibility: visible; }
+      #printable-qr-badge {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        border: 3px solid #e11d48 !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center bg-slate-950 text-slate-100 selection:bg-rose-600/30">
+
+  <!-- Global Toast Notification Stack -->
+  <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-md flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 1: STRICT UNAUTHENTICATED LOGIN GATE                             -->
+  <!-- ===================================================================== -->
+  <div id="auth-gate-screen" class="w-full max-w-md min-h-screen flex flex-col justify-between p-5">
+    <!-- Top Brand Header -->
+    <header class="pt-2 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- MITRAZ Crimson Butterfly Emblem -->
+        <div class="w-11 h-11 rounded-2xl bg-white p-1.5 shadow-lg shadow-rose-600/20 flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 120 110" class="w-full h-full" aria-label="MITRAZ Logo">
+            <defs>
+              <radialGradient id="mitrazOrbGradLogin" cx="38%" cy="32%" r="65%">
+                <stop offset="0%" stop-color="#FF2A36" />
+                <stop offset="65%" stop-color="#E30613" />
+                <stop offset="100%" stop-color="#A8000A" />
+              </radialGradient>
+            </defs>
+            <circle cx="60" cy="13.5" r="10.5" fill="url(#mitrazOrbGradLogin)" />
+            <path d="M15.5 13.5 C12.5 14.5, 11.5 18, 12.5 22.5 C15.5 36.5, 22.5 48.5, 34.5 58.5 C43.5 66, 40.5 78, 34.5 89.5 C32.5 93.5, 34 97.5, 37.5 97.5 C41 97.5, 43.5 94, 45.5 89.5 C51.5 76, 53 63, 47.5 51.5 C43 42, 48.5 36, 60 36 C71.5 36, 77 42, 72.5 51.5 C67 63, 68.5 76, 74.5 89.5 C76.5 94, 79 97.5, 82.5 97.5 C86 97.5, 87.5 93.5, 85.5 89.5 C79.5 78, 76.5 66, 85.5 58.5 C97.5 48.5, 104.5 36.5, 107.5 22.5 C108.5 18, 107.5 14.5, 104.5 13.5 C101.5 12.5, 98.5 15, 95.5 18.5 C87.5 27.5, 72.5 28.5, 60 28.5 C47.5 28.5, 32.5 27.5, 24.5 18.5 C21.5 15, 18.5 12.5, 15.5 13.5 Z" fill="#E30613" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-black tracking-tight text-white">MITRAZ</h1>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+              ENTERPRISE
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-medium">AttendGuard Android Production Portal</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button id="btn-install-pwa" onclick="triggerPWAInstall()" class="hidden px-2.5 py-1 rounded-full bg-indigo-600 hover:bg-indigo-500 text-[10px] font-bold text-white shadow transition">
+          + Install App
+        </button>
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-300">
+          <i data-lucide="shield-check" class="w-3 h-3"></i>
+          Production
+        </span>
+      </div>
+    </header>
+
+    <!-- Main Login Card -->
+    <main class="my-auto py-4 space-y-4">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-2xl space-y-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-white tracking-tight">Verified Sign-In</h2>
+          <p class="text-xs text-slate-400">Authorized MITRAZ members & Admin Master only</p>
+        </div>
+
+        <!-- Hardware Fingerprint Status Banner -->
+        <div class="bg-slate-950/90 border border-slate-800/90 rounded-2xl px-3 py-2 flex items-center justify-between text-[11px]">
+          <span class="text-slate-400 flex items-center gap-1.5">
+            <i data-lucide="smartphone" class="w-3.5 h-3.5 text-rose-500"></i>
+            Android Device Lock ID:
+          </span>
+          <span id="login-device-fp" class="font-mono font-bold text-slate-200">HW-INIT...</span>
+        </div>
+
+        <!-- Login Form -->
+        <form onsubmit="handleLoginSubmit(event)" class="space-y-3" autocomplete="off">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Member ID / Email / Admin ID</label>
+            <input id="login-identifier" type="text" required placeholder="Enter your Member ID or Email" class="w-full bg-slate-950 border border-slate-700 focus:border-rose-500 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Passphrase</label>
+            <div class="relative">
+              <input id="login-password" type="password" required placeholder="Enter your secret passphrase" class="w-full bg-slate-950 border border-slate-700 focus:border-rose-500 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-white placeholder-slate-500 focus:outline-none transition" />
+              <button type="button" onclick="toggleLoginPasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Inline Anti-Proxy / Auth Error Alert -->
+          <div id="login-error-box" class="hidden rounded-xl bg-rose-950/80 border border-rose-500/50 p-3 text-xs text-rose-200 space-y-1">
+            <div class="font-bold flex items-center gap-1.5 text-rose-300">
+              <i data-lucide="shield-alert" class="w-4 h-4 shrink-0"></i>
+              <span id="login-error-title">Access Denied</span>
+            </div>
+            <p id="login-error-desc" class="text-[11px] leading-relaxed text-rose-200/90"></p>
+          </div>
+
+          <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-sm shadow-lg shadow-rose-600/25 flex items-center justify-center gap-2 transition active:scale-[0.99]">
+            <i data-lucide="lock-open" class="w-4 h-4"></i>
+            Authenticate & Enter Portal
+          </button>
+        </form>
+
+        <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500">
+          <button type="button" onclick="handleForgotPasswordRequest()" class="text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 transition">
+            Forgot Password? Notify Admin
+          </button>
+          <span class="font-mono text-slate-400">v2.1 Release</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer Security Notice -->
+    <footer class="text-center text-[10px] text-slate-500 pb-2">
+      MITRAZ Enterprise Security • Geofence Lock • Cloud Sheet Sync
+    </footer>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: MANDATORY FIRST-LOGIN PASSPHRASE SETUP                         -->
+  <!-- ===================================================================== -->
+  <div id="first-login-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl space-y-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 shrink-0">
+          <i data-lucide="key-round" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-extrabold text-white">Set Your Personal Passphrase</h3>
+          <p class="text-[11px] text-slate-400">Required on first sign-in so only you know your password</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleFirstLoginPasswordChange(event)" class="space-y-3">
+        <div>
+          <label class="block text-[10px] font-semibold text-slate-300 mb-1">New Secret Passphrase (min 8 chars, upper, lower, number, symbol)</label>
+          <input id="new-user-pass-1" type="password" required placeholder="Enter strong personal passphrase" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500" />
+        </div>
+        <div>
+          <label class="block text-[10px] font-semibold text-slate-300 mb-1">Confirm New Passphrase</label>
+          <input id="new-user-pass-2" type="password" required placeholder="Re-enter new passphrase" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500" />
+        </div>
+        <p id="first-login-pass-error" class="hidden text-[11px] text-rose-400 font-semibold"></p>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition">
+          Save Personal Passphrase & Enter
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 2: AUTHENTICATED PORTAL SHELL (HIDDEN UNTIL VERIFIED)            -->
+  <!-- ===================================================================== -->
+  <div id="authenticated-portal" class="hidden w-full max-w-md min-h-screen flex flex-col pb-24">
+
+    <!-- Top Sticky Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/90 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-white p-1 shadow flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 120 110" class="w-full h-full" aria-label="MITRAZ Logo">
+            <defs>
+              <radialGradient id="mitrazOrbGradPortal" cx="38%" cy="32%" r="65%">
+                <stop offset="0%" stop-color="#FF2A36" />
+                <stop offset="65%" stop-color="#E30613" />
+                <stop offset="100%" stop-color="#A8000A" />
+              </radialGradient>
+            </defs>
+            <circle cx="60" cy="13.5" r="10.5" fill="url(#mitrazOrbGradPortal)" />
+            <path d="M15.5 13.5 C12.5 14.5, 11.5 18, 12.5 22.5 C15.5 36.5, 22.5 48.5, 34.5 58.5 C43.5 66, 40.5 78, 34.5 89.5 C32.5 93.5, 34 97.5, 37.5 97.5 C41 97.5, 43.5 94, 45.5 89.5 C51.5 76, 53 63, 47.5 51.5 C43 42, 48.5 36, 60 36 C71.5 36, 77 42, 72.5 51.5 C67 63, 68.5 76, 74.5 89.5 C76.5 94, 79 97.5, 82.5 97.5 C86 97.5, 87.5 93.5, 85.5 89.5 C79.5 78, 76.5 66, 85.5 58.5 C97.5 48.5, 104.5 36.5, 107.5 22.5 C108.5 18, 107.5 14.5, 104.5 13.5 C101.5 12.5, 98.5 15, 95.5 18.5 C87.5 27.5, 72.5 28.5, 60 28.5 C47.5 28.5, 32.5 27.5, 24.5 18.5 C21.5 15, 18.5 12.5, 15.5 13.5 Z" fill="#E30613" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm font-black tracking-tight text-white">MITRAZ</span>
+            <span id="header-role-badge" class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              MEMBER
+            </span>
+          </div>
+          <p id="header-user-subtitle" class="text-[10px] text-slate-400 font-mono truncate max-w-[165px]">Member • Group</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <button id="header-sync-badge" onclick="syncWithCloudServer(true)" title="Sync with Cloud Sheet" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-mono font-bold text-slate-300 flex items-center gap-1 transition">
+          <i data-lucide="cloud" class="w-3 h-3 text-sky-400"></i>
+          <span id="header-sync-label">Local</span>
+        </button>
+        <span id="live-clock" class="text-[10px] font-mono font-bold text-slate-300 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
+          00:00:00
+        </span>
+        <button onclick="logoutSession('Signed out safely.')" title="Sign Out" class="p-2 rounded-xl bg-slate-900 hover:bg-rose-600/20 border border-slate-800 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 transition">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dynamic View Container -->
+    <main class="flex-1 p-4 space-y-4">
+
+      <!-- ================================================================= -->
+      <!-- TAB A: MEMBER QR SCANNER & ATTENDANCE CHECK-IN/OUT                -->
+      <!-- ================================================================= -->
+      <section id="portal-tab-scan" class="space-y-4">
+
+        <!-- Verified Identity & Hardware Lock Card -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div id="member-avatar" class="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-600 to-indigo-600 flex items-center justify-center font-black text-sm text-white shadow">
+                MZ
+              </div>
+              <div>
+                <h2 id="member-full-name" class="text-sm font-extrabold text-white">Member Name</h2>
+                <p id="member-group-pill" class="text-[11px] font-mono text-indigo-300">ID • Group</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-mono font-bold text-emerald-300 flex items-center gap-1">
+              <i data-lucide="lock" class="w-3 h-3"></i>
+              Device Bound
+            </span>
+          </div>
+
+          <!-- GPS Geofence Telemetry Strip -->
+          <div class="bg-slate-950 border border-slate-800/90 rounded-xl px-3 py-2 flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
+              <span id="gps-status-text" class="text-slate-300 truncate font-mono">Locating GPS...</span>
+            </div>
+            <button onclick="refreshGPS(true)" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 shrink-0 ml-2">
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Check-In / Check-Out Action Toggle -->
+        <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
+          <button id="btn-scan-in" onclick="setScanMode('CHECK-IN')" class="py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow transition">
+            CHECK-IN
+          </button>
+          <button id="btn-scan-out" onclick="setScanMode('CHECK-OUT')" class="py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition">
+            CHECK-OUT
+          </button>
+        </div>
+
+        <!-- Live Camera QR Scanner Card -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Group Checkpoint Scanner</h3>
+              <p class="text-[11px] text-slate-400">Scan your assigned MITRAZ group QR badge</p>
+            </div>
+            <button id="btn-toggle-camera" onclick="toggleCameraScanner()" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 transition">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+              <span id="camera-btn-label">Start Camera</span>
+            </button>
+          </div>
+
+          <!-- Live Camera Viewport -->
+          <div class="relative w-full aspect-square max-h-72 rounded-2xl bg-slate-950 border-2 border-dashed border-slate-700 overflow-hidden flex flex-col items-center justify-center">
+            <div id="qr-reader" class="w-full h-full"></div>
+            <div id="camera-placeholder" class="absolute inset-0 flex flex-col items-center justify-center p-4 text-center space-y-2 pointer-events-none">
+              <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-rose-500">
+                <i data-lucide="scan-line" class="w-6 h-6"></i>
+              </div>
+              <p class="text-xs font-semibold text-slate-300">Tap "Start Camera" & Point at Group QR</p>
+              <p class="text-[10px] text-slate-500">GPS Geofence & Hardware ID verified automatically</p>
+            </div>
+            <div id="scanner-laser-line" class="hidden scanner-laser absolute left-4 right-4 h-0.5 bg-rose-500 shadow-[0_0_12px_#f43f5e] pointer-events-none"></div>
+          </div>
+        </div>
+
+        <!-- Last Verified Attendance Receipt -->
+        <div id="last-scan-receipt" class="hidden bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-emerald-300 flex items-center gap-1.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+              Attendance Logged to Group Matrix
+            </span>
+            <span id="receipt-time" class="text-[11px] font-mono text-emerald-200">09:15:00</span>
+          </div>
+          <p id="receipt-details" class="text-[11px] text-slate-300 font-mono leading-relaxed"></p>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB B: PERSONAL ATTENDANCE LOGS (STRICTLY PRIVATE TO LOGGED USER) -->
+      <!-- ================================================================= -->
+      <section id="portal-tab-logs" class="hidden space-y-4">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-extrabold text-white">My Verified Attendance</h2>
+              <p id="logs-privacy-caption" class="text-[11px] text-slate-400">Strictly isolated to your account only</p>
+            </div>
+            <span id="my-logs-count" class="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-300">
+              0 logs
+            </span>
+          </div>
+
+          <div id="my-logs-container" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB B2: LEAVE APPLICATION & STATUS (STRICTLY PRIVATE TO USER)     -->
+      <!-- ================================================================= -->
+      <section id="portal-tab-leave" class="hidden space-y-4">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-extrabold text-white">Apply for Leave</h2>
+              <p class="text-[11px] text-slate-400">Approved leaves auto-sync to your group Excel sheet</p>
+            </div>
+            <span class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
+              Private Portal
+            </span>
+          </div>
+
+          <form onsubmit="handleUserApplyLeave(event)" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-1">Leave Type *</label>
+              <select id="leave-type-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-rose-500">
+                <option value="CL">CL (Casual Leave)</option>
+                <option value="SL">SL (Sick Leave)</option>
+                <option value="EL">EL (Earned Leave)</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">From Date *</label>
+                <input id="leave-start-date" type="date" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">To Date *</label>
+                <input id="leave-end-date" type="date" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-1">Reason *</label>
+              <textarea id="leave-reason-input" rows="2" required maxlength="240" placeholder="Enter brief reason for leave..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500"></textarea>
+            </div>
+
+            <button type="submit" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              Submit Leave Application
+            </button>
+          </form>
+        </div>
+
+        <!-- User's Own Leave Requests List -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">My Leave Applications</h3>
+            <span id="my-leaves-count" class="text-[11px] font-mono text-slate-400">0 requests</span>
+          </div>
+          <div id="my-leaves-container" class="space-y-2"></div>
+        </div>
+
+        <!-- Organization Holidays Calendar (Read-Only for Members) -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Organization Holidays</h3>
+              <p class="text-[10px] text-slate-400">Official MITRAZ declared holidays</p>
+            </div>
+            <span id="member-holidays-count" class="text-[11px] font-mono text-amber-300">0 holidays</span>
+          </div>
+          <div id="member-holidays-list" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB C: ADMIN MASTER CONSOLE (HIDDEN & INACCESSIBLE TO NON-ADMINS) -->
+      <!-- ================================================================= -->
+      <section id="portal-tab-admin" class="hidden space-y-4">
+
+        <!-- Admin Sub-Navigation Pills -->
+        <div class="grid grid-cols-7 gap-1 bg-slate-900 p-1 rounded-2xl border border-slate-800 text-[9px] font-bold">
+          <button id="admin-sub-excel" onclick="switchAdminSubTab('excel')" class="py-2 rounded-xl bg-rose-600 text-white transition">
+            Excel
+          </button>
+          <button id="admin-sub-qr" onclick="switchAdminSubTab('qr')" class="py-2 rounded-xl text-slate-400 hover:text-white transition">
+            QRs
+          </button>
+          <button id="admin-sub-users" onclick="switchAdminSubTab('users')" class="py-2 rounded-xl text-slate-400 hover:text-white transition">
+            Users
+          </button>
+          <button id="admin-sub-leaves" onclick="switchAdminSubTab('leaves')" class="py-2 rounded-xl text-slate-400 hover:text-white transition relative">
+            Leaves <span id="admin-pending-leaves-badge" class="hidden ml-0.5 px-1 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[8px] font-black">0</span>
+          </button>
+          <button id="admin-sub-holidays" onclick="switchAdminSubTab('holidays')" class="py-2 rounded-xl text-slate-400 hover:text-white transition">
+            Holidays
+          </button>
+          <button id="admin-sub-cloud" onclick="switchAdminSubTab('cloud')" class="py-2 rounded-xl text-slate-400 hover:text-white transition">
+            Cloud
+          </button>
+          <button id="admin-sub-security" onclick="switchAdminSubTab('security')" class="py-2 rounded-xl text-slate-400 hover:text-white transition">
+            Security
+          </button>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- ADMIN SUB-VIEW 1: GROUP EXCEL MATRICES & AUTO MONTH ROLLOVER    -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="admin-view-excel" class="space-y-3">
+          <div class="grid grid-cols-5 gap-1">
+            <button onclick="selectWorkbookByGroup('Employees')" class="py-2 px-1 rounded-xl bg-slate-900 hover:bg-indigo-600/30 border border-slate-800 text-[10px] font-bold text-slate-200 transition">Employees</button>
+            <button onclick="selectWorkbookByGroup('GDA')" class="py-2 px-1 rounded-xl bg-slate-900 hover:bg-indigo-600/30 border border-slate-800 text-[10px] font-bold text-slate-200 transition">GDA</button>
+            <button onclick="selectWorkbookByGroup('IT')" class="py-2 px-1 rounded-xl bg-slate-900 hover:bg-indigo-600/30 border border-slate-800 text-[10px] font-bold text-slate-200 transition">IT</button>
+            <button onclick="selectWorkbookByGroup('MFs')" class="py-2 px-1 rounded-xl bg-slate-900 hover:bg-indigo-600/30 border border-slate-800 text-[10px] font-bold text-slate-200 transition">MFs</button>
+            <button onclick="selectUsersDirectoryWorkbook()" class="py-2 px-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-[10px] font-extrabold text-amber-300 transition">Users Sheet</button>
+          </div>
+
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
+                Active Excel Workbook
+              </span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                Auto Month Rollover
+              </span>
+            </div>
+
+            <select id="admin-wb-selector" onchange="switchActiveWorkbook(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none"></select>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="toggleNewWorkbookForm()" class="py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="file-plus-2" class="w-4 h-4 text-indigo-400"></i>
+                + New Workbook
+              </button>
+              <label class="py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition">
+                <i data-lucide="upload" class="w-4 h-4 text-amber-400"></i>
+                Choose .XLSX File
+                <input type="file" accept=".xlsx,.xls" onchange="handleImportCustomWorkbook(event)" class="hidden" />
+              </label>
+            </div>
+
+            <form id="new-workbook-form" onsubmit="handleCreateCustomWorkbook(event)" class="hidden bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
+              <div class="text-[11px] font-bold text-indigo-300">Create & Switch to New Excel Workbook</div>
+              <div class="grid grid-cols-2 gap-2">
+                <input id="custom-wb-name" type="text" required placeholder="e.g. MITRAZ_Custom_2026.xlsx" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500" />
+                <select id="custom-wb-group" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                  <option value="Employees">Link to: Employees</option>
+                  <option value="GDA">Link to: GDA</option>
+                  <option value="IT">Link to: IT</option>
+                  <option value="MFs">Link to: MFs</option>
+                </select>
+              </div>
+              <div class="flex justify-end gap-1.5">
+                <button type="button" onclick="toggleNewWorkbookForm()" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-[11px] font-bold">Cancel</button>
+                <button type="submit" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold">Create & Activate</button>
+              </div>
+            </form>
+
+            <div id="assign-wb-group-bar" class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+              <span class="text-[10px] font-semibold text-slate-400">Route Group Scans Here:</span>
+              <div class="flex items-center gap-1.5">
+                <select id="assign-wb-target-group" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-white">
+                  <option value="Employees">Employees</option>
+                  <option value="GDA">GDA</option>
+                  <option value="IT">IT</option>
+                  <option value="MFs">MFs</option>
+                </select>
+                <button type="button" onclick="assignActiveWorkbookToGroup()" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold">
+                  Link Group
+                </button>
+              </div>
+            </div>
+
+            <button onclick="exportActiveWorkbookXLSX()" class="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              Export Active Workbook (.XLSX)
+            </button>
+          </div>
+
+          <!-- Matrix Sheet Preview -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Attendance Register Matrix</h3>
+                <p class="text-[10px] text-slate-400">Names in Rows • Calendar Dates in Columns</p>
+              </div>
+              <span id="matrix-row-count" class="text-[11px] font-mono text-slate-400">0 rows</span>
+            </div>
+
+            <div id="workbook-sheet-tabs" class="flex items-center gap-1.5 overflow-x-auto pb-1"></div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950">
+              <table class="w-full text-left border-collapse text-[11px]">
+                <thead id="matrix-table-head"></thead>
+                <tbody id="matrix-table-body" class="divide-y divide-slate-800/80 text-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- ADMIN SUB-VIEW 2: UNIQUE GROUP QR GENERATOR & EXCEL LINKER      -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="admin-view-qr" class="hidden space-y-3">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Group Signed QR Studio</h3>
+                <p class="text-[11px] text-slate-400">Print or display each group's unique signed QR badge</p>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                HMAC-SHA256
+              </span>
+            </div>
+
+            <div class="grid grid-cols-4 gap-1.5">
+              <button onclick="selectActiveGroupQR('Employees')" class="py-2 rounded-xl bg-slate-950 hover:bg-rose-600 border border-slate-800 text-[11px] font-bold text-white transition">Employees</button>
+              <button onclick="selectActiveGroupQR('GDA')" class="py-2 rounded-xl bg-slate-950 hover:bg-rose-600 border border-slate-800 text-[11px] font-bold text-white transition">GDA</button>
+              <button onclick="selectActiveGroupQR('IT')" class="py-2 rounded-xl bg-slate-950 hover:bg-rose-600 border border-slate-800 text-[11px] font-bold text-white transition">IT</button>
+              <button onclick="selectActiveGroupQR('MFs')" class="py-2 rounded-xl bg-slate-950 hover:bg-rose-600 border border-slate-800 text-[11px] font-bold text-white transition">MFs</button>
+            </div>
+
+            <div class="text-center py-2">
+              <div id="printable-qr-badge" class="bg-white p-4 rounded-2xl inline-flex flex-col items-center justify-center shadow-xl border-4 border-rose-600 mx-auto">
+                <div class="text-[10px] font-black tracking-widest text-rose-600 uppercase mb-1.5">MITRAZ CHECKPOINT</div>
+                <div id="admin-qr-render-target"></div>
+                <p id="qr-badge-title" class="text-xs font-extrabold text-slate-900 mt-2 font-mono">Employees Checkpoint</p>
+                <p id="qr-badge-wb" class="text-[9px] text-slate-600 font-mono">→ MITRAZ_Employees_Attendance_2026.xlsx</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="downloadActiveQRPng()" class="py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
+                Save QR PNG
+              </button>
+              <button onclick="window.print()" class="py-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-indigo-500 text-slate-200 text-xs font-bold transition">
+                Print Badge
+              </button>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 space-y-2">
+              <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Group QR → Excel Sheet Links</h4>
+              <div id="group-qr-links-list" class="space-y-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- ADMIN SUB-VIEW 3: ONE-TIME USER ENROLLMENT & DELETION           -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="admin-view-users" class="hidden space-y-3">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Admin One-Time User Enrollment</h3>
+                <p class="text-[11px] text-slate-400">Single or Bulk .XLSX/.CSV import into Users sheet</p>
+              </div>
+              <button onclick="exportUsersDirectoryXLSX()" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shrink-0 transition">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                Users .XLSX
+              </button>
+            </div>
+
+            <!-- Bulk CSV / Excel User Import Bar -->
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-2">
+              <div>
+                <div class="text-[11px] font-bold text-indigo-300">Bulk Import Members (.XLSX / .CSV)</div>
+                <div class="text-[9px] text-slate-400">Cols: First Name, Last Name, Phone, Email, Group</div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="downloadBulkUserTemplate()" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] font-bold text-slate-300 transition">
+                  Template
+                </button>
+                <label class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-[10px] font-bold text-white cursor-pointer transition">
+                  Bulk Upload
+                  <input type="file" accept=".xlsx,.xls,.csv" onchange="handleBulkImportUsers(event)" class="hidden" />
+                </label>
+              </div>
+            </div>
+
+            <form onsubmit="handleAdminEnrollUser(event)" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">First Name *</label>
+                  <input id="enroll-first-name" type="text" required placeholder="First Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">Last Name *</label>
+                  <input id="enroll-last-name" type="text" required placeholder="Last Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">Phone Number *</label>
+                  <input id="enroll-phone" type="tel" required placeholder="+91 XXXXXXXXXX" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">Email Address *</label>
+                  <input id="enroll-email" type="email" required placeholder="member@mitraz.org" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 items-end">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">Assigned Group *</label>
+                  <select id="enroll-group" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
+                    <option value="Employees">Employees</option>
+                    <option value="GDA">GDA</option>
+                    <option value="IT">IT</option>
+                    <option value="MFs">MFs</option>
+                  </select>
+                </div>
+                <button type="submit" class="w-full py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1 transition">
+                  <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                  Enroll User
+                </button>
+              </div>
+            </form>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950">
+              <table class="w-full text-left border-collapse text-[11px]">
+                <thead>
+                  <tr class="bg-slate-900 text-slate-300 border-b border-slate-800 font-mono text-[10px]">
+                    <th class="py-2 px-2.5">ID</th>
+                    <th class="py-2 px-2.5">Name</th>
+                    <th class="py-2 px-2.5">Group</th>
+                    <th class="py-2 px-2.5">Contact</th>
+                    <th class="py-2 px-2.5 text-right">Manage</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-tbody" class="divide-y divide-slate-800/80 text-slate-200"></tbody>
+              </table>
+            </div>
+
+            <div class="bg-rose-950/30 border border-rose-500/30 rounded-2xl p-3 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-rose-300 flex items-center gap-1.5">
+                  <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
+                  Remove / Delete Enrolled User
+                </span>
+                <span class="text-[9px] font-mono text-rose-300/70">Admin Only</span>
+              </div>
+              <div class="flex gap-2">
+                <select id="admin-delete-user-select" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none"></select>
+                <button type="button" onclick="confirmDeleteSelectedUser()" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shrink-0 transition">
+                  Delete User
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- ADMIN SUB-VIEW 3B: LEAVE APPROVALS & EXCEL SYNC                 -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="admin-view-leaves" class="hidden space-y-3">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Member Leave Requests</h3>
+                <p class="text-[11px] text-slate-400">Approving marks <span class="font-mono text-amber-300">L (Leave)</span> in group Excel sheet</p>
+              </div>
+              <span id="admin-leaves-summary" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-amber-300">
+                0 pending
+              </span>
+            </div>
+
+            <div id="admin-leaves-list" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- ADMIN SUB-VIEW 3C: ORGANIZATION HOLIDAYS (ADD / EDIT / DELETE)  -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="admin-view-holidays" class="hidden space-y-3">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Organization Holidays</h3>
+                <p class="text-[11px] text-slate-400">Add, edit, or delete holidays (auto-syncs <span class="font-mono text-sky-300">H (Holiday)</span> to Excel)</p>
+              </div>
+              <span id="admin-holidays-count" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-sky-300">
+                0 holidays
+              </span>
+            </div>
+
+            <form onsubmit="handleAdminSaveHoliday(event)" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span id="holiday-form-mode-label" class="text-[11px] font-bold text-sky-300">Add New Organization Holiday</span>
+                <button id="btn-cancel-holiday-edit" type="button" onclick="cancelEditHoliday()" class="hidden text-[10px] font-bold text-slate-400 hover:text-white">
+                  Cancel Edit
+                </button>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">Holiday Date *</label>
+                  <input id="holiday-date-input" type="date" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">Category *</label>
+                  <select id="holiday-type-input" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
+                    <option value="National Holiday">National Holiday</option>
+                    <option value="Festival Holiday">Festival Holiday</option>
+                    <option value="Organization Off">Organization Off</option>
+                    <option value="Optional / Restricted">Optional / Restricted</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Holiday Name / Occasion *</label>
+                <input id="holiday-name-input" type="text" required maxlength="80" placeholder="e.g. Republic Day / Diwali / Foundation Day" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
+              </div>
+
+              <button id="btn-submit-holiday" type="submit" class="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                Save Holiday & Sync Excel
+              </button>
+            </form>
+
+            <div id="admin-holidays-list" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- ADMIN SUB-VIEW 3D: MULTI-DEVICE CLOUD SYNC (GOOGLE SHEETS API)  -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="admin-view-cloud" class="hidden space-y-3">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Live Multi-Phone Cloud Sync</h3>
+                <p class="text-[11px] text-slate-400">Syncs scans, users, leaves & holidays across all Android phones</p>
+              </div>
+              <span id="cloud-status-pill" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">
+                Offline / Local
+              </span>
+            </div>
+
+            <form onsubmit="handleSaveCloudSyncConfig(event)" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-sky-300">Google Apps Script Web App URL</span>
+                <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 cursor-pointer">
+                  <input id="cfg-cloud-enabled" type="checkbox" class="accent-rose-600 rounded" />
+                  Auto-Sync
+                </label>
+              </div>
+
+              <input id="cfg-cloud-endpoint" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-[11px] font-mono text-white focus:outline-none focus:border-sky-500" />
+
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Shared Organization Sync Secret Token *</label>
+                <input id="cfg-cloud-secret" type="text" placeholder="MITRAZ-CLOUD-KEY-2026" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-sky-500" />
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <button type="submit" class="py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition">
+                  Save Cloud Config
+                </button>
+                <button type="button" onclick="syncWithCloudServer(true)" class="py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                  Sync Now
+                </button>
+              </div>
+            </form>
+
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5 text-[11px]">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Pending Offline Queue:</span>
+                <span id="cloud-queue-count" class="font-mono font-bold text-amber-300">0 events queued</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Last Cloud Sync:</span>
+                <span id="cloud-last-sync-time" class="font-mono text-slate-300">Never</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- ADMIN SUB-VIEW 4: SECURITY GEOFENCE, CREDENTIALS & AUDIT LOG    -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="admin-view-security" class="hidden space-y-3">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Campus GPS Geofence Lock</h3>
+                <p class="text-[11px] text-slate-400">Block off-site QR scans outside campus perimeter</p>
+              </div>
+              <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 cursor-pointer">
+                <input id="cfg-geofence-enforced" type="checkbox" onchange="saveSecurityPolicySettings()" class="accent-rose-600 rounded" />
+                Enforce Lock
+              </label>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[9px] font-mono text-slate-400 mb-1">Campus Lat</label>
+                <input id="cfg-campus-lat" type="number" step="any" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[11px] font-mono text-white" />
+              </div>
+              <div>
+                <label class="block text-[9px] font-mono text-slate-400 mb-1">Campus Lng</label>
+                <input id="cfg-campus-lng" type="number" step="any" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[11px] font-mono text-white" />
+              </div>
+              <div>
+                <label class="block text-[9px] font-mono text-slate-400 mb-1">Max Radius (m)</label>
+                <input id="cfg-campus-radius" type="number" min="20" max="5000" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[11px] font-mono text-white" />
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 pt-1">
+              <button type="button" onclick="useCurrentGPSAsCampusCenter()" class="px-2.5 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-[10px] font-bold text-indigo-300">
+                Set My GPS as Campus
+              </button>
+              <button type="button" onclick="saveSecurityPolicySettings(true)" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-[11px] font-bold text-white">
+                Save Geofence
+              </button>
+            </div>
+          </div>
+
+          <!-- Rotate Admin Master Passphrase -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2.5">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Rotate Admin Master Passphrase</h3>
+            <form onsubmit="handleAdminRotatePassword(event)" class="space-y-2">
+              <input id="admin-new-pass-1" type="password" required placeholder="New strong Admin passphrase (10+ chars)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500" />
+              <input id="admin-new-pass-2" type="password" required placeholder="Confirm new Admin passphrase" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500" />
+              <button type="submit" class="w-full py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition">
+                Update Admin Master Password
+              </button>
+            </form>
+          </div>
+
+          <!-- Security Incident Log -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">Security & Anti-Proxy Audit Log</h4>
+            <div id="security-incident-list" class="space-y-1.5 max-h-60 overflow-y-auto"></div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar (Admin tab rendered ONLY when role === ROLE_ADMIN) -->
+    <nav id="bottom-nav-bar" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-slate-950/95 backdrop-blur-md border-t border-slate-800 p-2 grid grid-cols-3 gap-1.5 z-40">
+      <button id="nav-tab-scan" onclick="switchPortalTab('scan')" class="py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 bg-rose-600/20 text-rose-300 border border-rose-500/30 transition">
+        <i data-lucide="qr-code" class="w-4 h-4"></i>
+        <span class="text-[10px] font-bold">Scan QR</span>
+      </button>
+      <button id="nav-tab-logs" onclick="switchPortalTab('logs')" class="py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-white transition">
+        <i data-lucide="history" class="w-4 h-4"></i>
+        <span class="text-[10px] font-bold">My Logs</span>
+      </button>
+      <button id="nav-tab-leave" onclick="switchPortalTab('leave')" class="py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-white transition">
+        <i data-lucide="calendar-off" class="w-4 h-4"></i>
+        <span class="text-[10px] font-bold">Apply Leave</span>
+      </button>
+      <button id="nav-tab-admin" onclick="switchPortalTab('admin')" class="hidden py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-white transition">
+        <i data-lucide="shield" class="w-4 h-4"></i>
+        <span class="text-[10px] font-bold">Admin Console</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- APPLICATION LOGIC, CRYPTOGRAPHIC GUARDS & ZERO-TRUST ENGINE           -->
+  <!-- ===================================================================== -->
+  <script>
+    'use strict';
+
+    // -----------------------------------------------------------------------
+    // 1. CONSTANTS, GROUPS & CRYPTOGRAPHIC HELPERS
+    // -----------------------------------------------------------------------
+    const STORAGE_KEY = 'mitraz_attendguard_prod_v2';
+    const DEVICE_FP_KEY = 'mitraz_android_hw_fingerprint_v2';
+    const SESSION_KEY = 'mitraz_attendguard_session_v2';
+    const HMAC_SECRET = 'MITRAZ-ENTERPRISE-ZERO-TRUST-SECRET-2026';
+    const GROUPS = ['Employees', 'GDA', 'IT', 'MFs'];
+
+    const GROUP_WB_META = {
+      Employees: { wbId: 'wb_employees', fileName: 'MITRAZ_Employees_Attendance_2026.xlsx', qrId: 'QR-GRP-EMP', checkpoint: 'Employees Main Gate' },
+      GDA:       { wbId: 'wb_gda',       fileName: 'MITRAZ_GDA_Attendance_2026.xlsx',       qrId: 'QR-GRP-GDA', checkpoint: 'GDA Training Wing' },
+      IT:        { wbId: 'wb_it',        fileName: 'MITRAZ_IT_Attendance_2026.xlsx',        qrId: 'QR-GRP-IT',  checkpoint: 'IT Operations Floor' },
+      MFs:       { wbId: 'wb_mfs',       fileName: 'MITRAZ_MFs_Attendance_2026.xlsx',       qrId: 'QR-GRP-MFS', checkpoint: 'MFs Field Hub' }
+    };
+
+    let currentSession = null;
+    let html5QrInstance = null;
+    let isCameraActive = false;
+    let activeScanMode = 'CHECK-IN';
+    let activePortalTab = 'scan';
+    let activeAdminSubTab = 'excel';
+    let activeGroupQrSelected = 'Employees';
+    let pendingDeleteUserId = null;
+    let pendingFirstLoginUserId = null;
+    let editingHolidayId = null;
+    let deferredInstallPrompt = null;
+    let currentGPS = { lat: 12.971598, lng: 77.594566, accuracy: 16, distanceMeters: 0, verified: false };
+
+    // Haversine formula to compute exact ground distance in meters
+    function computeDistanceMeters(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const toRad = (deg) => (deg * Math.PI) / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    // Dynamic Android PWA Web App Manifest
+    function registerAndroidPWAAndOfflineCache() {
+      const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110"><rect width="120" height="110" rx="24" fill="#ffffff"/><defs><radialGradient id="g" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#FF2A36"/><stop offset="65%" stop-color="#E30613"/><stop offset="100%" stop-color="#A8000A"/></radialGradient></defs><circle cx="60" cy="13.5" r="10.5" fill="url(#g)"/><path d="M15.5 13.5 C12.5 14.5, 11.5 18, 12.5 22.5 C15.5 36.5, 22.5 48.5, 34.5 58.5 C43.5 66, 40.5 78, 34.5 89.5 C32.5 93.5, 34 97.5, 37.5 97.5 C41 97.5, 43.5 94, 45.5 89.5 C51.5 76, 53 63, 47.5 51.5 C43 42, 48.5 36, 60 36 C71.5 36, 77 42, 72.5 51.5 C67 63, 68.5 76, 74.5 89.5 C76.5 94, 79 97.5, 82.5 97.5 C86 97.5, 87.5 93.5, 85.5 89.5 C79.5 78, 76.5 66, 85.5 58.5 C97.5 48.5, 104.5 36.5, 107.5 22.5 C108.5 18, 107.5 14.5, 104.5 13.5 C101.5 12.5, 98.5 15, 95.5 18.5 C87.5 27.5, 72.5 28.5, 60 28.5 C47.5 28.5, 32.5 27.5, 24.5 18.5 C21.5 15, 18.5 12.5, 15.5 13.5 Z" fill="#E30613"/></svg>`;
+      const manifest = {
+        name: 'MITRAZ AttendGuard Enterprise',
+        short_name: 'MITRAZ Attend',
+        description: 'Zero-Trust Android Attendance & Leave Portal for MITRAZ',
+        start_url: './index.html',
+        scope: './',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#020617',
+        theme_color: '#020617',
+        icons: [
+          {
+            src: 'data:image/svg+xml,' + encodeURIComponent(iconSvg),
+            sizes: '192x192',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          },
+          {
+            src: 'data:image/svg+xml,' + encodeURIComponent(iconSvg),
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          }
+        ]
+      };
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
+      document.head.appendChild(link);
+    }
+
+    // Dynamic MITRAZ SVG Favicon
+    function applyMitrazFavicon() {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110"><rect width="120" height="110" rx="24" fill="#ffffff"/><defs><radialGradient id="g" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#FF2A36"/><stop offset="65%" stop-color="#E30613"/><stop offset="100%" stop-color="#A8000A"/></radialGradient></defs><circle cx="60" cy="13.5" r="10.5" fill="url(#g)"/><path d="M15.5 13.5 C12.5 14.5, 11.5 18, 12.5 22.5 C15.5 36.5, 22.5 48.5, 34.5 58.5 C43.5 66, 40.5 78, 34.5 89.5 C32.5 93.5, 34 97.5, 37.5 97.5 C41 97.5, 43.5 94, 45.5 89.5 C51.5 76, 53 63, 47.5 51.5 C43 42, 48.5 36, 60 36 C71.5 36, 77 42, 72.5 51.5 C67 63, 68.5 76, 74.5 89.5 C76.5 94, 79 97.5, 82.5 97.5 C86 97.5, 87.5 93.5, 85.5 89.5 C79.5 78, 76.5 66, 85.5 58.5 C97.5 48.5, 104.5 36.5, 107.5 22.5 C108.5 18, 107.5 14.5, 104.5 13.5 C101.5 12.5, 98.5 15, 95.5 18.5 C87.5 27.5, 72.5 28.5, 60 28.5 C47.5 28.5, 32.5 27.5, 24.5 18.5 C21.5 15, 18.5 12.5, 15.5 13.5 Z" fill="#E30613"/></svg>`;
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
+      document.head.appendChild(link);
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      document.getElementById('btn-install-pwa')?.classList.remove('hidden');
+    });
+
+    async function triggerPWAInstall() {
+      if (!deferredInstallPrompt) {
+        showToast('Open Chrome menu (⋮) and tap "Install app" or "Add to Home screen".', 'info');
+        return;
+      }
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      document.getElementById('btn-install-pwa')?.classList.add('hidden');
+    }
+
+    function escapeHTML(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeExcelCell(val) {
+      const s = String(val ?? '');
+      return /^[=+\-@]/.test(s) ? `'${s}` : s;
+    }
+
+    function computeMAC(payload) {
+      const raw = `${HMAC_SECRET}::${payload}`;
+      let h1 = 0xdeadbeef;
+      let h2 = 0x41c6ce57;
+      for (let i = 0; i < raw.length; i++) {
+        const c = raw.charCodeAt(i);
+        h1 = Math.imul(h1 ^ c, 2654435761);
+        h2 = Math.imul(h2 ^ c, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+    }
+
+    function constantTimeEqual(a, b) {
+      if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+      let diff = 0;
+      for (let i = 0; i < a.length; i++) {
+        diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+      }
+      return diff === 0;
+    }
+
+    function hashPassphrase(passphrase, salt) {
+      let acc = `${salt}:${passphrase}`;
+      for (let r = 0; r < 120; r++) {
+        acc = computeMAC(`${r}:${acc}`);
+      }
+      return acc;
+    }
+
+    // Real Per-Device Hardware Fingerprint Generator
+    function getHardwareFingerprint() {
+      try {
+        let cached = localStorage.getItem(DEVICE_FP_KEY);
+        if (cached && /^HW-[A-F0-9]{12}$/.test(cached)) return cached;
+
+        const signals = [
+          navigator.userAgent || '',
+          navigator.language || '',
+          String(screen.width) + 'x' + String(screen.height),
+          String(screen.colorDepth || 24),
+          String(navigator.hardwareConcurrency || 4),
+          Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+          crypto.getRandomValues ? Array.from(crypto.getRandomValues(new Uint8Array(6))).map((b) => b.toString(16).padStart(2, '0')).join('') : String(Date.now())
+        ].join('|');
+
+        const digest = computeMAC(signals).slice(0, 12).toUpperCase();
+        cached = `HW-${digest}`;
+        localStorage.setItem(DEVICE_FP_KEY, cached);
+        return cached;
+      } catch (e) {
+        return 'HW-ANDROID-LOCK';
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 2. MONTHLY MATRIX SHEET HELPERS (NAMES IN ROWS × DATES IN COLUMNS)
+    // -----------------------------------------------------------------------
+    function getMonthSheetName(dateObj = new Date()) {
+      return dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    }
+
+    function getDateColumnLabel(dateObj = new Date()) {
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const mon = dateObj.toLocaleDateString('en-US', { month: 'short' });
+      return `${day} ${mon}`;
+    }
+
+    function generateMonthDateColumns(dateObj = new Date()) {
+      const year = dateObj.getFullYear();
+      const month = dateObj.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const mon = dateObj.toLocaleDateString('en-US', { month: 'short' });
+      const cols = [];
+      for (let d = 1; d <= daysInMonth; d++) {
+        cols.push(`${String(d).padStart(2, '0')} ${mon}`);
+      }
+      return cols;
+    }
+
+    function createMatrixSheetForGroup(monthDateObj, groupName, usersList, holidaysList = null) {
+      const monthName = getMonthSheetName(monthDateObj);
+      const dateColumns = generateMonthDateColumns(monthDateObj);
+      const rows = {};
+      (usersList || [])
+        .filter((u) => u.group === groupName)
+        .forEach((u) => {
+          const days = {};
+          dateColumns.forEach((col) => { days[col] = ''; });
+          rows[u.userId] = {
+            userId: u.userId,
+            name: `${u.firstName} ${u.lastName}`.trim(),
+            group: u.group,
+            days
+          };
+        });
+
+      const activeHolidays = Array.isArray(holidaysList)
+        ? holidaysList
+        : (typeof appState !== 'undefined' && appState && Array.isArray(appState.holidays) ? appState.holidays : []);
+      activeHolidays.forEach((h) => {
+        const hDate = new Date(h.date + 'T00:00:00');
+        if (getMonthSheetName(hDate) === monthName) {
+          const colLabel = getDateColumnLabel(hDate);
+          Object.values(rows).forEach((r) => {
+            if (Object.prototype.hasOwnProperty.call(r.days, colLabel) && !r.days[colLabel]) {
+              r.days[colLabel] = `H (${h.name})`;
+            }
+          });
+        }
+      });
+      return { monthName, dateColumns, rows };
+    }
+
+    // -----------------------------------------------------------------------
+    // 3. CLEAN PRODUCTION STATE INITIALIZATION
+    // -----------------------------------------------------------------------
+    function buildDefaultState() {
+      const now = new Date();
+      const currentMonth = getMonthSheetName(now);
+
+      const defaultHolidays = [
+        { id: 'HOL-2026-01', date: '2026-01-26', name: 'Republic Day', type: 'National Holiday' },
+        { id: 'HOL-2026-08', date: '2026-08-15', name: 'Independence Day', type: 'National Holiday' },
+        { id: 'HOL-2026-10', date: '2026-10-02', name: 'Gandhi Jayanti', type: 'National Holiday' },
+        { id: 'HOL-2026-12', date: '2026-12-25', name: 'Christmas Day', type: 'Festival Holiday' }
+      ];
+
+      const workbooks = {};
+      const groupQRs = {};
+
+      GROUPS.forEach((grp) => {
+        const meta = GROUP_WB_META[grp];
+        workbooks[meta.wbId] = {
+          id: meta.wbId,
+          group: grp,
+          fileName: meta.fileName,
+          sheets: {
+            [currentMonth]: createMatrixSheetForGroup(now, grp, [], defaultHolidays)
+          }
+        };
+        groupQRs[grp] = {
+          qrId: meta.qrId,
+          group: grp,
+          wbId: meta.wbId,
+          checkpoint: meta.checkpoint,
+          sig: computeMAC(`${meta.qrId}|${grp}|${meta.wbId}|${meta.checkpoint}`),
+          scansCount: 0
+        };
+      });
+
+      workbooks['wb_users_directory'] = {
+        id: 'wb_users_directory',
+        isUsersDirectory: true,
+        fileName: 'MITRAZ_Registered_Users_Directory.xlsx',
+        sheets: {
+          'Enrolled_Users': { isDirectorySheet: true }
+        }
+      };
+
+      return {
+        adminAccount: {
+          adminId: 'ADMIN',
+          salt: 'SALT-MITRAZ-ADMIN-2026',
+          passHash: hashPassphrase('Mitraz@Admin#2026!', 'SALT-MITRAZ-ADMIN-2026')
+        },
+        registeredUsers: [],
+        workbooks,
+        groupQRs,
+        activeWorkbookId: 'wb_employees',
+        selectedSheetTab: currentMonth,
+        lastCheckedMonth: currentMonth,
+        securityPolicy: {
+          geofenceEnforced: true,
+          campusLat: 12.971598,
+          campusLng: 77.594566,
+          maxRadiusMeters: 250
+        },
+        cloudSync: {
+          enabled: false,
+          endpointUrl: '',
+          secretToken: 'MITRAZ-CLOUD-KEY-2026',
+          lastSyncAt: null,
+          pendingQueue: []
+        },
+        attendanceLogs: [],
+        leaveRequests: [],
+        holidays: defaultHolidays,
+        securityIncidents: [
+          {
+            id: 'SEC-BOOT',
+            severity: 'INFO',
+            time: now.toLocaleTimeString(),
+            message: 'MITRAZ AttendGuard Production Release v2.0 initialized.'
+          }
+        ]
+      };
+    }
+
+    let appState = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return buildDefaultState();
+        const parsed = JSON.parse(raw);
+        if (!parsed || !parsed.workbooks || !parsed.registeredUsers || !parsed.groupQRs) {
+          return buildDefaultState();
+        }
+        if (!Array.isArray(parsed.leaveRequests)) parsed.leaveRequests = [];
+        if (!Array.isArray(parsed.holidays)) parsed.holidays = [];
+        if (!parsed.securityPolicy) {
+          parsed.securityPolicy = {
+            geofenceEnforced: true,
+            campusLat: 12.971598,
+            campusLng: 77.594566,
+            maxRadiusMeters: 250
+          };
+        }
+        if (!parsed.cloudSync) {
+          parsed.cloudSync = {
+            enabled: false,
+            endpointUrl: '',
+            secretToken: 'MITRAZ-CLOUD-KEY-2026',
+            lastSyncAt: null,
+            pendingQueue: []
+          };
+        }
+        if (!Array.isArray(parsed.cloudSync.pendingQueue)) parsed.cloudSync.pendingQueue = [];
+        return parsed;
+      } catch (e) {
+        return buildDefaultState();
+      }
+    }
+
+    appState = loadState();
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        showToast('Storage warning: unable to persist locally.', 'warning');
+      }
+    }
+
+    function logSecurityIncident(severity, message) {
+      appState.securityIncidents.unshift({
+        id: 'SEC-' + Date.now().toString(36).toUpperCase(),
+        severity,
+        time: new Date().toLocaleTimeString(),
+        message
+      });
+      if (appState.securityIncidents.length > 80) {
+        appState.securityIncidents.length = 80;
+      }
+      saveState();
+    }
+
+    function ensureCurrentMonthSheetsExist(targetDate = new Date()) {
+      const targetMonth = getMonthSheetName(targetDate);
+      let createdCount = 0;
+
+      GROUPS.forEach((grp) => {
+        const wb = appState.workbooks[GROUP_WB_META[grp].wbId];
+        if (wb && !wb.sheets[targetMonth]) {
+          wb.sheets[targetMonth] = createMatrixSheetForGroup(targetDate, grp, appState.registeredUsers);
+          createdCount++;
+        }
+      });
+
+      appState.lastCheckedMonth = targetMonth;
+      if (createdCount > 0) {
+        saveState();
+        logSecurityIncident('INFO', `Automatic month-end rollover created [${targetMonth}] tabs across all 4 group workbooks.`);
+      }
+      return createdCount;
+    }
+
+    // -----------------------------------------------------------------------
+    // 3B. MULTI-DEVICE CLOUD SYNC ENGINE (GOOGLE APPS SCRIPT / GOOGLE SHEETS)
+    // -----------------------------------------------------------------------
+    function queueCloudSyncEvent(eventType, payload) {
+      if (!appState.cloudSync) return;
+      appState.cloudSync.pendingQueue.push({
+        eventId: 'EVT-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 5).toUpperCase(),
+        eventType,
+        timestamp: new Date().toISOString(),
+        payload
+      });
+      saveState();
+      updateCloudStatusUI();
+      if (appState.cloudSync.enabled && appState.cloudSync.endpointUrl) {
+        syncWithCloudServer(false);
+      }
+    }
+
+    function handleSaveCloudSyncConfig(event) {
+      event.preventDefault();
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const enabled = Boolean(document.getElementById('cfg-cloud-enabled')?.checked);
+      const endpointUrl = (document.getElementById('cfg-cloud-endpoint')?.value || '').trim();
+      const secretToken = (document.getElementById('cfg-cloud-secret')?.value || '').trim();
+
+      if (enabled && !endpointUrl) {
+        showToast('Enter your Google Apps Script Web App URL to enable Cloud Sync.', 'error');
+        return;
+      }
+
+      appState.cloudSync.enabled = enabled;
+      appState.cloudSync.endpointUrl = endpointUrl;
+      appState.cloudSync.secretToken = secretToken || 'MITRAZ-CLOUD-KEY-2026';
+      saveState();
+      updateCloudStatusUI();
+      logSecurityIncident('INFO', `Admin updated Cloud Sheet Sync (${enabled ? 'ENABLED' : 'DISABLED'}).`);
+      showToast(enabled ? 'Cloud Sheet Sync enabled!' : 'Cloud Sheet Sync saved (Local mode).', 'success');
+      if (enabled && endpointUrl) {
+        syncWithCloudServer(true);
+      }
+    }
+
+    async function syncWithCloudServer(manualTrigger = false) {
+      const cfg = appState.cloudSync;
+      if (!cfg || !cfg.enabled || !cfg.endpointUrl) {
+        if (manualTrigger) {
+          showToast('Configure & enable Google Sheets Web App URL in Admin → Cloud first.', 'info');
+        }
+        return;
+      }
+
+      const labelEl = document.getElementById('header-sync-label');
+      if (labelEl) labelEl.textContent = 'Syncing...';
+
+      try {
+        const res = await fetch(cfg.endpointUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            secretToken: cfg.secretToken,
+            deviceId: getHardwareFingerprint(),
+            events: cfg.pendingQueue,
+            snapshotRequest: true
+          })
+        });
+
+        const data = await res.json();
+        if (!data || data.ok !== true) {
+          throw new Error(data?.error || 'Cloud endpoint rejected sync token.');
+        }
+
+        cfg.pendingQueue = [];
+        cfg.lastSyncAt = new Date().toLocaleTimeString();
+
+        if (Array.isArray(data.registeredUsers)) {
+          appState.registeredUsers = data.registeredUsers;
+          GROUPS.forEach((grp) => {
+            const wb = appState.workbooks[GROUP_WB_META[grp].wbId];
+            if (wb) {
+              Object.values(wb.sheets).forEach((sheet) => {
+                if (!sheet || !sheet.rows) return;
+                appState.registeredUsers
+                  .filter((u) => u.group === grp)
+                  .forEach((u) => {
+                    if (!sheet.rows[u.userId]) {
+                      const days = {};
+                      (sheet.dateColumns || []).forEach((col) => { days[col] = ''; });
+                      sheet.rows[u.userId] = {
+                        userId: u.userId,
+                        name: `${u.firstName} ${u.lastName}`.trim(),
+                        group: u.group,
+                        days
+                      };
+                    }
+                  });
+              });
+            }
+          });
+        }
+
+        if (Array.isArray(data.leaveRequests)) appState.leaveRequests = data.leaveRequests;
+        if (Array.isArray(data.holidays)) appState.holidays = data.holidays;
+
+        saveState();
+        updateCloudStatusUI();
+        renderAllViews();
+        if (manualTrigger) showToast('Synced live with MITRAZ Master Google Sheet!', 'success');
+      } catch (err) {
+        updateCloudStatusUI(true);
+        if (manualTrigger) showToast(`Cloud Sync queued offline: ${err.message}`, 'warning');
+      }
+    }
+
+    function updateCloudStatusUI(hasError = false) {
+      const cfg = appState.cloudSync || {};
+      const active = Boolean(cfg.enabled && cfg.endpointUrl);
+      const qLen = Array.isArray(cfg.pendingQueue) ? cfg.pendingQueue.length : 0;
+
+      const labelEl = document.getElementById('header-sync-label');
+      const pillEl = document.getElementById('cloud-status-pill');
+      const qCountEl = document.getElementById('cloud-queue-count');
+      const lastSyncEl = document.getElementById('cloud-last-sync-time');
+
+      if (labelEl) {
+        labelEl.textContent = !active ? 'Local' : hasError ? `Queue (${qLen})` : qLen > 0 ? `Sync (${qLen})` : 'Cloud Live';
+      }
+      if (pillEl) {
+        pillEl.textContent = !active ? 'Offline / Local' : hasError ? 'Queued (Retry)' : 'Connected Live';
+        pillEl.className = !active
+          ? 'text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-400'
+          : hasError
+          ? 'text-[10px] font-mono px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300'
+          : 'text-[10px] font-mono px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300';
+      }
+      if (qCountEl) qCountEl.textContent = `${qLen} event${qLen === 1 ? '' : 's'} queued`;
+      if (lastSyncEl) lastSyncEl.textContent = cfg.lastSyncAt || 'Never';
+    }
+
+    // -----------------------------------------------------------------------
+    // 4. AUTHENTICATION, HARDWARE ANTI-PROXY BINDING & SESSION GUARD
+    // -----------------------------------------------------------------------
+    function handleForgotPasswordRequest() {
+      const identifier = (document.getElementById('login-identifier')?.value || '').trim();
+      if (!identifier) {
+        showLoginError('Enter Member ID or Email First', 'Type your Member ID or Email above, then tap "Forgot Password? Notify Admin".');
+        return;
+      }
+      if (identifier.toUpperCase() === 'ADMIN') {
+        showLoginError('Admin Master Account', 'Admin Master passphrase can only be rotated inside Admin Console → Security.');
+        return;
+      }
+
+      const user = appState.registeredUsers.find(
+        (u) => u.userId.toLowerCase() === identifier.toLowerCase() || u.email.toLowerCase() === identifier.toLowerCase()
+      );
+      if (!user) {
+        showLoginError('Member Not Found', 'No enrolled account matches that ID or email.');
+        return;
+      }
+
+      user.passwordResetRequested = true;
+      user.resetRequestedAt = new Date().toLocaleTimeString();
+      saveState();
+      logSecurityIncident('WARNING', `Member ${user.firstName} ${user.lastName} (${user.userId}) requested a password reset.`);
+      queueCloudSyncEvent('PASSWORD_RESET_REQUESTED', { userId: user.userId, requestedAt: user.resetRequestedAt });
+      hideLoginError();
+      showToast(`Reset request sent to Admin for ${user.firstName} (${user.userId}).`, 'success');
+    }
+
+    function toggleLoginPasswordVisibility() {
+      const pwEl = document.getElementById('login-password');
+      if (!pwEl) return;
+      pwEl.type = pwEl.type === 'password' ? 'text' : 'password';
+    }
+
+    function showLoginError(title, desc) {
+      const box = document.getElementById('login-error-box');
+      const tEl = document.getElementById('login-error-title');
+      const dEl = document.getElementById('login-error-desc');
+      if (tEl) tEl.textContent = title;
+      if (dEl) dEl.textContent = desc;
+      if (box) box.classList.remove('hidden');
+    }
+
+    function hideLoginError() {
+      const box = document.getElementById('login-error-box');
+      if (box) box.classList.add('hidden');
+    }
+
+    async function handleLoginSubmit(event) {
+      event.preventDefault();
+      hideLoginError();
+
+      if (appState.cloudSync?.enabled && appState.cloudSync?.endpointUrl) {
+        await syncWithCloudServer(false);
+      }
+
+      const identifier = (document.getElementById('login-identifier')?.value || '').trim();
+      const password = document.getElementById('login-password')?.value || '';
+      const currentHw = getHardwareFingerprint();
+
+      // 1. Admin Master Login
+      if (identifier.toUpperCase() === 'ADMIN') {
+        const expectedHash = appState.adminAccount.passHash;
+        const actualHash = hashPassphrase(password, appState.adminAccount.salt);
+        if (!constantTimeEqual(actualHash, expectedHash)) {
+          logSecurityIncident('CRITICAL', `Failed Admin Master login attempt from ${currentHw}.`);
+          showLoginError('Invalid Admin Credentials', 'Admin Master passphrase verification failed.');
+          return;
+        }
+        createAuthenticatedSession({
+          role: 'ROLE_ADMIN',
+          userId: 'ADMIN',
+          name: 'MITRAZ Administrator',
+          group: 'ALL_GROUPS',
+          deviceId: currentHw
+        });
+        return;
+      }
+
+      // 2. Lookup Admin-Enrolled Standard User
+      const user = appState.registeredUsers.find(
+        (u) => u.userId.toLowerCase() === identifier.toLowerCase() || u.email.toLowerCase() === identifier.toLowerCase()
+      );
+
+      if (!user) {
+        logSecurityIncident('WARNING', `Unregistered login attempt for "${identifier}" from ${currentHw}.`);
+        showLoginError('Account Not Found', 'Only users enrolled one-time by the Admin can access this portal.');
+        return;
+      }
+
+      // 3. Verify Salted Passphrase
+      const userHash = hashPassphrase(password, user.salt);
+      if (!constantTimeEqual(userHash, user.passHash)) {
+        logSecurityIncident('WARNING', `Invalid passphrase for ${user.userId} from ${currentHw}.`);
+        showLoginError('Authentication Failed', 'Incorrect passphrase for this member account.');
+        return;
+      }
+
+      // 4. Enforce Strict 1-Device-Per-User Anti-Proxy Lock
+      const otherUserOnPhone = appState.registeredUsers.find(
+        (u) => u.boundDeviceId === currentHw && u.userId !== user.userId
+      );
+      if (otherUserOnPhone) {
+        logSecurityIncident(
+          'CRITICAL',
+          `PROXY BLOCKED: ${user.userId} attempted login on ${currentHw}, locked to ${otherUserOnPhone.userId}.`
+        );
+        showLoginError(
+          'Proxy Attempt Blocked (Shared Device)',
+          `This Android device (${currentHw}) is permanently bound to ${otherUserOnPhone.firstName} (${otherUserOnPhone.userId}). Logging in for a colleague is blocked.`
+        );
+        return;
+      }
+
+      if (user.boundDeviceId && user.boundDeviceId !== currentHw) {
+        logSecurityIncident(
+          'CRITICAL',
+          `PROXY BLOCKED: ${user.userId} (bound to ${user.boundDeviceId}) attempted login from ${currentHw}.`
+        );
+        showLoginError(
+          'Proxy Attempt Blocked (Unrecognized Phone)',
+          `${user.firstName}'s account is locked to ${user.boundDeviceId}. Contact Admin to unbind if you changed phones.`
+        );
+        return;
+      }
+
+      if (!user.boundDeviceId) {
+        user.boundDeviceId = currentHw;
+        saveState();
+        logSecurityIncident('INFO', `First-time device binding: ${user.userId} bound to ${currentHw}.`);
+        queueCloudSyncEvent('DEVICE_BOUND', { userId: user.userId, boundDeviceId: currentHw });
+      }
+
+      if (user.mustChangePassword) {
+        pendingFirstLoginUserId = user.userId;
+        document.getElementById('first-login-pass-error')?.classList.add('hidden');
+        document.getElementById('first-login-modal')?.classList.remove('hidden');
+        return;
+      }
+
+      createAuthenticatedSession({
+        role: 'ROLE_USER',
+        userId: user.userId,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        group: user.group,
+        deviceId: currentHw
+      });
+    }
+
+    function handleFirstLoginPasswordChange(event) {
+      event.preventDefault();
+      const p1 = document.getElementById('new-user-pass-1')?.value || '';
+      const p2 = document.getElementById('new-user-pass-2')?.value || '';
+      const errEl = document.getElementById('first-login-pass-error');
+
+      const showModalErr = (msg) => {
+        if (errEl) {
+          errEl.textContent = msg;
+          errEl.classList.remove('hidden');
+        }
+      };
+
+      if (p1 !== p2) {
+        showModalErr('Passphrases do not match.');
+        return;
+      }
+      if (p1 === 'Mitraz@User1!') {
+        showModalErr('Choose a personal passphrase different from the temporary default.');
+        return;
+      }
+      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+      if (!strongRegex.test(p1)) {
+        showModalErr('Must be 8+ characters with uppercase, lowercase, number, and symbol.');
+        return;
+      }
+
+      const user = appState.registeredUsers.find((u) => u.userId === pendingFirstLoginUserId);
+      if (!user) return;
+
+      user.salt = `SALT-${user.userId}-${Date.now().toString(36)}`;
+      user.passHash = hashPassphrase(p1, user.salt);
+      user.mustChangePassword = false;
+      saveState();
+      logSecurityIncident('INFO', `Member ${user.userId} completed first-login personal passphrase setup.`);
+      queueCloudSyncEvent('USER_PASSWORD_UPDATED', { userId: user.userId, salt: user.salt, passHash: user.passHash });
+
+      document.getElementById('first-login-modal')?.classList.add('hidden');
+      pendingFirstLoginUserId = null;
+
+      createAuthenticatedSession({
+        role: 'ROLE_USER',
+        userId: user.userId,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        group: user.group,
+        deviceId: getHardwareFingerprint()
+      });
+    }
+
+    function handleAdminRotatePassword(event) {
+      event.preventDefault();
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const p1 = document.getElementById('admin-new-pass-1')?.value || '';
+      const p2 = document.getElementById('admin-new-pass-2')?.value || '';
+
+      if (p1 !== p2) {
+        showToast('New Admin passphrases do not match.', 'error');
+        return;
+      }
+      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
+      if (!strongRegex.test(p1)) {
+        showToast('Admin passphrase must be 10+ characters with upper, lower, number, and symbol.', 'error');
+        return;
+      }
+
+      const newSalt = 'SALT-ADMIN-' + Date.now().toString(36).toUpperCase();
+      appState.adminAccount.salt = newSalt;
+      appState.adminAccount.passHash = hashPassphrase(p1, newSalt);
+      saveState();
+      logSecurityIncident('INFO', 'Admin Master passphrase rotated successfully.');
+      document.getElementById('admin-new-pass-1').value = '';
+      document.getElementById('admin-new-pass-2').value = '';
+      showToast('Admin Master passphrase updated!', 'success');
+    }
+
+    function createAuthenticatedSession(claims) {
+      const issuedAt = Date.now();
+      const rawToken = `${claims.role}|${claims.userId}|${claims.group}|${claims.deviceId}|${issuedAt}`;
+      const sig = computeMAC(rawToken);
+      currentSession = { ...claims, issuedAt, sig };
+      try {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentSession));
+      } catch (e) {}
+
+      enterPortalUI();
+      showToast(`Welcome, ${claims.name}`, 'success');
+    }
+
+    function validateActiveSession() {
+      if (!currentSession) return false;
+      const rawToken = `${currentSession.role}|${currentSession.userId}|${currentSession.group}|${currentSession.deviceId}|${currentSession.issuedAt}`;
+      const expectedSig = computeMAC(rawToken);
+      if (!constantTimeEqual(currentSession.sig, expectedSig)) {
+        logSecurityIncident('CRITICAL', 'TAMPER ALERT: Session HMAC signature mismatch detected! Terminating session.');
+        logoutSession('Security violation: tampered session terminated.');
+        return false;
+      }
+      return true;
+    }
+
+    function logoutSession(reason = 'Signed out.') {
+      stopCameraScanner();
+      currentSession = null;
+      try {
+        sessionStorage.removeItem(SESSION_KEY);
+      } catch (e) {}
+
+      document.getElementById('authenticated-portal')?.classList.add('hidden');
+      document.getElementById('auth-gate-screen')?.classList.remove('hidden');
+      const pwEl = document.getElementById('login-password');
+      if (pwEl) pwEl.value = '';
+      showToast(reason, 'info');
+    }
+
+    function enterPortalUI() {
+      if (!validateActiveSession()) return;
+
+      document.getElementById('auth-gate-screen')?.classList.add('hidden');
+      document.getElementById('authenticated-portal')?.classList.remove('hidden');
+
+      const isAdmin = currentSession.role === 'ROLE_ADMIN';
+
+      const roleBadge = document.getElementById('header-role-badge');
+      const subtitle = document.getElementById('header-user-subtitle');
+      if (roleBadge) {
+        roleBadge.textContent = isAdmin ? 'ADMIN MASTER' : currentSession.group.toUpperCase();
+        roleBadge.className = isAdmin
+          ? 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40'
+          : 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      }
+      if (subtitle) {
+        subtitle.textContent = isAdmin
+          ? `${currentSession.deviceId} • Full Access`
+          : `${currentSession.userId} • ${currentSession.group}`;
+      }
+
+      const nameEl = document.getElementById('member-full-name');
+      const pillEl = document.getElementById('member-group-pill');
+      const avatarEl = document.getElementById('member-avatar');
+      if (nameEl) nameEl.textContent = currentSession.name;
+      if (pillEl) pillEl.textContent = isAdmin ? 'Admin Master Account • All Groups' : `${currentSession.userId} • Group: ${currentSession.group}`;
+      if (avatarEl) {
+        avatarEl.textContent = currentSession.name
+          .split(/\s+/)
+          .map((w) => w[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase();
+      }
+
+      const navBar = document.getElementById('bottom-nav-bar');
+      const navAdminBtn = document.getElementById('nav-tab-admin');
+      if (navBar && navAdminBtn) {
+        if (isAdmin) {
+          navBar.classList.remove('grid-cols-3');
+          navBar.classList.add('grid-cols-4');
+          navAdminBtn.classList.remove('hidden');
+          navAdminBtn.classList.add('flex');
+        } else {
+          navBar.classList.remove('grid-cols-4');
+          navBar.classList.add('grid-cols-3');
+          navAdminBtn.classList.add('hidden');
+          navAdminBtn.classList.remove('flex');
+        }
+      }
+
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const startEl = document.getElementById('leave-start-date');
+      const endEl = document.getElementById('leave-end-date');
+      if (startEl && !startEl.value) startEl.value = todayIso;
+      if (endEl && !endEl.value) endEl.value = todayIso;
+
+      updateCloudStatusUI();
+      switchPortalTab(isAdmin ? 'admin' : 'scan');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. QR SCANNING, GROUP VALIDATION & MATRIX ATTENDANCE LOGGING
+    // -----------------------------------------------------------------------
+    function setScanMode(mode) {
+      activeScanMode = mode;
+      const inBtn = document.getElementById('btn-scan-in');
+      const outBtn = document.getElementById('btn-scan-out');
+      if (inBtn && outBtn) {
+        inBtn.className = mode === 'CHECK-IN'
+          ? 'py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow transition'
+          : 'py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition';
+        outBtn.className = mode === 'CHECK-OUT'
+          ? 'py-2.5 rounded-xl text-xs font-extrabold bg-amber-600 text-white shadow transition'
+          : 'py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition';
+      }
+    }
+
+    async function toggleCameraScanner() {
+      if (isCameraActive) {
+        await stopCameraScanner();
+        return;
+      }
+      if (typeof Html5Qrcode === 'undefined') {
+        showToast('Camera library unavailable. Check internet connection.', 'error');
+        return;
+      }
+      try {
+        html5QrInstance = new Html5Qrcode('qr-reader');
+        await html5QrInstance.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (decodedText) => {
+            stopCameraScanner();
+            processScannedQRPayload(decodedText);
+          },
+          () => {}
+        );
+        isCameraActive = true;
+        document.getElementById('camera-placeholder')?.classList.add('hidden');
+        document.getElementById('scanner-laser-line')?.classList.remove('hidden');
+        const label = document.getElementById('camera-btn-label');
+        if (label) label.textContent = 'Stop Camera';
+      } catch (err) {
+        showToast('Camera permission denied. Enable camera access in Android settings.', 'error');
+      }
+    }
+
+    async function stopCameraScanner() {
+      if (html5QrInstance && isCameraActive) {
+        try {
+          await html5QrInstance.stop();
+          html5QrInstance.clear();
+        } catch (e) {}
+      }
+      isCameraActive = false;
+      document.getElementById('camera-placeholder')?.classList.remove('hidden');
+      document.getElementById('scanner-laser-line')?.classList.add('hidden');
+      const label = document.getElementById('camera-btn-label');
+      if (label) label.textContent = 'Start Camera';
+    }
+
+    function processScannedQRPayload(rawText) {
+      if (!validateActiveSession()) return;
+
+      let parsed;
+      try {
+        parsed = JSON.parse(rawText);
+      } catch (e) {
+        logSecurityIncident('WARNING', `Malformed QR scanned by ${currentSession.userId}.`);
+        showToast('Invalid QR format: not a MITRAZ signed checkpoint.', 'error');
+        return;
+      }
+
+      // 1. Verify QR HMAC Signature
+      const expectedSig = computeMAC(`${parsed.qrId}|${parsed.group}|${parsed.wbId}|${parsed.checkpoint}`);
+      if (parsed.org !== 'MITRAZ' || !constantTimeEqual(String(parsed.sig || ''), expectedSig)) {
+        logSecurityIncident('CRITICAL', `FORGED QR BLOCKED: ${currentSession.userId} scanned invalid signature.`);
+        showToast('Security Alert: Forged or tampered QR signature rejected!', 'error');
+        return;
+      }
+
+      // 2. Enforce Group Isolation
+      if (currentSession.role === 'ROLE_USER' && parsed.group !== currentSession.group) {
+        logSecurityIncident(
+          'WARNING',
+          `GROUP MISMATCH: ${currentSession.userId} (${currentSession.group}) scanned ${parsed.group} QR (${parsed.qrId}).`
+        );
+        showToast(`Wrong Group QR! You belong to [${currentSession.group}], not [${parsed.group}].`, 'error');
+        return;
+      }
+
+      // 3. Enforce Strict GPS Geofence Perimeter Lock
+      const policy = appState.securityPolicy || { geofenceEnforced: true, maxRadiusMeters: 250 };
+      if (policy.geofenceEnforced && (!currentGPS.verified || currentGPS.distanceMeters > policy.maxRadiusMeters)) {
+        logSecurityIncident(
+          'CRITICAL',
+          `GEOFENCE VIOLATION: ${currentSession.userId} attempted scan ${currentGPS.distanceMeters}m away (verified=${currentGPS.verified}, max ${policy.maxRadiusMeters}m).`
+        );
+        showToast(
+          !currentGPS.verified
+            ? 'GPS Location Required: Enable Android Location / GPS and tap Refresh before scanning.'
+            : `Geofence Blocked: You are ${currentGPS.distanceMeters}m from campus (limit ${policy.maxRadiusMeters}m).`,
+          'error'
+        );
+        return;
+      }
+
+      const targetGroup = parsed.group;
+      const targetUserId = currentSession.role === 'ROLE_USER'
+        ? currentSession.userId
+        : (appState.registeredUsers.find((u) => u.group === targetGroup)?.userId || null);
+      const targetUser = appState.registeredUsers.find((u) => u.userId === targetUserId);
+      if (!targetUser) {
+        showToast(`No enrolled user found in ${targetGroup} to log attendance.`, 'error');
+        return;
+      }
+
+      const linkedWbId = appState.groupQRs[targetGroup]?.wbId || parsed.wbId;
+      const targetWb = appState.workbooks[linkedWbId];
+      if (!targetWb) {
+        showToast('Linked Excel workbook not found.', 'error');
+        return;
+      }
+
+      const now = new Date();
+      ensureCurrentMonthSheetsExist(now);
+      const monthTab = getMonthSheetName(now);
+      const dateCol = getDateColumnLabel(now);
+      const timeStr = now.toTimeString().slice(0, 5);
+      const fullTimeStr = now.toLocaleTimeString();
+
+      const sheet = targetWb.sheets[monthTab];
+      if (!sheet.rows[targetUser.userId]) {
+        const emptyDays = {};
+        sheet.dateColumns.forEach((c) => { emptyDays[c] = ''; });
+        sheet.rows[targetUser.userId] = {
+          userId: targetUser.userId,
+          name: `${targetUser.firstName} ${targetUser.lastName}`.trim(),
+          group: targetUser.group,
+          days: emptyDays
+        };
+      }
+
+      const prevCell = sheet.rows[targetUser.userId].days[dateCol] || '';
+      let updatedCell = '';
+      if (activeScanMode === 'CHECK-IN') {
+        updatedCell = `P (${timeStr} IN)`;
+      } else {
+        updatedCell = prevCell.includes('IN')
+          ? `${prevCell.replace(')', '')} / ${timeStr} OUT)`
+          : `P (${timeStr} OUT)`;
+      }
+      sheet.rows[targetUser.userId].days[dateCol] = updatedCell;
+
+      if (appState.groupQRs[targetGroup]) {
+        appState.groupQRs[targetGroup].scansCount = (appState.groupQRs[targetGroup].scansCount || 0) + 1;
+      }
+
+      const recordHash = computeMAC(`${targetUser.userId}|${now.toISOString()}|${updatedCell}|${currentSession.deviceId}`);
+      const logEntry = {
+        id: 'LOG-' + Date.now().toString(36).toUpperCase(),
+        userId: targetUser.userId,
+        name: `${targetUser.firstName} ${targetUser.lastName}`.trim(),
+        group: targetGroup,
+        action: activeScanMode,
+        dateCol,
+        monthTab,
+        time: fullTimeStr,
+        cellValue: updatedCell,
+        workbookName: targetWb.fileName,
+        checkpoint: parsed.checkpoint,
+        gps: `${currentGPS.lat.toFixed(5)}, ${currentGPS.lng.toFixed(5)} (${currentGPS.distanceMeters}m)`,
+        deviceId: currentSession.deviceId,
+        hash: recordHash
+      };
+      appState.attendanceLogs.unshift(logEntry);
+      saveState();
+
+      queueCloudSyncEvent('ATTENDANCE_SCAN', logEntry);
+
+      const receiptEl = document.getElementById('last-scan-receipt');
+      const rTimeEl = document.getElementById('receipt-time');
+      const rDetEl = document.getElementById('receipt-details');
+      if (rTimeEl) rTimeEl.textContent = fullTimeStr;
+      if (rDetEl) {
+        rDetEl.textContent = `${logEntry.name} (${logEntry.userId}) • Sheet: ${targetWb.fileName} [${monthTab}] • Col [${dateCol}] = ${updatedCell}`;
+      }
+      if (receiptEl) receiptEl.classList.remove('hidden');
+
+      renderAllViews();
+      showToast(`${activeScanMode} logged to ${targetWb.fileName} [${monthTab}]!`, 'success');
+    }
+
+    function refreshGPS(notify = false) {
+      const policy = appState.securityPolicy || { campusLat: 12.971598, campusLng: 77.594566, maxRadiusMeters: 250 };
+      if (!navigator.geolocation) {
+        currentGPS.verified = false;
+        updateGPSLabel();
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          currentGPS.lat = pos.coords.latitude;
+          currentGPS.lng = pos.coords.longitude;
+          currentGPS.accuracy = Math.round(pos.coords.accuracy || 15);
+          currentGPS.distanceMeters = computeDistanceMeters(
+            currentGPS.lat,
+            currentGPS.lng,
+            policy.campusLat,
+            policy.campusLng
+          );
+          currentGPS.verified = true;
+          updateGPSLabel();
+          if (notify) showToast(`GPS verified (${currentGPS.distanceMeters}m from campus)`, 'info');
+        },
+        () => {
+          currentGPS.verified = false;
+          updateGPSLabel();
+          if (notify) showToast('Unable to get GPS lock. Turn on Android Location services.', 'error');
+        },
+        { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+      );
+    }
+
+    function updateGPSLabel() {
+      const el = document.getElementById('gps-status-text');
+      const policy = appState.securityPolicy || { geofenceEnforced: true, maxRadiusMeters: 250 };
+      if (!el) return;
+
+      if (!policy.geofenceEnforced) {
+        el.textContent = currentGPS.verified
+          ? `GPS Active (${currentGPS.distanceMeters}m) • Perimeter Open`
+          : 'Perimeter Check Open';
+        el.className = 'text-emerald-300 truncate font-mono';
+        return;
+      }
+
+      if (!currentGPS.verified) {
+        el.textContent = 'GPS Lock Required • Tap Refresh';
+        el.className = 'text-amber-300 truncate font-mono';
+        return;
+      }
+
+      const withinBounds = currentGPS.distanceMeters <= policy.maxRadiusMeters;
+      el.textContent = `${withinBounds ? 'In-Zone' : 'Out-of-Zone'} • ${currentGPS.distanceMeters}m / ${policy.maxRadiusMeters}m`;
+      el.className = withinBounds ? 'text-emerald-300 truncate font-mono' : 'text-rose-400 truncate font-mono font-bold';
+    }
+
+    function useCurrentGPSAsCampusCenter() {
+      if (!currentGPS.verified) {
+        showToast('Tap Refresh on GPS first so your current coordinates are locked.', 'warning');
+        return;
+      }
+      if (!appState.securityPolicy) appState.securityPolicy = {};
+      appState.securityPolicy.campusLat = Number(currentGPS.lat.toFixed(6));
+      appState.securityPolicy.campusLng = Number(currentGPS.lng.toFixed(6));
+      currentGPS.distanceMeters = 0;
+      saveState();
+      updateGPSLabel();
+      renderAdminConsole();
+      showToast('Updated campus center to your current GPS coordinates.', 'success');
+    }
+
+    function saveSecurityPolicySettings(notify = false) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const lat = parseFloat(document.getElementById('cfg-campus-lat')?.value);
+      const lng = parseFloat(document.getElementById('cfg-campus-lng')?.value);
+      const rad = parseInt(document.getElementById('cfg-campus-radius')?.value, 10);
+      const enforced = Boolean(document.getElementById('cfg-geofence-enforced')?.checked);
+
+      appState.securityPolicy = {
+        geofenceEnforced: enforced,
+        campusLat: Number.isFinite(lat) ? lat : 12.971598,
+        campusLng: Number.isFinite(lng) ? lng : 77.594566,
+        maxRadiusMeters: Number.isFinite(rad) && rad >= 20 ? rad : 250
+      };
+      if (currentGPS.verified) {
+        currentGPS.distanceMeters = computeDistanceMeters(
+          currentGPS.lat,
+          currentGPS.lng,
+          appState.securityPolicy.campusLat,
+          appState.securityPolicy.campusLng
+        );
+      }
+      saveState();
+      updateGPSLabel();
+      if (notify) showToast('Geofence policy saved.', 'success');
+    }
+
+    // -----------------------------------------------------------------------
+    // 6. ADMIN USER ENROLLMENT (ONE-TIME) & DELETION
+    // -----------------------------------------------------------------------
+    function handleAdminEnrollUser(event) {
+      event.preventDefault();
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') {
+        showToast('Unauthorized: Only Admin can enroll new users.', 'error');
+        return;
+      }
+
+      const firstName = document.getElementById('enroll-first-name')?.value.trim() || '';
+      const lastName = document.getElementById('enroll-last-name')?.value.trim() || '';
+      const phone = document.getElementById('enroll-phone')?.value.trim() || '';
+      const email = document.getElementById('enroll-email')?.value.trim().toLowerCase() || '';
+      const group = document.getElementById('enroll-group')?.value || 'Employees';
+
+      if (!firstName || !lastName || !phone || !email) {
+        showToast('All fields (First Name, Last Name, Phone, Email) are required.', 'error');
+        return;
+      }
+
+      const duplicate = appState.registeredUsers.find(
+        (u) => u.email.toLowerCase() === email || u.phone.replace(/\s+/g, '') === phone.replace(/\s+/g, '')
+      );
+      if (duplicate) {
+        showToast(`One-Time Policy: User already enrolled (${duplicate.userId} - ${duplicate.firstName} ${duplicate.lastName}).`, 'error');
+        return;
+      }
+
+      const prefixMap = { Employees: 'EMP', GDA: 'GDA', IT: 'IT', MFs: 'MFS' };
+      const prefix = prefixMap[group] || 'EMP';
+      const userId = `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
+      const salt = `SALT-${userId}-${Date.now().toString(36)}`;
+
+      const newUser = {
+        userId,
+        firstName,
+        lastName,
+        phone,
+        email,
+        group,
+        boundDeviceId: null,
+        mustChangePassword: true,
+        passwordResetRequested: false,
+        salt,
+        passHash: hashPassphrase('Mitraz@User1!', salt),
+        enrolledAt: new Date().toISOString()
+      };
+
+      appState.registeredUsers.push(newUser);
+
+      const targetGroupWbId = appState.groupQRs[group]?.wbId || GROUP_WB_META[group].wbId;
+      const grpWb = appState.workbooks[targetGroupWbId];
+      if (grpWb) {
+        Object.values(grpWb.sheets).forEach((sheet) => {
+          if (sheet && sheet.rows && !sheet.rows[userId]) {
+            const days = {};
+            (sheet.dateColumns || []).forEach((col) => { days[col] = ''; });
+            sheet.rows[userId] = {
+              userId,
+              name: `${firstName} ${lastName}`,
+              group,
+              days
+            };
+          }
+        });
+      }
+
+      saveState();
+      logSecurityIncident('INFO', `Admin enrolled ${firstName} ${lastName} (${userId}) into [${group}].`);
+      queueCloudSyncEvent('USER_ENROLLED', newUser);
+
+      ['enroll-first-name', 'enroll-last-name', 'enroll-phone', 'enroll-email'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+
+      renderAllViews();
+      showToast(`Enrolled ${firstName} ${lastName} • ID: ${userId} • Temp Pass: Mitraz@User1!`, 'success');
+    }
+
+    function requestDeleteUser(userId) {
+      pendingDeleteUserId = userId;
+      renderAdminConsole();
+    }
+
+    function cancelDeleteUser() {
+      pendingDeleteUserId = null;
+      renderAdminConsole();
+    }
+
+    function confirmDeleteSelectedUser() {
+      const sel = document.getElementById('admin-delete-user-select');
+      if (!sel || !sel.value) {
+        showToast('Select a user to delete.', 'warning');
+        return;
+      }
+      adminDeleteUser(sel.value);
+    }
+
+    function adminDeleteUser(userId) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const idx = appState.registeredUsers.findIndex((u) => u.userId === userId);
+      if (idx === -1) return;
+
+      const removed = appState.registeredUsers[idx];
+      appState.registeredUsers.splice(idx, 1);
+      pendingDeleteUserId = null;
+
+      Object.values(appState.workbooks).forEach((wb) => {
+        if (wb && !wb.isUsersDirectory && wb.sheets) {
+          Object.values(wb.sheets).forEach((sheet) => {
+            if (sheet && sheet.rows && sheet.rows[userId]) {
+              delete sheet.rows[userId];
+            }
+          });
+        }
+      });
+
+      saveState();
+      logSecurityIncident('WARNING', `Admin deleted user ${removed.firstName} ${removed.lastName} (${userId}).`);
+      queueCloudSyncEvent('USER_DELETED', { userId });
+      renderAllViews();
+      showToast(`Deleted user ${removed.firstName} ${removed.lastName} (${userId}).`, 'info');
+    }
+
+    function adminUnbindUserDevice(userId) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const user = appState.registeredUsers.find((u) => u.userId === userId);
+      if (!user) return;
+      user.boundDeviceId = null;
+      saveState();
+      logSecurityIncident('INFO', `Admin reset hardware binding for ${user.userId}.`);
+      queueCloudSyncEvent('DEVICE_UNBOUND', { userId: user.userId });
+      renderAllViews();
+      showToast(`Reset device lock for ${user.firstName} (${user.userId}).`, 'info');
+    }
+
+    function adminResetUserPassword(userId) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const user = appState.registeredUsers.find((u) => u.userId === userId);
+      if (!user) return;
+
+      const newSalt = `SALT-${user.userId}-${Date.now().toString(36)}`;
+      user.salt = newSalt;
+      user.passHash = hashPassphrase('Mitraz@User1!', newSalt);
+      user.mustChangePassword = true;
+      user.passwordResetRequested = false;
+      saveState();
+      logSecurityIncident('INFO', `Admin reset passphrase for ${user.userId} to temporary starter password.`);
+      queueCloudSyncEvent('USER_PASSWORD_UPDATED', { userId: user.userId, salt: user.salt, passHash: user.passHash });
+      renderAllViews();
+      showToast(`Password reset for ${user.firstName} (${user.userId}) → Temp: Mitraz@User1!`, 'success');
+    }
+
+    function downloadBulkUserTemplate() {
+      if (typeof XLSX === 'undefined') {
+        showToast('Excel engine still loading...', 'warning');
+        return;
+      }
+      const wb = XLSX.utils.book_new();
+      const aoa = [
+        ['First Name', 'Last Name', 'Phone Number', 'Email', 'Group'],
+        ['Kavita', 'Nair', '+91 9876543210', 'kavita.nair@mitraz.org', 'Employees'],
+        ['Arjun', 'Menon', '+91 9876543211', 'arjun.menon@mitraz.org', 'GDA'],
+        ['Divya', 'Rao', '+91 9876543212', 'divya.rao@mitraz.org', 'IT'],
+        ['Suresh', 'Patel', '+91 9876543213', 'suresh.patel@mitraz.org', 'MFs']
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      XLSX.utils.book_append_sheet(wb, ws, 'Bulk_Users_Template');
+      XLSX.writeFile(wb, 'MITRAZ_Bulk_Users_Template.xlsx');
+      showToast('Downloaded MITRAZ_Bulk_Users_Template.xlsx', 'success');
+    }
+
+    function handleBulkImportUsers(event) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const file = event.target?.files?.[0];
+      if (!file) return;
+      if (typeof XLSX === 'undefined') {
+        showToast('Excel engine still loading...', 'warning');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: 'array' });
+          const firstSheet = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+          let added = 0;
+          let skipped = 0;
+          const prefixMap = { Employees: 'EMP', GDA: 'GDA', IT: 'IT', MFs: 'MFS' };
+
+          for (let i = 1; i < rows.length; i++) {
+            const r = rows[i] || [];
+            const firstName = String(r[0] || '').trim();
+            const lastName = String(r[1] || '').trim();
+            const phone = String(r[2] || '').trim();
+            const email = String(r[3] || '').trim().toLowerCase();
+            const rawGroup = String(r[4] || 'Employees').trim();
+            const group = GROUPS.find((g) => g.toLowerCase() === rawGroup.toLowerCase()) || 'Employees';
+
+            if (!firstName || !lastName || !phone || !email) {
+              skipped++;
+              continue;
+            }
+
+            const exists = appState.registeredUsers.some(
+              (u) => u.email.toLowerCase() === email || u.phone.replace(/\s+/g, '') === phone.replace(/\s+/g, '')
+            );
+            if (exists) {
+              skipped++;
+              continue;
+            }
+
+            const prefix = prefixMap[group] || 'EMP';
+            const userId = `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
+            const salt = `SALT-${userId}-${Date.now().toString(36)}-${i}`;
+
+            const newUser = {
+              userId,
+              firstName,
+              lastName,
+              phone,
+              email,
+              group,
+              boundDeviceId: null,
+              mustChangePassword: true,
+              passwordResetRequested: false,
+              salt,
+              passHash: hashPassphrase('Mitraz@User1!', salt),
+              enrolledAt: new Date().toISOString()
+            };
+
+            appState.registeredUsers.push(newUser);
+            queueCloudSyncEvent('USER_ENROLLED', newUser);
+
+            const targetGroupWbId = appState.groupQRs[group]?.wbId || GROUP_WB_META[group].wbId;
+            const grpWb = appState.workbooks[targetGroupWbId];
+            if (grpWb) {
+              Object.values(grpWb.sheets).forEach((sheet) => {
+                if (sheet && sheet.rows && !sheet.rows[userId]) {
+                  const days = {};
+                  (sheet.dateColumns || []).forEach((col) => { days[col] = ''; });
+                  sheet.rows[userId] = { userId, name: `${firstName} ${lastName}`, group, days };
+                }
+              });
+            }
+            added++;
+          }
+
+          saveState();
+          logSecurityIncident('INFO', `Admin bulk-imported ${added} users (${skipped} skipped/duplicates) from ${file.name}.`);
+          renderAllViews();
+          showToast(`Bulk Import: ${added} enrolled, ${skipped} skipped (duplicates/blank).`, added > 0 ? 'success' : 'warning');
+        } catch (err) {
+          showToast('Failed to parse file. Use .xlsx or .csv matching the template.', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      event.target.value = '';
+    }
+
+    function assignActiveWorkbookToGroup() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const activeWb = appState.workbooks[appState.activeWorkbookId];
+      if (!activeWb || activeWb.isUsersDirectory) {
+        showToast('Select an attendance Excel workbook first.', 'warning');
+        return;
+      }
+      const targetGroup = document.getElementById('assign-wb-target-group')?.value || 'Employees';
+      relinkGroupQRWorkbook(targetGroup, activeWb.id);
+    }
+
+    function selectWorkbookByGroup(groupName) {
+      const wbId = appState.groupQRs[groupName]?.wbId || GROUP_WB_META[groupName]?.wbId;
+      if (!wbId || !appState.workbooks[wbId]) return;
+      appState.activeWorkbookId = wbId;
+      const tabs = Object.keys(appState.workbooks[wbId].sheets);
+      appState.selectedSheetTab = tabs[tabs.length - 1] || getMonthSheetName(new Date());
+      saveState();
+      renderAdminConsole();
+    }
+
+    function selectUsersDirectoryWorkbook() {
+      appState.activeWorkbookId = 'wb_users_directory';
+      appState.selectedSheetTab = 'Enrolled_Users';
+      saveState();
+      renderAdminConsole();
+    }
+
+    function switchActiveWorkbook(wbId) {
+      if (!appState.workbooks[wbId]) return;
+      appState.activeWorkbookId = wbId;
+      const tabs = Object.keys(appState.workbooks[wbId].sheets);
+      appState.selectedSheetTab = tabs[tabs.length - 1] || '';
+      saveState();
+      renderAdminConsole();
+    }
+
+    function selectWorkbookTab(tabName) {
+      appState.selectedSheetTab = tabName;
+      saveState();
+      renderAdminConsole();
+    }
+
+    function exportActiveWorkbookXLSX() {
+      if (typeof XLSX === 'undefined') {
+        showToast('Excel engine still loading...', 'warning');
+        return;
+      }
+      const activeWb = appState.workbooks[appState.activeWorkbookId];
+      if (!activeWb) return;
+
+      if (activeWb.isUsersDirectory) {
+        exportUsersDirectoryXLSX();
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+      Object.entries(activeWb.sheets).forEach(([sheetName, sheetObj]) => {
+        const dateCols = sheetObj.dateColumns || [];
+        const header = ['Member ID', 'Full Name', 'Group', ...dateCols, 'Total Present', 'Attendance %'];
+        const rows = Object.values(sheetObj.rows || {}).map((r) => {
+          const present = dateCols.filter((d) => String(r.days[d] || '').startsWith('P')).length;
+          const pct = dateCols.length ? Math.round((present / dateCols.length) * 100) : 0;
+          return [
+            sanitizeExcelCell(r.userId),
+            sanitizeExcelCell(r.name),
+            sanitizeExcelCell(r.group),
+            ...dateCols.map((d) => sanitizeExcelCell(r.days[d] || '')),
+            present,
+            `${pct}%`
+          ];
+        });
+        const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
+      });
+
+      XLSX.writeFile(wb, activeWb.fileName);
+      showToast(`Downloaded ${activeWb.fileName}`, 'success');
+    }
+
+    function exportUsersDirectoryXLSX() {
+      if (typeof XLSX === 'undefined') return;
+      const wb = XLSX.utils.book_new();
+      const header = ['User ID', 'First Name', 'Last Name', 'Group', 'Phone Number', 'Email', 'Bound Device ID', 'Enrolled At'];
+      const rows = appState.registeredUsers.map((u) => [
+        sanitizeExcelCell(u.userId),
+        sanitizeExcelCell(u.firstName),
+        sanitizeExcelCell(u.lastName),
+        sanitizeExcelCell(u.group),
+        sanitizeExcelCell(u.phone),
+        sanitizeExcelCell(u.email),
+        sanitizeExcelCell(u.boundDeviceId || 'Unbound'),
+        sanitizeExcelCell(u.enrolledAt)
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+      XLSX.utils.book_append_sheet(wb, ws, 'Enrolled_Users');
+      XLSX.writeFile(wb, 'MITRAZ_Registered_Users_Directory.xlsx');
+      showToast('Downloaded MITRAZ_Registered_Users_Directory.xlsx', 'success');
+    }
+
+    function selectActiveGroupQR(groupName) {
+      activeGroupQrSelected = groupName;
+      renderAdminQRCode();
+    }
+
+    function relinkGroupQRWorkbook(groupName, newWbId) {
+      const qrObj = appState.groupQRs[groupName];
+      if (!qrObj || !appState.workbooks[newWbId]) return;
+      qrObj.wbId = newWbId;
+      qrObj.sig = computeMAC(`${qrObj.qrId}|${qrObj.group}|${newWbId}|${qrObj.checkpoint}`);
+      saveState();
+      renderAdminConsole();
+      showToast(`Linked ${groupName} QR to ${appState.workbooks[newWbId].fileName}`, 'success');
+    }
+
+    function renderAdminQRCode() {
+      const target = document.getElementById('admin-qr-render-target');
+      if (!target) return;
+      const qrObj = appState.groupQRs[activeGroupQrSelected] || appState.groupQRs['Employees'];
+      const wb = appState.workbooks[qrObj.wbId];
+
+      const payload = JSON.stringify({
+        org: 'MITRAZ',
+        qrId: qrObj.qrId,
+        group: qrObj.group,
+        wbId: qrObj.wbId,
+        checkpoint: qrObj.checkpoint,
+        sig: qrObj.sig
+      });
+
+      target.innerHTML = '';
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(target, {
+          text: payload,
+          width: 172,
+          height: 172,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+
+      const titleEl = document.getElementById('qr-badge-title');
+      const wbEl = document.getElementById('qr-badge-wb');
+      if (titleEl) titleEl.textContent = `${qrObj.group} • ${qrObj.checkpoint}`;
+      if (wbEl) wbEl.textContent = `→ ${wb ? wb.fileName : qrObj.wbId}`;
+    }
+
+    function downloadActiveQRPng() {
+      const canvas = document.querySelector('#admin-qr-render-target canvas');
+      const img = document.querySelector('#admin-qr-render-target img');
+      const url = canvas ? canvas.toDataURL('image/png') : img?.src;
+      if (!url) return;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `MITRAZ_${activeGroupQrSelected}_QR.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast(`Saved ${activeGroupQrSelected} QR PNG`, 'success');
+    }
+
+    // -----------------------------------------------------------------------
+    // 8. NAVIGATION & UI RENDERERS
+    // -----------------------------------------------------------------------
+    function switchPortalTab(tab) {
+      if (!validateActiveSession()) return;
+      if (tab === 'admin' && currentSession.role !== 'ROLE_ADMIN') {
+        logSecurityIncident('CRITICAL', `UNAUTHORIZED ADMIN ACCESS ATTEMPT by ${currentSession.userId}.`);
+        showToast('Access Denied: Admin privileges required.', 'error');
+        return;
+      }
+
+      activePortalTab = tab;
+      ['scan', 'logs', 'leave', 'admin'].forEach((t) => {
+        document.getElementById(`portal-tab-${t}`)?.classList.toggle('hidden', t !== tab);
+        const navBtn = document.getElementById(`nav-tab-${t}`);
+        if (navBtn) {
+          if (t === tab) {
+            navBtn.classList.add('bg-rose-600/20', 'text-rose-300', 'border', 'border-rose-500/30');
+            navBtn.classList.remove('text-slate-400');
+          } else {
+            navBtn.classList.remove('bg-rose-600/20', 'text-rose-300', 'border', 'border-rose-500/30');
+            navBtn.classList.add('text-slate-400');
+          }
+        }
+      });
+
+      if (tab === 'logs') renderMyLogsView();
+      if (tab === 'leave') renderMyLeavesView();
+      if (tab === 'admin') renderAdminConsole();
+    }
+
+    function switchAdminSubTab(sub) {
+      activeAdminSubTab = sub;
+      ['excel', 'qr', 'users', 'leaves', 'holidays', 'cloud', 'security'].forEach((s) => {
+        document.getElementById(`admin-view-${s}`)?.classList.toggle('hidden', s !== sub);
+        const btn = document.getElementById(`admin-sub-${s}`);
+        if (btn) {
+          btn.className = s === sub
+            ? 'py-2 rounded-xl bg-rose-600 text-white transition'
+            : 'py-2 rounded-xl text-slate-400 hover:text-white transition';
+        }
+      });
+      if (sub === 'qr') renderAdminQRCode();
+      renderAdminConsole();
+    }
+
+    // -----------------------------------------------------------------------
+    // 9A. ORGANIZATION HOLIDAYS (ADMIN ADD / EDIT / DELETE & EXCEL SYNC)
+    // -----------------------------------------------------------------------
+    function syncHolidayToGroupWorkbooks(dateIso, cellValue, onlyIfMatchesPrefix = null) {
+      if (!dateIso) return;
+      const dObj = new Date(dateIso + 'T00:00:00');
+      if (Number.isNaN(dObj.getTime())) return;
+      const monthTab = getMonthSheetName(dObj);
+      const dateCol = getDateColumnLabel(dObj);
+
+      GROUPS.forEach((grp) => {
+        const wbId = appState.groupQRs[grp]?.wbId || GROUP_WB_META[grp]?.wbId;
+        const wb = appState.workbooks[wbId];
+        if (!wb || !wb.sheets[monthTab]) return;
+        const sheet = wb.sheets[monthTab];
+        Object.values(sheet.rows || {}).forEach((row) => {
+          if (!Object.prototype.hasOwnProperty.call(row.days, dateCol)) return;
+          const cur = String(row.days[dateCol] || '');
+          if (onlyIfMatchesPrefix) {
+            if (cur.startsWith(onlyIfMatchesPrefix)) {
+              row.days[dateCol] = cellValue;
+            }
+          } else if (!cur || cur.startsWith('H (')) {
+            row.days[dateCol] = cellValue;
+          }
+        });
+      });
+    }
+
+    function handleAdminSaveHoliday(event) {
+      event.preventDefault();
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+
+      const dateVal = document.getElementById('holiday-date-input')?.value || '';
+      const typeVal = document.getElementById('holiday-type-input')?.value || 'National Holiday';
+      const nameVal = (document.getElementById('holiday-name-input')?.value || '').trim();
+
+      if (!dateVal || !nameVal) {
+        showToast('Holiday date and name are required.', 'error');
+        return;
+      }
+
+      if (!Array.isArray(appState.holidays)) appState.holidays = [];
+
+      const duplicate = appState.holidays.find((h) => h.date === dateVal && h.id !== editingHolidayId);
+      if (duplicate) {
+        showToast(`A holiday (${duplicate.name}) is already set for ${dateVal}.`, 'error');
+        return;
+      }
+
+      if (editingHolidayId) {
+        const existing = appState.holidays.find((h) => h.id === editingHolidayId);
+        if (existing) {
+          if (existing.date !== dateVal) {
+            syncHolidayToGroupWorkbooks(existing.date, '', 'H (');
+          }
+          existing.date = dateVal;
+          existing.name = nameVal;
+          existing.type = typeVal;
+          syncHolidayToGroupWorkbooks(dateVal, `H (${nameVal})`);
+          logSecurityIncident('INFO', `Admin updated holiday [${nameVal}] on ${dateVal}.`);
+          queueCloudSyncEvent('HOLIDAY_UPSERT', existing);
+          showToast(`Updated holiday: ${nameVal} (${dateVal})`, 'success');
+        }
+        cancelEditHoliday();
+      } else {
+        const newHoliday = {
+          id: 'HOL-' + Date.now().toString(36).toUpperCase(),
+          date: dateVal,
+          name: nameVal,
+          type: typeVal
+        };
+        appState.holidays.push(newHoliday);
+        syncHolidayToGroupWorkbooks(dateVal, `H (${nameVal})`);
+        logSecurityIncident('INFO', `Admin added organization holiday [${nameVal}] on ${dateVal}.`);
+        queueCloudSyncEvent('HOLIDAY_UPSERT', newHoliday);
+        showToast(`Added holiday: ${nameVal} (${dateVal}) & synced Excel!`, 'success');
+      }
+
+      appState.holidays.sort((a, b) => a.date.localeCompare(b.date));
+      saveState();
+
+      const nameEl = document.getElementById('holiday-name-input');
+      if (nameEl) nameEl.value = '';
+      renderAllViews();
+    }
+
+    function startEditHoliday(holidayId) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const hol = (appState.holidays || []).find((h) => h.id === holidayId);
+      if (!hol) return;
+
+      editingHolidayId = hol.id;
+      const dateEl = document.getElementById('holiday-date-input');
+      const typeEl = document.getElementById('holiday-type-input');
+      const nameEl = document.getElementById('holiday-name-input');
+      const modeLbl = document.getElementById('holiday-form-mode-label');
+      const cancelBtn = document.getElementById('btn-cancel-holiday-edit');
+      const submitBtn = document.getElementById('btn-submit-holiday');
+
+      if (dateEl) dateEl.value = hol.date;
+      if (typeEl) typeEl.value = hol.type;
+      if (nameEl) nameEl.value = hol.name;
+      if (modeLbl) modeLbl.textContent = `Editing Holiday: ${hol.name}`;
+      if (cancelBtn) cancelBtn.classList.remove('hidden');
+      if (submitBtn) submitBtn.textContent = 'Update Holiday & Sync Excel';
+    }
+
+    function cancelEditHoliday() {
+      editingHolidayId = null;
+      const dateEl = document.getElementById('holiday-date-input');
+      const nameEl = document.getElementById('holiday-name-input');
+      const modeLbl = document.getElementById('holiday-form-mode-label');
+      const cancelBtn = document.getElementById('btn-cancel-holiday-edit');
+      const submitBtn = document.getElementById('btn-submit-holiday');
+
+      if (dateEl) dateEl.value = '';
+      if (nameEl) nameEl.value = '';
+      if (modeLbl) modeLbl.textContent = 'Add New Organization Holiday';
+      if (cancelBtn) cancelBtn.classList.add('hidden');
+      if (submitBtn) {
+        submitBtn.innerHTML = `<i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> Save Holiday & Sync Excel`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    }
+
+    function deleteOrganizationHoliday(holidayId) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      if (!Array.isArray(appState.holidays)) return;
+      const idx = appState.holidays.findIndex((h) => h.id === holidayId);
+      if (idx === -1) return;
+
+      const removed = appState.holidays[idx];
+      appState.holidays.splice(idx, 1);
+      if (editingHolidayId === holidayId) cancelEditHoliday();
+
+      syncHolidayToGroupWorkbooks(removed.date, '', 'H (');
+      saveState();
+      logSecurityIncident('WARNING', `Admin deleted holiday [${removed.name}] (${removed.date}).`);
+      queueCloudSyncEvent('HOLIDAY_DELETED', { id: holidayId, date: removed.date });
+      renderAllViews();
+      showToast(`Deleted holiday: ${removed.name}`, 'info');
+    }
+
+    // -----------------------------------------------------------------------
+    // 9B. LEAVE APPLICATION & ADMIN APPROVAL WORKFLOW
+    // -----------------------------------------------------------------------
+    function handleUserApplyLeave(event) {
+      event.preventDefault();
+      if (!validateActiveSession()) return;
+
+      const leaveType = document.getElementById('leave-type-select')?.value || 'CL';
+      const startDate = document.getElementById('leave-start-date')?.value || '';
+      const endDate = document.getElementById('leave-end-date')?.value || '';
+      const reason = (document.getElementById('leave-reason-input')?.value || '').trim();
+
+      if (!startDate || !endDate || !reason) {
+        showToast('Please fill in start date, end date, and reason.', 'error');
+        return;
+      }
+      if (endDate < startDate) {
+        showToast('End date cannot be earlier than start date.', 'error');
+        return;
+      }
+
+      const applicantGroup = currentSession.role === 'ROLE_ADMIN' ? 'Employees' : currentSession.group;
+      if (!Array.isArray(appState.leaveRequests)) appState.leaveRequests = [];
+
+      const leaveReq = {
+        id: 'LV-' + Date.now().toString(36).toUpperCase(),
+        userId: currentSession.userId,
+        name: currentSession.name,
+        group: applicantGroup,
+        leaveType,
+        startDate,
+        endDate,
+        reason,
+        status: 'PENDING',
+        appliedAt: new Date().toLocaleString(),
+        reviewedBy: null,
+        reviewedAt: null
+      };
+
+      appState.leaveRequests.unshift(leaveReq);
+      saveState();
+      logSecurityIncident('INFO', `Leave request ${leaveReq.id} submitted by ${currentSession.userId} (${startDate} to ${endDate}).`);
+      queueCloudSyncEvent('LEAVE_APPLIED', leaveReq);
+
+      const reasonEl = document.getElementById('leave-reason-input');
+      if (reasonEl) reasonEl.value = '';
+
+      renderAllViews();
+      showToast(`Leave request (${leaveReq.id}) submitted for Admin approval.`, 'success');
+    }
+
+    function adminReviewLeaveRequest(leaveId, decision) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      if (!Array.isArray(appState.leaveRequests)) return;
+
+      const req = appState.leaveRequests.find((r) => r.id === leaveId);
+      if (!req) return;
+
+      req.status = decision;
+      req.reviewedBy = currentSession.userId;
+      req.reviewedAt = new Date().toLocaleString();
+
+      if (decision === 'APPROVED') {
+        const linkedWbId = appState.groupQRs[req.group]?.wbId || GROUP_WB_META[req.group]?.wbId;
+        const targetWb = appState.workbooks[linkedWbId];
+        if (targetWb) {
+          const start = new Date(req.startDate + 'T00:00:00');
+          const end = new Date(req.endDate + 'T00:00:00');
+          for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const monthTab = getMonthSheetName(d);
+            const dateCol = getDateColumnLabel(d);
+            if (!targetWb.sheets[monthTab]) {
+              targetWb.sheets[monthTab] = createMatrixSheetForGroup(d, req.group, appState.registeredUsers);
+            }
+            const sheet = targetWb.sheets[monthTab];
+            if (!sheet.rows[req.userId]) {
+              const emptyDays = {};
+              sheet.dateColumns.forEach((c) => { emptyDays[c] = ''; });
+              sheet.rows[req.userId] = {
+                userId: req.userId,
+                name: req.name,
+                group: req.group,
+                days: emptyDays
+              };
+            }
+            if (Object.prototype.hasOwnProperty.call(sheet.rows[req.userId].days, dateCol)) {
+              sheet.rows[req.userId].days[dateCol] = `L (${req.leaveType.split(' ')[0]})`;
+            }
+          }
+        }
+      }
+
+      saveState();
+      logSecurityIncident('INFO', `Admin ${decision} leave ${req.id} for ${req.userId} (${req.startDate} to ${req.endDate}).`);
+      queueCloudSyncEvent('LEAVE_REVIEWED', req);
+      renderAllViews();
+      showToast(`Leave ${req.id} marked as ${decision}.`, decision === 'APPROVED' ? 'success' : 'info');
+    }
+
+    function renderMyLogsView() {
+      const container = document.getElementById('my-logs-container');
+      const countEl = document.getElementById('my-logs-count');
+      const captionEl = document.getElementById('logs-privacy-caption');
+      if (!container || !currentSession) return;
+
+      const isAdmin = currentSession.role === 'ROLE_ADMIN';
+      const authorizedLogs = isAdmin
+        ? appState.attendanceLogs
+        : appState.attendanceLogs.filter((l) => l.userId === currentSession.userId);
+
+      if (captionEl) {
+        captionEl.textContent = isAdmin
+          ? 'Admin Master View: showing all verified organization scans'
+          : `Strictly isolated to ${currentSession.name} (${currentSession.userId}) only`;
+      }
+      if (countEl) {
+        countEl.textContent = `${authorizedLogs.length} log${authorizedLogs.length === 1 ? '' : 's'}`;
+      }
+
+      if (authorizedLogs.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-xs text-slate-500">No verified attendance logs recorded yet.</div>`;
+        return;
+      }
+
+      container.innerHTML = authorizedLogs
+        .map(
+          (l) => `
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold text-white">${escapeHTML(l.name)} <span class="text-[10px] font-mono text-indigo-300">(${escapeHTML(l.userId)})</span></span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                l.action === 'CHECK-IN'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+              }">${escapeHTML(l.action)}</span>
+            </div>
+            <div class="text-[11px] font-mono text-emerald-300">${escapeHTML(l.dateCol)} • ${escapeHTML(l.time)} • ${escapeHTML(l.cellValue)}</div>
+            <div class="text-[10px] text-slate-400">Sheet: ${escapeHTML(l.workbookName)} [${escapeHTML(l.monthTab)}]</div>
+            <div class="text-[9px] font-mono text-slate-500 truncate">GPS: ${escapeHTML(l.gps)} • Hash: ${escapeHTML(l.hash)}</div>
+          </div>
+        `
+        )
+        .join('');
+    }
+
+    function renderMyLeavesView() {
+      const container = document.getElementById('my-leaves-container');
+      const countEl = document.getElementById('my-leaves-count');
+      if (!container || !currentSession) return;
+
+      const allLeaves = Array.isArray(appState.leaveRequests) ? appState.leaveRequests : [];
+      const myLeaves = currentSession.role === 'ROLE_ADMIN'
+        ? allLeaves
+        : allLeaves.filter((r) => r.userId === currentSession.userId);
+
+      if (countEl) countEl.textContent = `${myLeaves.length} request${myLeaves.length === 1 ? '' : 's'}`;
+
+      if (myLeaves.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-xs text-slate-500">No leave applications submitted yet.</div>`;
+      } else {
+        container.innerHTML = myLeaves
+          .map((r) => {
+            const badgeClass =
+              r.status === 'APPROVED'
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                : r.status === 'REJECTED'
+                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+            return `
+              <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-bold text-white">${escapeHTML(r.leaveType)}</span>
+                  <span class="px-2 py-0.5 rounded border text-[10px] font-mono font-bold ${badgeClass}">${escapeHTML(r.status)}</span>
+                </div>
+                <div class="text-[11px] font-mono text-indigo-300">${escapeHTML(r.startDate)} → ${escapeHTML(r.endDate)}</div>
+                <p class="text-[11px] text-slate-300">${escapeHTML(r.reason)}</p>
+                <div class="text-[9px] font-mono text-slate-500">ID: ${escapeHTML(r.id)} • Applied: ${escapeHTML(r.appliedAt)}</div>
+              </div>
+            `;
+          })
+          .join('');
+      }
+
+      const holListEl = document.getElementById('member-holidays-list');
+      const holCountEl = document.getElementById('member-holidays-count');
+      const holidays = [...(appState.holidays || [])].sort((a, b) => a.date.localeCompare(b.date));
+      if (holCountEl) holCountEl.textContent = `${holidays.length} holiday${holidays.length === 1 ? '' : 's'}`;
+      if (holListEl) {
+        holListEl.innerHTML =
+          holidays.length === 0
+            ? `<div class="text-center py-4 text-xs text-slate-500">No holidays declared yet.</div>`
+            : holidays
+                .map(
+                  (h) => `
+                  <div class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 flex items-center justify-between gap-2">
+                    <div>
+                      <div class="text-xs font-bold text-white">${escapeHTML(h.name)}</div>
+                      <div class="text-[10px] text-slate-400">${escapeHTML(h.type)}</div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-[10px] font-mono font-bold text-sky-300">${escapeHTML(h.date)}</span>
+                  </div>
+                `
+                )
+                .join('');
+      }
+    }
+
+    function renderAdminConsole() {
+      if (!currentSession || currentSession.role !== 'ROLE_ADMIN') return;
+
+      const wbSelect = document.getElementById('admin-wb-selector');
+      if (wbSelect) {
+        wbSelect.innerHTML = Object.values(appState.workbooks)
+          .map(
+            (wb) =>
+              `<option value="${escapeHTML(wb.id)}" ${wb.id === appState.activeWorkbookId ? 'selected' : ''}>${escapeHTML(
+                wb.fileName
+              )}</option>`
+          )
+          .join('');
+      }
+
+      const activeWb = appState.workbooks[appState.activeWorkbookId] || Object.values(appState.workbooks)[0];
+      const tabsContainer = document.getElementById('workbook-sheet-tabs');
+      const thead = document.getElementById('matrix-table-head');
+      const tbody = document.getElementById('matrix-table-body');
+      const rowCountEl = document.getElementById('matrix-row-count');
+      const assignBar = document.getElementById('assign-wb-group-bar');
+
+      if (activeWb) {
+        if (assignBar) assignBar.classList.toggle('hidden', Boolean(activeWb.isUsersDirectory));
+        const tabNames = Object.keys(activeWb.sheets || {});
+        if (!tabNames.includes(appState.selectedSheetTab)) {
+          appState.selectedSheetTab = tabNames[tabNames.length - 1] || '';
+        }
+
+        if (tabsContainer) {
+          tabsContainer.innerHTML = tabNames
+            .map(
+              (t) => `
+              <button type="button" onclick="selectWorkbookTab('${escapeHTML(t)}')" class="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold shrink-0 transition ${
+                t === appState.selectedSheetTab
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+              }">${escapeHTML(t)}</button>
+            `
+            )
+            .join('');
+        }
+
+        if (activeWb.isUsersDirectory) {
+          if (rowCountEl) rowCountEl.textContent = `${appState.registeredUsers.length} users`;
+          if (thead) {
+            thead.innerHTML = `
+              <tr class="bg-slate-900 text-slate-300 border-b border-slate-800 font-mono text-[10px]">
+                <th class="py-2 px-2.5">User ID</th>
+                <th class="py-2 px-2.5">Full Name</th>
+                <th class="py-2 px-2.5">Group</th>
+                <th class="py-2 px-2.5">Phone</th>
+                <th class="py-2 px-2.5">Email</th>
+                <th class="py-2 px-2.5">Device Lock</th>
+              </tr>
+            `;
+          }
+          if (tbody) {
+            tbody.innerHTML =
+              appState.registeredUsers.length === 0
+                ? `<tr><td colspan="6" class="py-5 text-center text-slate-500">No users enrolled yet. Add members in the Users tab.</td></tr>`
+                : appState.registeredUsers
+                    .map(
+                      (u) => `
+                      <tr>
+                        <td class="py-2 px-2.5 font-mono text-indigo-300 font-bold whitespace-nowrap">${escapeHTML(u.userId)}</td>
+                        <td class="py-2 px-2.5 font-semibold text-white whitespace-nowrap">${escapeHTML(u.firstName)} ${escapeHTML(u.lastName)}</td>
+                        <td class="py-2 px-2.5 whitespace-nowrap">${escapeHTML(u.group)}</td>
+                        <td class="py-2 px-2.5 font-mono text-slate-300 whitespace-nowrap">${escapeHTML(u.phone)}</td>
+                        <td class="py-2 px-2.5 text-slate-300 whitespace-nowrap">${escapeHTML(u.email)}</td>
+                        <td class="py-2 px-2.5 font-mono text-[10px] whitespace-nowrap">${escapeHTML(u.boundDeviceId || 'Unbound')}</td>
+                      </tr>
+                    `
+                    )
+                    .join('');
+          }
+        } else {
+          const sheetObj = activeWb.sheets[appState.selectedSheetTab];
+          const dateCols = sheetObj?.dateColumns || [];
+          const rowsArr = Object.values(sheetObj?.rows || {});
+          if (rowCountEl) rowCountEl.textContent = `${rowsArr.length} members`;
+
+          if (thead) {
+            thead.innerHTML = `
+              <tr class="bg-slate-900 text-slate-300 border-b border-slate-800 font-mono text-[10px]">
+                <th class="py-2 px-2.5 sticky left-0 bg-slate-900 z-10">ID</th>
+                <th class="py-2 px-2.5 sticky left-14 bg-slate-900 z-10">Name</th>
+                ${dateCols.map((d) => `<th class="py-2 px-2 whitespace-nowrap text-center">${escapeHTML(d)}</th>`).join('')}
+                <th class="py-2 px-2.5 text-center text-emerald-300">Present</th>
+              </tr>
+            `;
+          }
+
+          if (tbody) {
+            tbody.innerHTML =
+              rowsArr.length === 0
+                ? `<tr><td colspan="${dateCols.length + 3}" class="py-5 text-center text-slate-500">No members enrolled in this group yet.</td></tr>`
+                : rowsArr
+                    .map((r) => {
+                      const presentCount = dateCols.filter((d) => String(r.days[d] || '').startsWith('P')).length;
+                      return `
+                        <tr>
+                          <td class="py-2 px-2.5 font-mono text-indigo-300 font-bold sticky left-0 bg-slate-950 whitespace-nowrap">${escapeHTML(r.userId)}</td>
+                          <td class="py-2 px-2.5 font-semibold text-white sticky left-14 bg-slate-950 whitespace-nowrap">${escapeHTML(r.name)}</td>
+                          ${dateCols
+                            .map((d) => {
+                              const val = String(r.days[d] || '');
+                              let cls = 'text-slate-600';
+                              if (val.startsWith('P')) cls = 'text-emerald-300 font-bold';
+                              else if (val.startsWith('L')) cls = 'text-amber-300 font-bold';
+                              else if (val.startsWith('H')) cls = 'text-sky-300 font-bold';
+                              return `<td class="py-2 px-2 font-mono text-[10px] text-center whitespace-nowrap ${cls}">${escapeHTML(val || '—')}</td>`;
+                            })
+                            .join('')}
+                          <td class="py-2 px-2.5 font-mono font-bold text-center text-emerald-300">${presentCount}</td>
+                        </tr>
+                      `;
+                    })
+                    .join('');
+          }
+        }
+      }
+
+      const qrLinksEl = document.getElementById('group-qr-links-list');
+      if (qrLinksEl) {
+        const attendanceWbs = Object.values(appState.workbooks).filter((w) => !w.isUsersDirectory);
+        qrLinksEl.innerHTML = GROUPS.map((grp) => {
+          const qrObj = appState.groupQRs[grp];
+          return `
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-white">${escapeHTML(grp)} <span class="text-[10px] font-mono text-rose-400">(${escapeHTML(qrObj.qrId)})</span></div>
+                <div class="text-[10px] font-mono text-slate-400">Scans: ${qrObj.scansCount || 0}</div>
+              </div>
+              <select onchange="relinkGroupQRWorkbook('${escapeHTML(grp)}', this.value)" class="max-w-[185px] bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[10px] text-white">
+                ${attendanceWbs
+                  .map(
+                    (wb) =>
+                      `<option value="${escapeHTML(wb.id)}" ${wb.id === qrObj.wbId ? 'selected' : ''}>${escapeHTML(wb.fileName)}</option>`
+                  )
+                  .join('')}
+              </select>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const usersTbody = document.getElementById('admin-users-tbody');
+      const deleteSelect = document.getElementById('admin-delete-user-select');
+      if (usersTbody) {
+        usersTbody.innerHTML =
+          appState.registeredUsers.length === 0
+            ? `<tr><td colspan="5" class="py-5 text-center text-slate-500">No members enrolled yet. Use the form above.</td></tr>`
+            : appState.registeredUsers
+                .map((u) => {
+                  const isConfirming = pendingDeleteUserId === u.userId;
+                  return `
+                    <tr class="${u.passwordResetRequested ? 'bg-amber-500/10' : ''}">
+                      <td class="py-2 px-2.5 font-mono font-bold text-indigo-300 whitespace-nowrap">${escapeHTML(u.userId)}</td>
+                      <td class="py-2 px-2.5 font-semibold text-white whitespace-nowrap">
+                        ${escapeHTML(u.firstName)} ${escapeHTML(u.lastName)}
+                        ${
+                          u.passwordResetRequested
+                            ? `<span class="ml-1 px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-mono text-[8px] font-black">RESET REQ</span>`
+                            : ''
+                        }
+                      </td>
+                      <td class="py-2 px-2.5 whitespace-nowrap">${escapeHTML(u.group)}</td>
+                      <td class="py-2 px-2.5 text-[10px] text-slate-400 whitespace-nowrap">${escapeHTML(u.phone)}</td>
+                      <td class="py-2 px-2.5 text-right whitespace-nowrap space-x-1">
+                        <button type="button" onclick="adminResetUserPassword('${escapeHTML(u.userId)}')" class="px-2 py-0.5 rounded ${
+                          u.passwordResetRequested
+                            ? 'bg-amber-500 text-slate-950 font-extrabold'
+                            : 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold'
+                        } text-[9px]">Reset Pass</button>
+                        ${
+                          u.boundDeviceId
+                            ? `<button type="button" onclick="adminUnbindUserDevice('${escapeHTML(u.userId)}')" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-bold">Unbind</button>`
+                            : ''
+                        }
+                        ${
+                          isConfirming
+                            ? `<button type="button" onclick="adminDeleteUser('${escapeHTML(u.userId)}')" class="px-2 py-0.5 rounded bg-rose-600 text-white text-[9px] font-bold">Confirm</button>
+                               <button type="button" onclick="cancelDeleteUser()" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[9px] font-bold">Cancel</button>`
+                            : `<button type="button" onclick="requestDeleteUser('${escapeHTML(u.userId)}')" class="px-2 py-0.5 rounded bg-rose-600/20 text-rose-300 border border-rose-500/40 text-[9px] font-bold">Delete</button>`
+                        }
+                      </td>
+                    </tr>
+                  `;
+                })
+                .join('');
+      }
+      if (deleteSelect) {
+        deleteSelect.innerHTML =
+          appState.registeredUsers.length === 0
+            ? `<option value="">No enrolled users</option>`
+            : appState.registeredUsers
+                .map(
+                  (u) =>
+                    `<option value="${escapeHTML(u.userId)}">${escapeHTML(u.userId)} — ${escapeHTML(u.firstName)} ${escapeHTML(u.lastName)} (${escapeHTML(u.group)})</option>`
+                )
+                .join('');
+      }
+
+      const allLeaves = Array.isArray(appState.leaveRequests) ? appState.leaveRequests : [];
+      const pendingLeaves = allLeaves.filter((r) => r.status === 'PENDING');
+      const badgeEl = document.getElementById('admin-pending-leaves-badge');
+      const summaryEl = document.getElementById('admin-leaves-summary');
+      const leavesListEl = document.getElementById('admin-leaves-list');
+
+      if (badgeEl) {
+        badgeEl.textContent = String(pendingLeaves.length);
+        badgeEl.classList.toggle('hidden', pendingLeaves.length === 0);
+      }
+      if (summaryEl) {
+        summaryEl.textContent = `${pendingLeaves.length} pending / ${allLeaves.length} total`;
+      }
+      if (leavesListEl) {
+        leavesListEl.innerHTML =
+          allLeaves.length === 0
+            ? `<div class="text-center py-6 text-xs text-slate-500">No leave requests submitted by members yet.</div>`
+            : allLeaves
+                .map((r) => {
+                  const statusBadge =
+                    r.status === 'APPROVED'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      : r.status === 'REJECTED'
+                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+                  return `
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
+                      <div class="flex items-center justify-between gap-2">
+                        <div>
+                          <span class="text-xs font-bold text-white">${escapeHTML(r.name)}</span>
+                          <span class="text-[10px] font-mono text-indigo-300 ml-1">(${escapeHTML(r.userId)} • ${escapeHTML(r.group)})</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded border text-[9px] font-mono font-bold ${statusBadge}">${escapeHTML(r.status)}</span>
+                      </div>
+                      <div class="text-[11px] font-mono text-slate-300">${escapeHTML(r.leaveType)} • ${escapeHTML(r.startDate)} → ${escapeHTML(r.endDate)}</div>
+                      <p class="text-[11px] text-slate-400">${escapeHTML(r.reason)}</p>
+                      ${
+                        r.status === 'PENDING'
+                          ? `<div class="grid grid-cols-2 gap-2 pt-1">
+                               <button type="button" onclick="adminReviewLeaveRequest('${escapeHTML(r.id)}', 'APPROVED')" class="py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition">
+                                 Approve & Sync Excel
+                               </button>
+                               <button type="button" onclick="adminReviewLeaveRequest('${escapeHTML(r.id)}', 'REJECTED')" class="py-1.5 rounded-lg bg-rose-600/25 hover:bg-rose-600/40 border border-rose-500/40 text-rose-200 text-[11px] font-bold transition">
+                                 Reject
+                               </button>
+                             </div>`
+                          : `<div class="text-[9px] font-mono text-slate-500">Reviewed by ${escapeHTML(r.reviewedBy || 'ADMIN')} at ${escapeHTML(r.reviewedAt || '')}</div>`
+                      }
+                    </div>
+                  `;
+                })
+                .join('');
+      }
+
+      const cloudCfg = appState.cloudSync || {};
+      const cloudEnChk = document.getElementById('cfg-cloud-enabled');
+      const cloudUrlInp = document.getElementById('cfg-cloud-endpoint');
+      const cloudSecInp = document.getElementById('cfg-cloud-secret');
+      if (cloudEnChk) cloudEnChk.checked = Boolean(cloudCfg.enabled);
+      if (cloudUrlInp && document.activeElement !== cloudUrlInp) cloudUrlInp.value = cloudCfg.endpointUrl || '';
+      if (cloudSecInp && document.activeElement !== cloudSecInp) cloudSecInp.value = cloudCfg.secretToken || 'MITRAZ-CLOUD-KEY-2026';
+      updateCloudStatusUI();
+
+      const policy = appState.securityPolicy || {};
+      const geoChk = document.getElementById('cfg-geofence-enforced');
+      const latInp = document.getElementById('cfg-campus-lat');
+      const lngInp = document.getElementById('cfg-campus-lng');
+      const radInp = document.getElementById('cfg-campus-radius');
+      if (geoChk) geoChk.checked = policy.geofenceEnforced !== false;
+      if (latInp && document.activeElement !== latInp) latInp.value = policy.campusLat ?? 12.971598;
+      if (lngInp && document.activeElement !== lngInp) lngInp.value = policy.campusLng ?? 77.594566;
+      if (radInp && document.activeElement !== radInp) radInp.value = policy.maxRadiusMeters ?? 250;
+
+      const incidentList = document.getElementById('security-incident-list');
+      if (incidentList) {
+        incidentList.innerHTML = (appState.securityIncidents || [])
+          .map((inc) => {
+            const sevClass =
+              inc.severity === 'CRITICAL'
+                ? 'text-rose-400'
+                : inc.severity === 'WARNING'
+                ? 'text-amber-300'
+                : 'text-emerald-300';
+            return `
+              <div class="bg-slate-950 border border-slate-800/80 rounded-xl px-3 py-2 text-[10px]">
+                <div class="flex items-center justify-between font-mono mb-0.5">
+                  <span class="font-bold ${sevClass}">${escapeHTML(inc.severity)}</span>
+                  <span class="text-slate-500">${escapeHTML(inc.time)}</span>
+                </div>
+                <p class="text-slate-300">${escapeHTML(inc.message)}</p>
+              </div>
+            `;
+          })
+          .join('');
+      }
+
+      const adminHolList = document.getElementById('admin-holidays-list');
+      const adminHolCount = document.getElementById('admin-holidays-count');
+      const sortedHols = [...(appState.holidays || [])].sort((a, b) => a.date.localeCompare(b.date));
+      if (adminHolCount) {
+        adminHolCount.textContent = `${sortedHols.length} holiday${sortedHols.length === 1 ? '' : 's'}`;
+      }
+      if (adminHolList) {
+        adminHolList.innerHTML =
+          sortedHols.length === 0
+            ? `<div class="text-center py-6 text-xs text-slate-500">No organization holidays added yet.</div>`
+            : sortedHols
+                .map(
+                  (h) => `
+                  <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-white truncate">${escapeHTML(h.name)}</span>
+                        <span class="px-2 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-[10px] font-mono font-bold text-sky-300 shrink-0">${escapeHTML(h.date)}</span>
+                      </div>
+                      <div class="text-[10px] text-slate-400 mt-0.5">${escapeHTML(h.type)}</div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <button type="button" onclick="startEditHoliday('${escapeHTML(h.id)}')" class="px-2.5 py-1 rounded-lg bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/40 text-indigo-200 text-[10px] font-bold transition">
+                        Edit
+                      </button>
+                      <button type="button" onclick="deleteOrganizationHoliday('${escapeHTML(h.id)}')" class="px-2.5 py-1 rounded-lg bg-rose-600/25 hover:bg-rose-600/40 border border-rose-500/40 text-rose-200 text-[10px] font-bold transition">
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                `
+                )
+                .join('');
+      }
+    }
+
+    function renderAllViews() {
+      updateGPSLabel();
+      updateCloudStatusUI();
+      if (!currentSession) return;
+      renderMyLogsView();
+      renderMyLeavesView();
+      if (currentSession.role === 'ROLE_ADMIN') {
+        renderAdminConsole();
+        if (activeAdminSubTab === 'qr') renderAdminQRCode();
+      }
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const styles = {
+        success: 'bg-emerald-950/95 border-emerald-500/60 text-emerald-200',
+        error: 'bg-rose-950/95 border-rose-500/60 text-rose-200',
+        warning: 'bg-amber-950/95 border-amber-500/60 text-amber-200',
+        info: 'bg-slate-900/95 border-indigo-500/60 text-slate-100'
+      };
+      const el = document.createElement('div');
+      el.className = `pointer-events-auto px-3.5 py-2.5 rounded-xl border text-xs font-semibold shadow-xl backdrop-blur-md transition-all ${styles[type] || styles.info}`;
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 250);
+      }, 3200);
+    }
+
+    setInterval(() => {
+      const now = new Date();
+      const clockEl = document.getElementById('live-clock');
+      if (clockEl) clockEl.textContent = now.toTimeString().slice(0, 8);
+      if (getMonthSheetName(now) !== appState.lastCheckedMonth) {
+        ensureCurrentMonthSheetsExist(now);
+        renderAllViews();
+      }
+    }, 1000);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      applyMitrazFavicon();
+      registerAndroidPWAAndOfflineCache();
+      const fpEl = document.getElementById('login-device-fp');
+      if (fpEl) fpEl.textContent = getHardwareFingerprint();
+
+      ensureCurrentMonthSheetsExist(new Date());
+      refreshGPS(false);
+
+      try {
+        const saved = sessionStorage.getItem(SESSION_KEY);
+        if (saved) {
+          currentSession = JSON.parse(saved);
+          if (validateActiveSession()) {
+            enterPortalUI();
+          }
+        }
+      } catch (e) {}
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
