@@ -7,8 +7,8 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MITRAZ Attend" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>MITRAZ AttendGuard Enterprise</title>
+  <!-- MITRAZ Official Emblem SVG Data URI -->
+  <link id="mitraz-favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 112'%3E%3Crect width='120' height='112' rx='24' fill='%23020617'/%3E%3Ccircle cx='60' cy='14' r='10.5' fill='%23E30613'/%3E%3Cpath d='M12 16 C10 28, 18 46, 35 61 C44 69, 41 81, 33 93 C31 96.5, 33.5 100, 37 99.5 C41 99, 45 91, 48.5 81 C52.5 68, 53 56, 48 46 C44 38, 50 33, 60 33 C70 33, 76 38, 72 46 C67 56, 67.5 68, 71.5 81 C75 91, 79 99, 83 99.5 C86.5 100, 89 96.5, 87 93 C79 81, 76 69, 85 61 C102 46, 110 28, 108 16 C107 11.5, 103 11, 99.5 15 C89 26, 73 28.5, 60 28.5 C47 28.5, 31 26, 20.5 15 C17 11, 13 11.5, 12 16 Z' fill='%23E30613'/%3E%3C/svg%3E" />
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -333,8 +333,8 @@
               <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-rose-500">
                 <i data-lucide="qr-code" class="w-6 h-6"></i>
               </div>
-              <p class="text-xs font-semibold text-slate-300">QR Scanner Ready • Tap "Start Camera"</p>
-              <p class="text-[10px] text-slate-500">Point camera at your MITRAZ Group QR Badge (iOS & Android)</p>
+              <p class="text-xs font-semibold text-slate-300">HD QR Scanner Ready • Tap "Start Camera"</p>
+              <p class="text-[10px] text-slate-500">QR Code Mode Only • Point camera at your MITRAZ Group QR Badge</p>
             </div>
             <div id="scanner-laser-line" class="hidden scanner-laser absolute left-4 right-4 h-0.5 bg-rose-500 shadow-[0_0_12px_#f43f5e] pointer-events-none"></div>
           </div>
@@ -585,7 +585,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Group Signed QR Studio</h3>
-                <p class="text-[11px] text-slate-400">Print or display each group's unique signed QR badge</p>
+                <p class="text-[11px] text-slate-400">Print or display each group's unique HD signed QR badge</p>
               </div>
               <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30">
                 HMAC-SHA256
@@ -625,7 +625,6 @@
                 </button>
               </div>
 
-              <!-- Easy 1-Click Create & Link OR Paste Google Sheet URL -->
               <div id="qr-sheet-linker-box" class="hidden bg-slate-950 border border-indigo-500/40 rounded-xl p-3 space-y-2.5">
                 <div class="text-[10px] font-bold text-indigo-300">Link Group QR to a New Excel Workbook or Google Sheet Link</div>
                 <div class="grid grid-cols-2 gap-1.5">
@@ -1099,6 +1098,32 @@
 
     function computeMAC(message) {
       return hashPassphrase(message, HMAC_SECRET);
+    }
+
+    function computeGroupQRSignature(qrId, groupName, wbId, checkpoint) {
+      const canonicalId = String(qrId || `QR-GRP-${String(groupName || '').toUpperCase()}`).trim();
+      const canonicalGroup = String(groupName || '').trim();
+      const canonicalWb = String(wbId || GROUP_WB_META[canonicalGroup]?.wbId || '').trim();
+      const canonicalCp = String(checkpoint || GROUP_WB_META[canonicalGroup]?.checkpoint || '').trim();
+      return computeMAC(`${canonicalId}|${canonicalGroup}|${canonicalWb}|${canonicalCp}`);
+    }
+
+    function buildGroupQRPayload(groupName) {
+      const grp = GROUPS.includes(groupName) ? groupName : 'Employees';
+      const qrObj = appState.groupQRs?.[grp] || {};
+      const qrId = String(qrObj.qrId || GROUP_WB_META[grp].qrId).trim();
+      const wbId = String(qrObj.wbId || GROUP_WB_META[grp].wbId).trim();
+      const checkpoint = String(qrObj.checkpoint || GROUP_WB_META[grp].checkpoint).trim();
+      const sig = computeGroupQRSignature(qrId, grp, wbId, checkpoint);
+      return {
+        v: 2,
+        type: 'MITRAZ_GROUP_QR',
+        qrId,
+        group: grp,
+        wbId,
+        checkpoint,
+        sig
+      };
     }
 
     function constantTimeEqual(a, b) {
@@ -1816,9 +1841,34 @@
 
     function startCameraScanner() {
       if (isCameraActive || typeof Html5Qrcode === 'undefined') return;
-      html5QrInstance = new Html5Qrcode('qr-reader');
+      const qrOnlyFormats = typeof Html5QrcodeSupportedFormats !== 'undefined'
+        ? [Html5QrcodeSupportedFormats.QR_CODE]
+        : undefined;
+
+      html5QrInstance = new Html5Qrcode('qr-reader', {
+        verbose: false,
+        formatsToSupport: qrOnlyFormats,
+        useBarCodeDetectorIfSupported: false
+      });
+
+      const cameraConfig = {
+        fps: 15,
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+          const boxSize = Math.max(180, Math.min(260, Math.floor(minEdge * 0.72)));
+          return { width: boxSize, height: boxSize };
+        },
+        aspectRatio: 1.0,
+        formatsToSupport: qrOnlyFormats
+      };
+
       html5QrInstance
-        .start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 220, height: 220 } }, onGroupQRDecoded)
+        .start(
+          { facingMode: 'environment' },
+          cameraConfig,
+          onGroupQRDecoded,
+          () => {}
+        )
         .then(() => {
           isCameraActive = true;
           document.getElementById('camera-placeholder')?.classList.add('hidden');
@@ -1827,7 +1877,7 @@
           if (lbl) lbl.textContent = 'Stop Camera';
         })
         .catch(() => {
-          showToast('Camera permission denied or unavailable over non-HTTPS.', 'error');
+          showToast('QR camera permission denied or unavailable over non-HTTPS.', 'error');
         });
     }
 
@@ -1851,23 +1901,64 @@
     }
 
     function onGroupQRDecoded(decodedText) {
-      stopCameraScanner();
       if (!validateActiveSession()) return;
 
-      let payload;
+      const rawText = String(decodedText || '').trim();
+      let payload = null;
+
       try {
-        payload = JSON.parse(decodedText);
+        payload = JSON.parse(rawText);
       } catch (e) {
-        showToast('Invalid QR code payload.', 'error');
+        const matchPrefix = rawText.match(/^MITRAZ[-_]QR[:|]([A-Za-z]+)$/i);
+        const matchCode = rawText.match(/^QR[-_]GRP[-_]([A-Za-z]+)$/i);
+        const codeMap = { EMP: 'Employees', EMPLOYEES: 'Employees', GDA: 'GDA', IT: 'IT', MF: 'MFs', MFS: 'MFs' };
+        const extracted = (matchPrefix && matchPrefix[1]) || (matchCode && codeMap[(matchCode[1] || '').toUpperCase()]) || '';
+        const matchedGroup = GROUPS.find((g) => g.toLowerCase() === extracted.toLowerCase());
+        if (matchedGroup) {
+          payload = buildGroupQRPayload(matchedGroup);
+        }
+      }
+
+      if (!payload || !payload.group) {
+        showToast('Invalid QR code: please scan an official MITRAZ Group QR badge.', 'error');
         return;
       }
 
-      const expectedSig = computeMAC(`${payload.qrId}|${payload.group}|${payload.wbId}|${payload.checkpoint}`);
-      if (!constantTimeEqual(payload.sig, expectedSig)) {
-        logSecurityIncident('CRITICAL', `Forged QR payload rejected for ${currentSession.userId}.`);
-        showToast('Security Alert: Forged or tampered QR signature!', 'error');
+      const matchedGroup = GROUPS.find((g) => g.toLowerCase() === String(payload.group).trim().toLowerCase());
+      if (!matchedGroup) {
+        showToast(`Unknown group "${payload.group}" in QR code.`, 'error');
         return;
       }
+      payload.group = matchedGroup;
+
+      const qrObj = appState.groupQRs?.[matchedGroup] || {};
+      const candidateIds = [payload.qrId, qrObj.qrId, GROUP_WB_META[matchedGroup].qrId].filter(Boolean);
+      const candidateWbs = [payload.wbId, qrObj.wbId, GROUP_WB_META[matchedGroup].wbId].filter(Boolean);
+      const candidateCps = [payload.checkpoint, qrObj.checkpoint, GROUP_WB_META[matchedGroup].checkpoint].filter(Boolean);
+
+      let signatureValid = false;
+      for (const cId of candidateIds) {
+        for (const cWb of candidateWbs) {
+          for (const cCp of candidateCps) {
+            const expectedCurrent = computeGroupQRSignature(cId, matchedGroup, cWb, cCp);
+            const expectedLegacy = computeMAC(`${cId}|${matchedGroup}|${cWb}|${cCp}`);
+            if (constantTimeEqual(payload.sig, expectedCurrent) || constantTimeEqual(payload.sig, expectedLegacy)) {
+              signatureValid = true;
+              break;
+            }
+          }
+          if (signatureValid) break;
+        }
+        if (signatureValid) break;
+      }
+
+      if (!signatureValid) {
+        logSecurityIncident('CRITICAL', `QR signature mismatch for ${currentSession.userId} on group ${matchedGroup}.`);
+        showToast('QR Signature Mismatch: Regenerate the Group QR badge in Admin → QRs.', 'error');
+        return;
+      }
+
+      stopCameraScanner();
 
       if (currentSession.role !== 'ROLE_ADMIN' && payload.group !== currentSession.group) {
         logSecurityIncident('WARNING', `Cross-group scan blocked: ${currentSession.userId} (${currentSession.group}) scanned ${payload.group}.`);
@@ -1894,7 +1985,7 @@
       const dateCol = getDateColumnLabel(now);
       const timeStr = now.toTimeString().slice(0, 5);
       const targetGroup = payload.group;
-      const wbId = appState.groupQRs[targetGroup]?.wbId || GROUP_WB_META[targetGroup]?.wbId;
+      const wbId = appState.groupQRs[targetGroup]?.wbId || (payload.wbId && appState.workbooks[payload.wbId] ? payload.wbId : GROUP_WB_META[targetGroup]?.wbId);
       const wb = appState.workbooks[wbId];
 
       ensureCurrentMonthSheetsExist(now);
@@ -2156,8 +2247,78 @@
       showToast(`Deleted user ${userId}.`, 'info');
     }
 
+    function openBulkDeleteGroupWarning() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const checkedGroups = Array.from(document.querySelectorAll('.bulk-del-group-chk:checked')).map((el) => el.value);
+      const adminPassInput = document.getElementById('bulk-delete-admin-pass');
+      const passVal = (adminPassInput?.value || '').trim();
+
+      if (checkedGroups.length === 0) {
+        showToast('Select at least one group (Employees, GDA, IT, or MFs).', 'error');
+        return;
+      }
+      if (!passVal) {
+        showToast('Enter the Admin Master Password to authorize bulk deletion.', 'error');
+        return;
+      }
+      const computed = hashPassphrase(passVal, appState.adminAccount.salt);
+      if (!constantTimeEqual(computed, appState.adminAccount.passHash)) {
+        logSecurityIncident('CRITICAL', 'Unauthorized bulk group deletion attempt (invalid Admin password).');
+        showToast('Invalid Admin Master Password.', 'error');
+        return;
+      }
+
+      const affectedCount = appState.registeredUsers.filter((u) => checkedGroups.includes(u.group)).length;
+      pendingBulkDeleteGroups = checkedGroups;
+      const banner = document.getElementById('bulk-delete-confirm-banner');
+      const warnText = document.getElementById('bulk-delete-warning-text');
+      if (warnText) {
+        warnText.textContent = `Warning: Permanently delete ${affectedCount} user(s) across [${checkedGroups.join(', ')}]?`;
+      }
+      if (banner) banner.classList.remove('hidden');
+    }
+
+    function cancelBulkDeleteGroup() {
+      pendingBulkDeleteGroups = [];
+      document.getElementById('bulk-delete-confirm-banner')?.classList.add('hidden');
+    }
+
+    function executeBulkDeleteSelectedGroups() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      if (!Array.isArray(pendingBulkDeleteGroups) || pendingBulkDeleteGroups.length === 0) return;
+
+      const targetGroups = [...pendingBulkDeleteGroups];
+      const toRemove = appState.registeredUsers.filter((u) => targetGroups.includes(u.group));
+      const removedIds = new Set(toRemove.map((u) => u.userId));
+
+      appState.registeredUsers = appState.registeredUsers.filter((u) => !removedIds.has(u.userId));
+      Object.values(appState.workbooks).forEach((wb) => {
+        if (wb && !wb.isUsersDirectory && wb.sheets) {
+          Object.values(wb.sheets).forEach((sh) => {
+            if (sh && sh.rows) {
+              removedIds.forEach((uid) => { delete sh.rows[uid]; });
+            }
+          });
+        }
+      });
+      removedIds.forEach((uid) => {
+        queueCloudSyncEvent('USER_DELETED', { userId: uid });
+      });
+
+      const passInp = document.getElementById('bulk-delete-admin-pass');
+      if (passInp) passInp.value = '';
+      document.querySelectorAll('.bulk-del-group-chk').forEach((chk) => { chk.checked = false; });
+      pendingBulkDeleteGroups = [];
+      document.getElementById('bulk-delete-confirm-banner')?.classList.add('hidden');
+
+      saveState();
+      logSecurityIncident('WARNING', `Admin bulk-deleted ${removedIds.size} user(s) in [${targetGroups.join(', ')}].`);
+      renderAllViews();
+      showToast(`Deleted ${removedIds.size} user(s) from [${targetGroups.join(', ')}].`, 'info');
+    }
+
     // -----------------------------------------------------------------------
-    // 5. SECURITY POLICY, CAMPUS GPS & QR RENDERING
+    // 5. SECURITY POLICY, CAMPUS GPS, QR STUDIO & SHEET LINKING
     // -----------------------------------------------------------------------
     function useCurrentGPSAsCampusCenter() {
       if (!navigator.geolocation) {
@@ -2218,6 +2379,85 @@
       showToast('Admin Master passphrase updated successfully.', 'success');
     }
 
+    function selectActiveGroupQR(groupName) {
+      if (!GROUPS.includes(groupName)) return;
+      activeGroupQrSelected = groupName;
+      renderAdminQRCode();
+    }
+
+    function relinkGroupQRWorkbook(groupName, newWbId) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      if (!GROUPS.includes(groupName) || !appState.workbooks[newWbId]) return;
+      const qrObj = appState.groupQRs[groupName];
+      qrObj.wbId = newWbId;
+      qrObj.sig = computeGroupQRSignature(qrObj.qrId, groupName, newWbId, qrObj.checkpoint);
+      ensureCurrentMonthSheetsExist(new Date());
+      saveState();
+      renderAdminQRCode();
+      renderAdminConsole();
+      showToast(`Linked ${groupName} QR → ${appState.workbooks[newWbId].fileName}`, 'success');
+    }
+
+    function toggleQrSheetLinkerBox() {
+      document.getElementById('qr-sheet-linker-box')?.classList.toggle('hidden');
+    }
+
+    function handleCreateOrLinkGroupSheet() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const grp = document.getElementById('qr-link-target-group')?.value || 'Employees';
+      const rawName = (document.getElementById('qr-link-sheet-name')?.value || '').trim();
+      const rawUrl = (document.getElementById('qr-link-external-url')?.value || '').trim();
+
+      let spreadsheetId = '';
+      if (rawUrl) {
+        const match = rawUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (!match) {
+          showToast('Invalid Google Sheet URL. Expected https://docs.google.com/spreadsheets/d/<ID>/...', 'error');
+          return;
+        }
+        spreadsheetId = match[1];
+      }
+
+      const cleanBase = (rawName || `MITRAZ_${grp}_Linked_2026`).replace(/\.xlsx$/i, '');
+      const fileName = `${cleanBase}.xlsx`;
+      const wbId = `wb_custom_${Date.now().toString(36)}`;
+      const now = new Date();
+      const monthTab = getMonthSheetName(now);
+
+      appState.workbooks[wbId] = {
+        id: wbId,
+        group: grp,
+        fileName,
+        externalSpreadsheetId: spreadsheetId || null,
+        sheets: {
+          [monthTab]: createMatrixSheetForGroup(now, grp, appState.registeredUsers, appState.holidays)
+        }
+      };
+
+      const qrObj = appState.groupQRs[grp];
+      qrObj.wbId = wbId;
+      qrObj.sig = computeGroupQRSignature(qrObj.qrId, grp, wbId, qrObj.checkpoint);
+      appState.activeWorkbookId = wbId;
+      appState.selectedSheetTab = monthTab;
+
+      if (spreadsheetId) {
+        queueCloudSyncEvent('GROUP_EXTERNAL_SHEET_LINKED', {
+          group: grp,
+          spreadsheetId,
+          sheetTitle: cleanBase
+        });
+      }
+
+      saveState();
+      if (document.getElementById('qr-link-sheet-name')) document.getElementById('qr-link-sheet-name').value = '';
+      if (document.getElementById('qr-link-external-url')) document.getElementById('qr-link-external-url').value = '';
+      document.getElementById('qr-sheet-linker-box')?.classList.add('hidden');
+
+      selectActiveGroupQR(grp);
+      renderAdminConsole();
+      showToast(`Created & linked ${fileName} to ${grp} QR!`, 'success');
+    }
+
     function renderAdminQRCode() {
       const target = document.getElementById('admin-qr-render-target');
       const titleEl = document.getElementById('qr-badge-title');
@@ -2227,254 +2467,62 @@
 
       target.innerHTML = '';
       const linkedWb = appState.workbooks[qrObj.wbId];
-      if (titleEl) titleEl.textContent = `${qrObj.group} Checkpoint`;
+      const signedPayload = buildGroupQRPayload(qrObj.group);
+      qrObj.qrId = signedPayload.qrId;
+      qrObj.checkpoint = signedPayload.checkpoint;
+      qrObj.sig = signedPayload.sig;
+
+      if (titleEl) titleEl.textContent = `${qrObj.group} HD QR Checkpoint`;
       if (wbEl) wbEl.textContent = `→ ${linkedWb?.fileName || GROUP_WB_META[qrObj.group].fileName}`;
 
       new QRCode(target, {
-        text: JSON.stringify({
-          qrId: qrObj.qrId,
-          group: qrObj.group,
-          wbId: qrObj.wbId,
-          checkpoint: qrObj.checkpoint,
-          sig: qrObj.sig
-        }),
-        width: 170,
-        height: 170,
+        text: JSON.stringify(signedPayload),
+        width: 260,
+        height: 260,
         colorDark: '#0f172a',
-        colorLight: '#ffffff'
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
       });
+
+      const canvas = target.querySelector('canvas');
+      const img = target.querySelector('img');
+      if (canvas) {
+        canvas.style.width = '184px';
+        canvas.style.height = '184px';
+        canvas.style.imageRendering = 'crisp-edges';
+      }
+      if (img) {
+        img.style.width = '184px';
+        img.style.height = '184px';
+        img.style.imageRendering = 'crisp-edges';
+      }
     }
 
-    function applyMitrazFavicon() {
-      const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='120' height='120' rx='24' fill='%230F172A'/><circle cx='60' cy='24' r='8' fill='%23E11D48'/><path d='M24 22 C36 22 46 38 60 44 C74 38 84 22 96 22 C98 46 84 62 74 72 C68 78 72 90 78 96 L68 98 C62 88 60 76 60 66 C60 76 58 88 52 98 L42 96 C48 90 52 78 46 72 C36 62 22 46 24 22 Z' fill='%23E11D48'/></svg>`;
-      const link = document.createElement('link');
-      link.rel = 'icon';
-      link.type = 'image/svg+xml';
-      link.href = 'data:image/svg+xml,' + svg;
-      document.head.appendChild(link);
-    }
-
-    function registerMobilePWAAndAppleIcons() {
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredInstallPrompt = e;
-        document.getElementById('btn-install-pwa')?.classList.remove('hidden');
-      });
-    }
-
-    function triggerPWAInstall() {
-      if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt();
-      deferredInstallPrompt = null;
-      document.getElementById('btn-install-pwa')?.classList.add('hidden');
+    function downloadActiveQRPng() {
+      const canvas = document.querySelector('#admin-qr-render-target canvas');
+      const img = document.querySelector('#admin-qr-render-target img');
+      const url = canvas ? canvas.toDataURL('image/png') : img?.src;
+      if (!url) return;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `MITRAZ_${activeGroupQrSelected}_QR.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast(`Saved ${activeGroupQrSelected} QR PNG`, 'success');
     }
 
     // -----------------------------------------------------------------------
-    // 6. BULK DELETE BY GROUP, WORKBOOK CREATION, IMPORT & EXPORT
+    // 6. WORKBOOK MANAGEMENT, 12-MONTH HISTORY EXPORT & LEAVE CANCELLATION
     // -----------------------------------------------------------------------
-    function openBulkDeleteGroupWarning() {
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const selectedGroups = Array.from(document.querySelectorAll('.bulk-del-group-chk:checked')).map((el) => el.value);
-      const adminPass = (document.getElementById('bulk-delete-admin-pass')?.value || '').trim();
-
-      if (selectedGroups.length === 0) {
-        showToast('Select at least one group checkbox to bulk delete.', 'warning');
-        return;
-      }
-      if (!adminPass) {
-        showToast('Enter your Admin Master Password to authorize bulk deletion.', 'error');
-        return;
-      }
-
-      const expectedHash = appState.adminAccount.passHash;
-      const actualHash = hashPassphrase(adminPass, appState.adminAccount.salt);
-      if (!constantTimeEqual(actualHash, expectedHash)) {
-        logSecurityIncident('CRITICAL', 'Failed Admin password verification during Bulk Group Delete attempt.');
-        showToast('Incorrect Admin Master Password! Bulk deletion blocked.', 'error');
-        return;
-      }
-
-      const affectedCount = appState.registeredUsers.filter((u) => selectedGroups.includes(u.group)).length;
-      if (affectedCount === 0) {
-        showToast(`No enrolled users found in [${selectedGroups.join(', ')}].`, 'info');
-        return;
-      }
-
-      pendingBulkDeleteGroups = selectedGroups;
-      const warnEl = document.getElementById('bulk-delete-warning-text');
-      const bannerEl = document.getElementById('bulk-delete-confirm-banner');
-      if (warnEl) {
-        warnEl.textContent = `WARNING: Permanently delete ${affectedCount} member(s) from [${selectedGroups.join(', ')}]? This cannot be undone.`;
-      }
-      if (bannerEl) bannerEl.classList.remove('hidden');
-    }
-
-    function cancelBulkDeleteGroup() {
-      pendingBulkDeleteGroups = [];
-      document.getElementById('bulk-delete-confirm-banner')?.classList.add('hidden');
-    }
-
-    function executeBulkDeleteSelectedGroups() {
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      if (!Array.isArray(pendingBulkDeleteGroups) || pendingBulkDeleteGroups.length === 0) return;
-
-      const toRemoveIds = appState.registeredUsers
-        .filter((u) => pendingBulkDeleteGroups.includes(u.group))
-        .map((u) => u.userId);
-
-      appState.registeredUsers = appState.registeredUsers.filter((u) => !pendingBulkDeleteGroups.includes(u.group));
-
-      Object.values(appState.workbooks).forEach((wb) => {
-        if (wb && !wb.isUsersDirectory && wb.sheets) {
-          Object.values(wb.sheets).forEach((sheet) => {
-            if (sheet && sheet.rows) {
-              toRemoveIds.forEach((uid) => { delete sheet.rows[uid]; });
-            }
-          });
-        }
-      });
-
-      toRemoveIds.forEach((uid) => {
-        queueCloudSyncEvent('USER_DELETED', { userId: uid });
-      });
-
-      const deletedGroupsLabel = pendingBulkDeleteGroups.join(', ');
-      pendingBulkDeleteGroups = [];
-      document.getElementById('bulk-delete-confirm-banner')?.classList.add('hidden');
-      const pwInp = document.getElementById('bulk-delete-admin-pass');
-      if (pwInp) pwInp.value = '';
-      document.querySelectorAll('.bulk-del-group-chk').forEach((chk) => { chk.checked = false; });
-
-      saveState();
-      logSecurityIncident('CRITICAL', `Admin bulk-deleted ${toRemoveIds.length} user(s) from [${deletedGroupsLabel}].`);
-      renderAllViews();
-      showToast(`Deleted ${toRemoveIds.length} member(s) from [${deletedGroupsLabel}].`, 'success');
-    }
-
-    function toggleNewWorkbookForm() {
-      const form = document.getElementById('new-workbook-form');
-      if (form) form.classList.toggle('hidden');
-    }
-
-    function handleCreateCustomWorkbook(event) {
-      event.preventDefault();
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      let rawName = (document.getElementById('custom-wb-name')?.value || '').trim();
-      const targetGroup = document.getElementById('custom-wb-group')?.value || 'Employees';
-      if (!rawName) return;
-      if (!rawName.toLowerCase().endsWith('.xlsx')) rawName += '.xlsx';
-
-      const wbId = 'wb_custom_' + Date.now().toString(36);
-      const now = new Date();
-      const monthTab = getMonthSheetName(now);
-
-      appState.workbooks[wbId] = {
-        id: wbId,
-        group: targetGroup,
-        fileName: rawName,
-        sheets: {
-          [monthTab]: createMatrixSheetForGroup(now, targetGroup, appState.registeredUsers, appState.holidays)
-        }
-      };
-
-      if (appState.groupQRs[targetGroup]) {
-        appState.groupQRs[targetGroup].wbId = wbId;
-        const qrObj = appState.groupQRs[targetGroup];
-        qrObj.sig = computeMAC(`${qrObj.qrId}|${qrObj.group}|${wbId}|${qrObj.checkpoint}`);
-      }
-
-      appState.activeWorkbookId = wbId;
-      appState.selectedSheetTab = monthTab;
-      saveState();
-      event.target.reset();
-      toggleNewWorkbookForm();
-      renderAllViews();
-      showToast(`Created & linked ${rawName} to ${targetGroup}.`, 'success');
-    }
-
-    function handleImportCustomWorkbook(event) {
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const file = event.target?.files?.[0];
-      if (!file) return;
-      if (typeof XLSX === 'undefined') {
-        showToast('Excel parser still loading...', 'warning');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const parsedWb = XLSX.read(data, { type: 'array' });
-          const wbId = 'wb_import_' + Date.now().toString(36);
-          const now = new Date();
-          const fallbackMonth = getMonthSheetName(now);
-          const sheets = {};
-
-          parsedWb.SheetNames.forEach((sName) => {
-            const aoa = XLSX.utils.sheet_to_json(parsedWb.Sheets[sName], { header: 1 });
-            const matrix = createMatrixSheetForGroup(now, 'Employees', appState.registeredUsers, appState.holidays);
-            if (aoa.length > 1) {
-              const headerRow = aoa[0].map((h) => String(h || '').trim());
-              const dateCols = headerRow.slice(3).filter((h) => h && !['Present (P)', 'Leaves (L)', 'Holidays (H)', 'Attendance %', 'Status Flag'].includes(h));
-              if (dateCols.length > 0) matrix.dateColumns = dateCols;
-              matrix.rows = {};
-              for (let r = 1; r < aoa.length; r++) {
-                const rowArr = aoa[r] || [];
-                const uId = String(rowArr[0] || `IMP-${r}`).trim();
-                if (uId === 'SUMMARY') continue;
-                const uName = String(rowArr[1] || `Member ${r}`).trim();
-                const uGrp = String(rowArr[2] || 'Employees').trim();
-                const days = {};
-                matrix.dateColumns.forEach((col, cIdx) => {
-                  days[col] = String(rowArr[3 + cIdx] || '').trim();
-                });
-                matrix.rows[uId] = { userId: uId, name: uName, group: uGrp, days };
-              }
-            }
-            sheets[sName] = matrix;
-          });
-
-          if (Object.keys(sheets).length === 0) {
-            sheets[fallbackMonth] = createMatrixSheetForGroup(now, 'Employees', appState.registeredUsers, appState.holidays);
-          }
-
-          appState.workbooks[wbId] = {
-            id: wbId,
-            group: 'Employees',
-            fileName: file.name,
-            sheets
-          };
-          appState.activeWorkbookId = wbId;
-          appState.selectedSheetTab = Object.keys(sheets)[0];
-          saveState();
-          renderAllViews();
-          showToast(`Imported ${file.name} successfully.`, 'success');
-        } catch (err) {
-          showToast('Invalid Excel file format.', 'error');
-        }
-      };
-      reader.readAsArrayBuffer(file);
-      event.target.value = '';
-    }
-
-    function assignActiveWorkbookToGroup() {
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const activeWb = appState.workbooks[appState.activeWorkbookId];
-      if (!activeWb || activeWb.isUsersDirectory) {
-        showToast('Select an attendance Excel workbook first.', 'warning');
-        return;
-      }
-      const targetGroup = document.getElementById('assign-wb-target-group')?.value || 'Employees';
-      relinkGroupQRWorkbook(targetGroup, activeWb.id);
-    }
-
     function selectWorkbookByGroup(groupName) {
       const wbId = appState.groupQRs[groupName]?.wbId || GROUP_WB_META[groupName]?.wbId;
       if (!wbId || !appState.workbooks[wbId]) return;
       appState.activeWorkbookId = wbId;
-      const tabs = Object.keys(appState.workbooks[wbId].sheets);
-      appState.selectedSheetTab = tabs[tabs.length - 1] || getMonthSheetName(new Date());
+      const tabNames = Object.keys(appState.workbooks[wbId].sheets || {});
+      if (tabNames.length > 0 && !tabNames.includes(appState.selectedSheetTab)) {
+        appState.selectedSheetTab = tabNames[tabNames.length - 1];
+      }
       saveState();
       renderAdminConsole();
     }
@@ -2489,8 +2537,8 @@
     function switchActiveWorkbook(wbId) {
       if (!appState.workbooks[wbId]) return;
       appState.activeWorkbookId = wbId;
-      const tabs = Object.keys(appState.workbooks[wbId].sheets);
-      appState.selectedSheetTab = tabs[tabs.length - 1] || '';
+      const tabNames = Object.keys(appState.workbooks[wbId].sheets || {});
+      appState.selectedSheetTab = tabNames[tabNames.length - 1] || '';
       saveState();
       renderAdminConsole();
     }
@@ -2501,208 +2549,210 @@
       renderAdminConsole();
     }
 
-    function exportActiveWorkbookXLSX() {
-      if (typeof XLSX === 'undefined') {
-        showToast('Excel engine still loading...', 'warning');
-        return;
-      }
-      const activeWb = appState.workbooks[appState.activeWorkbookId];
-      if (!activeWb) return;
-
-      if (activeWb.isUsersDirectory) {
-        exportUsersDirectoryXLSX();
-        return;
-      }
-
-      const wb = XLSX.utils.book_new();
-      Object.entries(activeWb.sheets).forEach(([sheetName, sheetObj]) => {
-        const dateCols = sheetObj.dateColumns || [];
-        const header = [
-          'Member ID',
-          'Full Name',
-          'Group',
-          ...dateCols,
-          'Present (P)',
-          'Leaves (L)',
-          'Holidays (H)',
-          'Attendance %',
-          'Status Flag'
-        ];
-        const rowObjects = Object.values(sheetObj.rows || {});
-        const rows = rowObjects.map((r) => {
-          let present = 0;
-          let leaves = 0;
-          let holidays = 0;
-          const dayCells = dateCols.map((d) => {
-            const rawCell = String(r.days[d] || '');
-            if (rawCell.startsWith('P')) present++;
-            else if (rawCell.startsWith('L')) leaves++;
-            else if (rawCell.startsWith('H')) holidays++;
-            return sanitizeExcelCell(rawCell);
-          });
-          const effectiveDays = Math.max(1, dateCols.length - holidays);
-          const pct = Math.round(((present + leaves) / effectiveDays) * 100);
-          const flag = pct >= 90 ? 'EXCELLENT' : pct >= 75 ? 'NORMAL' : 'LOW ATTENDANCE';
-          return [
-            sanitizeExcelCell(r.userId),
-            sanitizeExcelCell(r.name),
-            sanitizeExcelCell(r.group),
-            ...dayCells,
-            present,
-            leaves,
-            holidays,
-            `${pct}%`,
-            flag
-          ];
-        });
-
-        const dailyPresentRow = [
-          'SUMMARY',
-          `Daily Headcount (${sheetName})`,
-          activeWb.group || '',
-          ...dateCols.map((d) =>
-            rowObjects.filter((r) => String(r.days[d] || '').startsWith('P')).length
-          ),
-          '',
-          '',
-          '',
-          '',
-          ''
-        ];
-
-        const ws = XLSX.utils.aoa_to_sheet([header, ...rows, dailyPresentRow]);
-        ws['!cols'] = [
-          { wch: 12 },
-          { wch: 24 },
-          { wch: 13 },
-          ...dateCols.map(() => ({ wch: 16 })),
-          { wch: 13 },
-          { wch: 12 },
-          { wch: 13 },
-          { wch: 14 },
-          { wch: 18 }
-        ];
-        XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
-      });
-
-      XLSX.writeFile(wb, activeWb.fileName);
-      showToast(`Downloaded ${activeWb.fileName} with attendance summaries`, 'success');
+    function toggleNewWorkbookForm() {
+      document.getElementById('new-workbook-form')?.classList.toggle('hidden');
     }
 
-    function exportUsersDirectoryXLSX() {
-      if (typeof XLSX === 'undefined') return;
-      const wb = XLSX.utils.book_new();
-      const header = ['User ID', 'First Name', 'Last Name', 'Group', 'Phone Number', 'Email', 'Bound Device ID', 'Enrolled At'];
-      const rows = appState.registeredUsers.map((u) => [
-        sanitizeExcelCell(u.userId),
-        sanitizeExcelCell(u.firstName),
-        sanitizeExcelCell(u.lastName),
-        sanitizeExcelCell(u.group),
-        sanitizeExcelCell(u.phone),
-        sanitizeExcelCell(u.email),
-        sanitizeExcelCell(u.boundDeviceId || 'Unbound'),
-        sanitizeExcelCell(u.enrolledAt)
-      ]);
-      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
-      ws['!cols'] = [
-        { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 13 },
-        { wch: 18 }, { wch: 28 }, { wch: 18 }, { wch: 24 }
-      ];
-      XLSX.utils.book_append_sheet(wb, ws, 'Enrolled_Users');
-      XLSX.writeFile(wb, 'MITRAZ_Registered_Users_Directory.xlsx');
-      showToast('Downloaded MITRAZ_Registered_Users_Directory.xlsx', 'success');
-    }
-
-    function selectActiveGroupQR(groupName) {
-      activeGroupQrSelected = groupName;
-      renderAdminQRCode();
-    }
-
-    function relinkGroupQRWorkbook(groupName, newWbId) {
-      const qrObj = appState.groupQRs[groupName];
-      if (!qrObj || !appState.workbooks[newWbId]) return;
-      qrObj.wbId = newWbId;
-      qrObj.sig = computeMAC(`${qrObj.qrId}|${qrObj.group}|${newWbId}|${qrObj.checkpoint}`);
-      saveState();
-      renderAdminConsole();
-      showToast(`Linked ${groupName} QR to ${appState.workbooks[newWbId].fileName}`, 'success');
-    }
-
-    function toggleQrSheetLinkerBox() {
-      document.getElementById('qr-sheet-linker-box')?.classList.toggle('hidden');
-    }
-
-    function handleCreateOrLinkGroupSheet() {
+    function handleCreateCustomWorkbook(event) {
+      event.preventDefault();
       if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const targetGroup = document.getElementById('qr-link-target-group')?.value || 'Employees';
-      let sheetName = (document.getElementById('qr-link-sheet-name')?.value || '').trim();
-      const externalUrl = (document.getElementById('qr-link-external-url')?.value || '').trim();
+      const rawName = (document.getElementById('custom-wb-name')?.value || '').trim();
+      const grp = document.getElementById('custom-wb-group')?.value || 'Employees';
+      if (!rawName) return;
 
-      let externalSheetId = '';
-      if (externalUrl) {
-        const match = externalUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-        if (!match || !match[1]) {
-          showToast('Invalid Google Sheet URL. Paste a link containing /spreadsheets/d/<ID>/.', 'error');
-          return;
-        }
-        externalSheetId = match[1];
-        if (!sheetName) sheetName = `MITRAZ_${targetGroup}_LinkedSheet.xlsx`;
-      } else if (!sheetName) {
-        sheetName = `MITRAZ_${targetGroup}_New_${new Date().getFullYear()}.xlsx`;
-      }
-
-      if (!sheetName.toLowerCase().endsWith('.xlsx')) sheetName += '.xlsx';
-
-      const wbId = 'wb_linked_' + Date.now().toString(36);
+      const cleanBase = rawName.replace(/\.xlsx$/i, '');
+      const fileName = `${cleanBase}.xlsx`;
+      const wbId = `wb_custom_${Date.now().toString(36)}`;
       const now = new Date();
       const monthTab = getMonthSheetName(now);
 
       appState.workbooks[wbId] = {
         id: wbId,
-        group: targetGroup,
-        fileName: sheetName,
-        externalSheetUrl: externalUrl || '',
-        externalSpreadsheetId: externalSheetId || '',
+        group: grp,
+        fileName,
         sheets: {
-          [monthTab]: createMatrixSheetForGroup(now, targetGroup, appState.registeredUsers, appState.holidays)
+          [monthTab]: createMatrixSheetForGroup(now, grp, appState.registeredUsers, appState.holidays)
         }
       };
-
-      if (appState.groupQRs[targetGroup]) {
-        appState.groupQRs[targetGroup].wbId = wbId;
-        appState.groupQRs[targetGroup].externalSheetUrl = externalUrl || '';
-        const qrObj = appState.groupQRs[targetGroup];
-        qrObj.sig = computeMAC(`${qrObj.qrId}|${qrObj.group}|${wbId}|${qrObj.checkpoint}`);
-      }
-
+      appState.groupQRs[grp].wbId = wbId;
+      appState.groupQRs[grp].sig = computeGroupQRSignature(
+        appState.groupQRs[grp].qrId,
+        grp,
+        wbId,
+        appState.groupQRs[grp].checkpoint
+      );
+      appState.activeWorkbookId = wbId;
+      appState.selectedSheetTab = monthTab;
       saveState();
-      if (externalSheetId) {
-        queueCloudSyncEvent('GROUP_EXTERNAL_SHEET_LINKED', {
-          group: targetGroup,
-          spreadsheetId: externalSheetId,
-          sheetUrl: externalUrl,
-          fileName: sheetName
+      event.target.reset();
+      document.getElementById('new-workbook-form')?.classList.add('hidden');
+      renderAdminConsole();
+      showToast(`Created & linked ${fileName} to ${grp}.`, 'success');
+    }
+
+    function assignActiveWorkbookToGroup() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const grp = document.getElementById('assign-wb-target-group')?.value || 'Employees';
+      const activeWb = appState.workbooks[appState.activeWorkbookId];
+      if (!activeWb || activeWb.isUsersDirectory) return;
+      relinkGroupQRWorkbook(grp, activeWb.id);
+    }
+
+    function handleImportCustomWorkbook(event) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const file = event.target?.files?.[0];
+      if (!file || typeof XLSX === 'undefined') return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsedXlsx = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+          const wbId = `wb_imp_${Date.now().toString(36)}`;
+          const now = new Date();
+          const defaultMonth = getMonthSheetName(now);
+          const sheetsMap = {};
+
+          parsedXlsx.SheetNames.forEach((sName) => {
+            const rowsJson = XLSX.utils.sheet_to_json(parsedXlsx.Sheets[sName], { defval: '' });
+            const dateColumns = [];
+            const rowsObj = {};
+            rowsJson.forEach((r, idx) => {
+              const uid = String(r['Member ID'] || r['User ID'] || r['ID'] || `IMP-${idx + 1}`).trim();
+              const uname = String(r['Full Name'] || r['Name'] || uid).trim();
+              const ugrp = String(r['Group'] || 'Employees').trim();
+              const days = {};
+              Object.keys(r).forEach((k) => {
+                if (!['Member ID', 'User ID', 'ID', 'Full Name', 'Name', 'Group', 'Present (P)', 'Leaves (L)', 'Holidays (H)', 'Attendance %', 'Status Flag'].includes(k)) {
+                  if (!dateColumns.includes(k)) dateColumns.push(k);
+                  days[k] = String(r[k] || '');
+                }
+              });
+              rowsObj[uid] = { userId: uid, name: uname, group: ugrp, days };
+            });
+            sheetsMap[sName.slice(0, 31)] = { dateColumns, rows: rowsObj };
+          });
+
+          if (Object.keys(sheetsMap).length === 0) {
+            sheetsMap[defaultMonth] = createMatrixSheetForGroup(now, 'Employees', appState.registeredUsers, appState.holidays);
+          }
+
+          appState.workbooks[wbId] = {
+            id: wbId,
+            group: 'Employees',
+            fileName: file.name.endsWith('.xlsx') ? file.name : `${file.name}.xlsx`,
+            sheets: sheetsMap
+          };
+          appState.activeWorkbookId = wbId;
+          appState.selectedSheetTab = Object.keys(sheetsMap)[0];
+          saveState();
+          renderAdminConsole();
+          showToast(`Imported workbook "${file.name}".`, 'success');
+        } catch (err) {
+          showToast('Failed to parse uploaded .XLSX file.', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      event.target.value = '';
+    }
+
+    function buildMatrixSheetRows(sheetObj, dateCols, rowsArr) {
+      const outRows = rowsArr.map((r) => {
+        const rowOut = {
+          'Member ID': sanitizeExcelCell(r.userId),
+          'Full Name': sanitizeExcelCell(r.name),
+          'Group': sanitizeExcelCell(r.group)
+        };
+        let pCnt = 0;
+        let lCnt = 0;
+        let hCnt = 0;
+        dateCols.forEach((col) => {
+          const val = String(r.days?.[col] || '');
+          rowOut[col] = sanitizeExcelCell(val);
+          if (val.startsWith('P')) pCnt++;
+          else if (val.startsWith('L')) lCnt++;
+          else if (val.startsWith('H')) hCnt++;
+        });
+        const denom = Math.max(1, dateCols.length - hCnt);
+        const pct = Math.round(((pCnt + lCnt) / denom) * 100);
+        const statusFlag = pct >= 90 ? 'EXCELLENT' : pct >= 75 ? 'NORMAL' : 'LOW ATTENDANCE';
+        rowOut['Present (P)'] = pCnt;
+        rowOut['Leaves (L)'] = lCnt;
+        rowOut['Holidays (H)'] = hCnt;
+        rowOut['Attendance %'] = `${pct}%`;
+        rowOut['Status Flag'] = statusFlag;
+        return rowOut;
+      });
+
+      if (rowsArr.length > 0 && dateCols.length > 0) {
+        const headcountRow = {
+          'Member ID': 'SUMMARY',
+          'Full Name': 'Daily Headcount',
+          'Group': ''
+        };
+        dateCols.forEach((col) => {
+          headcountRow[col] = rowsArr.filter((r) => String(r.days?.[col] || '').startsWith('P')).length;
+        });
+        outRows.push(headcountRow);
+      }
+      return outRows;
+    }
+
+    function exportActiveWorkbookXLSX() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN' || typeof XLSX === 'undefined') return;
+      const activeWb = appState.workbooks[appState.activeWorkbookId] || Object.values(appState.workbooks)[0];
+      if (!activeWb) return;
+
+      const wbOut = XLSX.utils.book_new();
+      if (activeWb.isUsersDirectory) {
+        const dirRows = appState.registeredUsers.map((u) => ({
+          'Member ID': sanitizeExcelCell(u.userId),
+          'First Name': sanitizeExcelCell(u.firstName),
+          'Last Name': sanitizeExcelCell(u.lastName),
+          'Group': sanitizeExcelCell(u.group),
+          'Phone': sanitizeExcelCell(u.phone),
+          'Email': sanitizeExcelCell(u.email),
+          'Device Lock': sanitizeExcelCell(u.boundDeviceId || 'Unbound')
+        }));
+        const ws = XLSX.utils.json_to_sheet(dirRows);
+        XLSX.utils.book_append_sheet(wbOut, ws, 'Enrolled_Users');
+      } else {
+        Object.entries(activeWb.sheets || {}).forEach(([tabName, sheetObj]) => {
+          const dateCols = sheetObj?.dateColumns || [];
+          const rowsArr = Object.values(sheetObj?.rows || {});
+          const ws = XLSX.utils.json_to_sheet(buildMatrixSheetRows(sheetObj, dateCols, rowsArr));
+          XLSX.utils.book_append_sheet(wbOut, ws, String(tabName).slice(0, 31));
         });
       }
-      logSecurityIncident('INFO', `Admin linked [${targetGroup}] QR to [${sheetName}]${externalSheetId ? ' (External Google Sheet)' : ''}.`);
-      const nameEl = document.getElementById('qr-link-sheet-name');
-      const urlEl = document.getElementById('qr-link-external-url');
-      if (nameEl) nameEl.value = '';
-      if (urlEl) urlEl.value = '';
-      toggleQrSheetLinkerBox();
-      renderAllViews();
-      showToast(`Linked ${targetGroup} QR → ${sheetName}`, 'success');
+      XLSX.writeFile(wbOut, activeWb.fileName || 'MITRAZ_Attendance.xlsx');
+      showToast(`Exported ${activeWb.fileName}`, 'success');
+    }
+
+    function exportUsersDirectoryXLSX() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN' || typeof XLSX === 'undefined') return;
+      const dirRows = appState.registeredUsers.map((u) => ({
+        'Member ID': sanitizeExcelCell(u.userId),
+        'First Name': sanitizeExcelCell(u.firstName),
+        'Last Name': sanitizeExcelCell(u.lastName),
+        'Group': sanitizeExcelCell(u.group),
+        'Phone': sanitizeExcelCell(u.phone),
+        'Email': sanitizeExcelCell(u.email),
+        'Device Lock': sanitizeExcelCell(u.boundDeviceId || 'Unbound')
+      }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dirRows), 'Registered_Users');
+      XLSX.writeFile(wb, 'MITRAZ_Registered_Users_Directory.xlsx');
+      showToast('Exported Registered Users directory (.XLSX)', 'success');
     }
 
     function getLast12MonthsList() {
       const list = [];
-      const base = new Date();
+      const now = new Date();
       for (let i = 0; i < 12; i++) {
-        const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         list.push({
-          label: getMonthSheetName(d),
           year: d.getFullYear(),
-          monthIndex: d.getMonth(),
+          month: d.getMonth(),
+          label: getMonthSheetName(d),
           dateObj: d
         });
       }
@@ -2710,90 +2760,57 @@
     }
 
     function exportSelectedHistoryMonthXLSX() {
-      if (typeof XLSX === 'undefined') {
-        showToast('Excel engine still loading...', 'warning');
-        return;
-      }
-      const activeWb = appState.workbooks[appState.activeWorkbookId];
-      if (!activeWb || activeWb.isUsersDirectory) {
-        showToast('Select a group attendance workbook (Employees, GDA, IT, or MFs) first.', 'warning');
-        return;
-      }
-      const selectedMonthLabel = document.getElementById('admin-history-month-select')?.value;
-      const monthMeta = getLast12MonthsList().find((m) => m.label === selectedMonthLabel);
-      if (!monthMeta) return;
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN' || typeof XLSX === 'undefined') return;
+      const selLabel = document.getElementById('admin-history-month-select')?.value;
+      const entry = getLast12MonthsList().find((m) => m.label === selLabel) || getLast12MonthsList()[0];
+      if (!entry) return;
 
-      const groupName = activeWb.group || 'Employees';
-      let sheetObj = activeWb.sheets[monthMeta.label];
+      const activeWb = appState.workbooks[appState.activeWorkbookId];
+      const grp = (!activeWb || activeWb.isUsersDirectory) ? 'Employees' : (activeWb.group || 'Employees');
+      const wbId = appState.groupQRs[grp]?.wbId || GROUP_WB_META[grp].wbId;
+      const grpWb = appState.workbooks[wbId];
+
+      let sheetObj = grpWb?.sheets?.[entry.label];
       if (!sheetObj) {
-        sheetObj = createMatrixSheetForGroup(monthMeta.dateObj, groupName, appState.registeredUsers, appState.holidays);
+        sheetObj = createMatrixSheetForGroup(entry.dateObj, grp, appState.registeredUsers, appState.holidays);
         (appState.attendanceLogs || [])
-          .filter((l) => l.group === groupName && l.monthTab === monthMeta.label)
+          .filter((l) => l.group === grp && l.monthTab === entry.label)
           .forEach((l) => {
             if (sheetObj.rows[l.userId] && Object.prototype.hasOwnProperty.call(sheetObj.rows[l.userId].days, l.dateCol)) {
               sheetObj.rows[l.userId].days[l.dateCol] = l.cellValue;
             }
           });
-        (appState.leaveRequests || [])
-          .filter((lv) => lv.group === groupName && lv.status === 'APPROVED')
-          .forEach((lv) => {
-            const start = new Date(lv.startDate + 'T00:00:00');
-            const end = new Date(lv.endDate + 'T00:00:00');
-            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-              if (getMonthSheetName(d) === monthMeta.label) {
-                const col = getDateColumnLabel(d);
-                if (sheetObj.rows[lv.userId] && Object.prototype.hasOwnProperty.call(sheetObj.rows[lv.userId].days, col)) {
-                  sheetObj.rows[lv.userId].days[col] = `L (${String(lv.leaveType || 'CL').split(' ')[0]})`;
-                }
-              }
-            }
-          });
       }
 
       const dateCols = sheetObj.dateColumns || [];
-      const header = ['Member ID', 'Full Name', 'Group', ...dateCols, 'Present (P)', 'Leaves (L)', 'Holidays (H)', 'Attendance %', 'Status Flag'];
-      const rowObjects = Object.values(sheetObj.rows || {});
-      const rows = rowObjects.map((r) => {
-        let present = 0;
-        let leaves = 0;
-        let holidays = 0;
-        const dayCells = dateCols.map((d) => {
-          const rawCell = String(r.days[d] || '');
-          if (rawCell.startsWith('P')) present++;
-          else if (rawCell.startsWith('L')) leaves++;
-          else if (rawCell.startsWith('H')) holidays++;
-          return sanitizeExcelCell(rawCell);
-        });
-        const effectiveDays = Math.max(1, dateCols.length - holidays);
-        const pct = Math.round(((present + leaves) / effectiveDays) * 100);
-        const flag = pct >= 90 ? 'EXCELLENT' : pct >= 75 ? 'NORMAL' : 'LOW ATTENDANCE';
-        return [sanitizeExcelCell(r.userId), sanitizeExcelCell(r.name), sanitizeExcelCell(r.group), ...dayCells, present, leaves, holidays, `${pct}%`, flag];
-      });
-
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
-      XLSX.utils.book_append_sheet(wb, ws, monthMeta.label.slice(0, 31));
-      const safeFileMonth = monthMeta.label.replace(/\s+/g, '_');
-      XLSX.writeFile(wb, `MITRAZ_${groupName}_Attendance_${safeFileMonth}.xlsx`);
-      showToast(`Downloaded ${groupName} attendance for ${monthMeta.label}!`, 'success');
+      const rowsArr = Object.values(sheetObj.rows || {});
+      const wbOut = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(buildMatrixSheetRows(sheetObj, dateCols, rowsArr));
+      XLSX.utils.book_append_sheet(wbOut, ws, entry.label.slice(0, 31));
+      const safeFile = `MITRAZ_${grp}_${entry.label.replace(/\s+/g, '_')}.xlsx`;
+      XLSX.writeFile(wbOut, safeFile);
+      showToast(`Downloaded ${safeFile}`, 'success');
     }
 
     function clearLeaveCellsFromMatrix(req) {
+      if (!req || !req.startDate || !req.endDate) return;
       const linkedWbId = appState.groupQRs[req.group]?.wbId || GROUP_WB_META[req.group]?.wbId;
       const targetWb = appState.workbooks[linkedWbId];
       if (!targetWb) return;
+
       const start = new Date(req.startDate + 'T00:00:00');
       const end = new Date(req.endDate + 'T00:00:00');
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const monthTab = getMonthSheetName(d);
         const dateCol = getDateColumnLabel(d);
         const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        const sheet = targetWb.sheets[monthTab];
-        if (sheet && sheet.rows && sheet.rows[req.userId] && Object.prototype.hasOwnProperty.call(sheet.rows[req.userId].days, dateCol)) {
-          const curVal = String(sheet.rows[req.userId].days[dateCol] || '');
-          if (curVal.startsWith('L (')) {
+        const sheet = targetWb.sheets?.[monthTab];
+        const row = sheet?.rows?.[req.userId];
+        if (row && Object.prototype.hasOwnProperty.call(row.days, dateCol)) {
+          const cur = String(row.days[dateCol] || '');
+          if (cur.startsWith('L (')) {
             const hol = (appState.holidays || []).find((h) => h.date === isoDate);
-            sheet.rows[req.userId].days[dateCol] = hol ? `H (${hol.name})` : '';
+            row.days[dateCol] = hol ? `H (${hol.name})` : '';
           }
         }
       }
@@ -2873,18 +2890,72 @@
       showToast(`Leave ${req.id} updated to ${decision}.`, decision === 'APPROVED' ? 'success' : 'info');
     }
 
-    function downloadActiveQRPng() {
-      const canvas = document.querySelector('#admin-qr-render-target canvas');
-      const img = document.querySelector('#admin-qr-render-target img');
-      const url = canvas ? canvas.toDataURL('image/png') : img?.src;
-      if (!url) return;
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `MITRAZ_${activeGroupQrSelected}_QR.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      showToast(`Saved ${activeGroupQrSelected} QR PNG`, 'success');
+    // -----------------------------------------------------------------------
+    // 7. PWA MANIFEST, APPLE ICON & STARTUP LIFECYCLE
+    // -----------------------------------------------------------------------
+    function buildMitrazIconDataUri(sizePx = 512) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 112" width="${sizePx}" height="${sizePx}"><rect width="120" height="112" rx="24" fill="#020617"/><circle cx="60" cy="14" r="10.5" fill="#E30613"/><path d="M12 16 C10 28, 18 46, 35 61 C44 69, 41 81, 33 93 C31 96.5, 33.5 100, 37 99.5 C41 99, 45 91, 48.5 81 C52.5 68, 53 56, 48 46 C44 38, 50 33, 60 33 C70 33, 76 38, 72 46 C67 56, 67.5 68, 71.5 81 C75 91, 79 99, 83 99.5 C86.5 100, 89 96.5, 87 93 C79 81, 76 69, 85 61 C102 46, 110 28, 108 16 C107 11.5, 103 11, 99.5 15 C89 26, 73 28.5, 60 28.5 C47 28.5, 31 26, 20.5 15 C17 11, 13 11.5, 12 16 Z" fill="#E30613"/></svg>`;
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+
+    function applyMitrazFavicon() {
+      const uri = buildMitrazIconDataUri(64);
+      let link = document.querySelector("link[rel='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = uri;
+    }
+
+    function registerMobilePWAAndAppleIcons() {
+      const iconUri = buildMitrazIconDataUri(512);
+      let appleTouch = document.querySelector("link[rel='apple-touch-icon']");
+      if (!appleTouch) {
+        appleTouch = document.createElement('link');
+        appleTouch.rel = 'apple-touch-icon';
+        document.head.appendChild(appleTouch);
+      }
+      appleTouch.href = iconUri;
+
+      const manifest = {
+        name: 'MITRAZ AttendGuard Enterprise',
+        short_name: 'MITRAZ Attend',
+        start_url: './',
+        scope: './',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#020617',
+        theme_color: '#020617',
+        icons: [
+          { src: iconUri, sizes: '192x192', type: 'image/svg+xml', purpose: 'any' },
+          { src: iconUri, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+        ]
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      const manifestUrl = URL.createObjectURL(blob);
+      let manLink = document.querySelector("link[rel='manifest']");
+      if (!manLink) {
+        manLink = document.createElement('link');
+        manLink.rel = 'manifest';
+        document.head.appendChild(manLink);
+      }
+      manLink.href = manifestUrl;
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      document.getElementById('btn-install-pwa')?.classList.remove('hidden');
+    });
+
+    async function triggerPWAInstall() {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      document.getElementById('btn-install-pwa')?.classList.add('hidden');
     }
 
     // -----------------------------------------------------------------------
