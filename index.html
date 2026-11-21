@@ -141,8 +141,8 @@
         <!-- Login Form -->
         <form onsubmit="handleLoginSubmit(event)" class="space-y-3" autocomplete="off">
           <div>
-            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Member ID / Email / Admin ID</label>
-            <input id="login-identifier" type="text" required placeholder="Enter your Member ID or Email" class="w-full bg-slate-950 border border-slate-700 focus:border-rose-500 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition" />
+            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Member ID / Full Name / Email / Admin ID</label>
+            <input id="login-identifier" type="text" required placeholder="e.g. EMP-101, Giri Babu, or ADMIN" class="w-full bg-slate-950 border border-slate-700 focus:border-rose-500 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition" />
           </div>
 
           <div>
@@ -257,7 +257,7 @@
       <div class="flex items-center gap-1.5">
         <button id="header-sync-badge" onclick="syncWithCloudServer(true)" title="Sync with Cloud Sheet" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-mono font-bold text-slate-300 flex items-center gap-1 transition">
           <i data-lucide="cloud" class="w-3 h-3 text-sky-400"></i>
-          <span id="header-sync-label">Local</span>
+          <span id="header-sync-label">Live Auto</span>
         </button>
         <button onclick="logoutSession('Signed out safely.')" title="Sign Out" class="p-2 rounded-xl bg-slate-900 hover:bg-rose-600/20 border border-slate-800 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 transition">
           <i data-lucide="log-out" class="w-4 h-4"></i>
@@ -490,74 +490,68 @@
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
                 Active Excel Workbook
               </span>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                Auto Month Rollover
-              </span>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="toggleNewWorkbookForm()" class="px-2 py-1 rounded-lg bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/40 text-[10px] font-bold text-indigo-200 transition">
+                  + New Workbook
+                </button>
+                <span id="matrix-row-count" class="text-[10px] font-mono text-slate-400">0 members</span>
+              </div>
             </div>
 
-            <select id="admin-wb-selector" onchange="switchActiveWorkbook(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none"></select>
-
-            <div class="grid grid-cols-2 gap-2">
-              <button onclick="toggleNewWorkbookForm()" class="py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 transition">
-                <i data-lucide="file-plus-2" class="w-4 h-4 text-indigo-400"></i>
-                + New Workbook
-              </button>
-              <label class="py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition">
-                <i data-lucide="upload" class="w-4 h-4 text-amber-400"></i>
-                Choose .XLSX File
-                <input type="file" accept=".xlsx,.xls" onchange="handleImportCustomWorkbook(event)" class="hidden" />
-              </label>
-            </div>
-
-            <form id="new-workbook-form" onsubmit="handleCreateCustomWorkbook(event)" class="hidden bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
-              <div class="text-[11px] font-bold text-indigo-300">Create & Switch to New Excel Workbook</div>
-              <div class="grid grid-cols-2 gap-2">
-                <input id="custom-wb-name" type="text" required placeholder="e.g. MITRAZ_Custom_2026.xlsx" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500" />
-                <select id="custom-wb-group" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
-                  <option value="Employees">Link to: Employees</option>
-                  <option value="GDA">Link to: GDA</option>
-                  <option value="IT">Link to: IT</option>
-                  <option value="MFs">Link to: MFs</option>
+            <form id="new-workbook-form" onsubmit="handleCreateCustomWorkbook(event)" class="hidden bg-slate-950 border border-indigo-500/40 rounded-xl p-2.5 space-y-2">
+              <div class="text-[10px] font-bold text-indigo-300">Create Custom Group Attendance Workbook (.XLSX)</div>
+              <div class="grid grid-cols-2 gap-1.5">
+                <input id="custom-wb-name" type="text" required placeholder="e.g. MITRAZ_Custom_2026" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-[11px] text-white focus:outline-none" />
+                <select id="custom-wb-group" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-[11px] text-white focus:outline-none">
+                  <option value="Employees">Link: Employees</option>
+                  <option value="GDA">Link: GDA</option>
+                  <option value="IT">Link: IT</option>
+                  <option value="MFs">Link: MFs</option>
                 </select>
               </div>
               <div class="flex justify-end gap-1.5">
-                <button type="button" onclick="toggleNewWorkbookForm()" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-[11px] font-bold">Cancel</button>
-                <button type="submit" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold">Create & Activate</button>
+                <button type="button" onclick="toggleNewWorkbookForm()" class="px-2.5 py-1 rounded-lg bg-slate-800 text-[10px] font-bold text-slate-300">Cancel</button>
+                <button type="submit" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-[10px] font-bold text-white">Create & Activate</button>
               </div>
             </form>
 
-            <div id="assign-wb-group-bar" class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
-              <span class="text-[10px] font-semibold text-slate-400">Route Group Scans Here:</span>
-              <div class="flex items-center gap-1.5">
-                <select id="assign-wb-target-group" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-white">
-                  <option value="Employees">Employees</option>
-                  <option value="GDA">GDA</option>
-                  <option value="IT">IT</option>
-                  <option value="MFs">MFs</option>
-                </select>
-                <button type="button" onclick="assignActiveWorkbookToGroup()" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold">
-                  Link Group
+            <div class="grid grid-cols-1 gap-2">
+              <select id="admin-wb-selector" onchange="switchActiveWorkbook(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none"></select>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button onclick="exportActiveWorkbookXLSX()" class="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                  Export .XLSX
                 </button>
+                <label class="py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition">
+                  <i data-lucide="upload" class="w-3.5 h-3.5 text-indigo-400"></i>
+                  Import .XLSX
+                  <input type="file" accept=".xlsx,.xls" onchange="handleImportCustomWorkbook(event)" class="hidden" />
+                </label>
+              </div>
+
+              <div id="assign-wb-group-bar" class="flex items-center justify-between gap-2 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5">
+                <span class="text-[10px] text-slate-400">Route Group Scans Here:</span>
+                <div class="flex items-center gap-1.5">
+                  <select id="assign-wb-target-group" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[10px] text-white">
+                    <option value="Employees">Employees</option>
+                    <option value="GDA">GDA</option>
+                    <option value="IT">IT</option>
+                    <option value="MFs">MFs</option>
+                  </select>
+                  <button type="button" onclick="assignActiveWorkbookToGroup()" class="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-[10px] font-bold text-white">
+                    Link Group
+                  </button>
+                </div>
               </div>
             </div>
 
-            <button onclick="exportActiveWorkbookXLSX()" class="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition">
-              <i data-lucide="download" class="w-4 h-4"></i>
-              Export Active Workbook (.XLSX)
-            </button>
-          </div>
-
-          <!-- Matrix Sheet Preview -->
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Attendance Register Matrix</h3>
-                <p class="text-[10px] text-slate-400">Names in Rows • Calendar Dates in Columns</p>
-              </div>
-              <span id="matrix-row-count" class="text-[11px] font-mono text-slate-400">0 rows</span>
+            <div class="flex items-center justify-between gap-2 pt-1">
+              <div id="workbook-sheet-tabs" class="flex items-center gap-1.5 overflow-x-auto pb-1"></div>
+              <button onclick="ensureCurrentMonthSheetsExist(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)); renderAdminConsole(); showToast('Next month tab initialized across all 4 group workbooks.', 'info');" class="shrink-0 px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/40 text-[10px] font-bold text-indigo-300">
+                + Next Month Tab
+              </button>
             </div>
-
-            <div id="workbook-sheet-tabs" class="flex items-center gap-1.5 overflow-x-auto pb-1"></div>
 
             <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950">
               <table class="w-full text-left border-collapse text-[11px]">
@@ -616,14 +610,14 @@
         </div>
 
         <!-- --------------------------------------------------------------- -->
-        <!-- ADMIN SUB-VIEW 3: ONE-TIME USER ENROLLMENT & DELETION           -->
+        <!-- ADMIN SUB-VIEW 3: USER ENROLLMENT, CUSTOM IDs, SEARCH & FILTERS -->
         <!-- --------------------------------------------------------------- -->
         <div id="admin-view-users" class="hidden space-y-3">
           <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
             <div class="flex items-center justify-between gap-2">
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Admin One-Time User Enrollment</h3>
-                <p class="text-[11px] text-slate-400">Single or Bulk .XLSX/.CSV import into Users sheet</p>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Admin User Enrollment & ID Assignment</h3>
+                <p class="text-[11px] text-slate-400">Assign custom IDs or bulk import into Users sheet</p>
               </div>
               <button onclick="exportUsersDirectoryXLSX()" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shrink-0 transition">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -635,7 +629,7 @@
             <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-2">
               <div>
                 <div class="text-[11px] font-bold text-indigo-300">Bulk Import Members (.XLSX / .CSV)</div>
-                <div class="text-[9px] text-slate-400">Cols: First Name, Last Name, Phone, Email, Group</div>
+                <div class="text-[9px] text-slate-400">Cols: Member ID, First Name, Last Name, Phone, Email, Group</div>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
                 <button type="button" onclick="downloadBulkUserTemplate()" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] font-bold text-slate-300 transition">
@@ -648,7 +642,23 @@
               </div>
             </div>
 
+            <!-- One-Time Enrollment Form with Custom Member ID -->
             <form onsubmit="handleAdminEnrollUser(event)" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">Custom Member ID (Optional)</label>
+                  <input id="enroll-custom-id" type="text" placeholder="e.g. EMP-105 (or Auto)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-rose-500" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">Assigned Group *</label>
+                  <select id="enroll-group" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
+                    <option value="Employees">Employees</option>
+                    <option value="GDA">GDA</option>
+                    <option value="IT">IT</option>
+                    <option value="MFs">MFs</option>
+                  </select>
+                </div>
+              </div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block text-[10px] text-slate-400 mb-1">First Name *</label>
@@ -669,22 +679,38 @@
                   <input id="enroll-email" type="email" required placeholder="member@mitraz.org" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-2 items-end">
-                <div>
-                  <label class="block text-[10px] text-slate-400 mb-1">Assigned Group *</label>
-                  <select id="enroll-group" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
-                    <option value="Employees">Employees</option>
-                    <option value="GDA">GDA</option>
-                    <option value="IT">IT</option>
-                    <option value="MFs">MFs</option>
-                  </select>
-                </div>
-                <button type="submit" class="w-full py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1 transition">
-                  <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                  Enroll User
-                </button>
-              </div>
+              <button type="submit" class="w-full py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1 transition">
+                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                Enroll User & Sync Cloud
+              </button>
             </form>
+
+            <!-- Search & Attribute Filters for Enrolled Users -->
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Search & Filter Members</span>
+                <span id="admin-users-filter-count" class="text-[10px] font-mono text-indigo-300">0 shown</span>
+              </div>
+              <div class="relative">
+                <input id="admin-users-search" type="text" oninput="renderAdminConsole()" placeholder="Search by ID, Name, Email, Phone, or Device..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select id="admin-users-filter-group" onchange="renderAdminConsole()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-[11px] text-white focus:outline-none">
+                  <option value="ALL">Group: All Groups</option>
+                  <option value="Employees">Group: Employees</option>
+                  <option value="GDA">Group: GDA</option>
+                  <option value="IT">Group: IT</option>
+                  <option value="MFs">Group: MFs</option>
+                </select>
+                <select id="admin-users-filter-status" onchange="renderAdminConsole()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-[11px] text-white focus:outline-none">
+                  <option value="ALL">Status: All Members</option>
+                  <option value="BOUND">Device: Bound</option>
+                  <option value="UNBOUND">Device: Unbound</option>
+                  <option value="RESET_REQ">Flag: Reset Requested</option>
+                </select>
+              </div>
+            </div>
 
             <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950">
               <table class="w-full text-left border-collapse text-[11px]">
@@ -800,10 +826,10 @@
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Live Multi-Device Cloud Sync</h3>
-                <p class="text-[11px] text-slate-400">Auto-polls every 12s • Syncs scans, users, leaves & holidays</p>
+                <p class="text-[11px] text-slate-400">Pre-configured • Auto-polls every 12s across all devices</p>
               </div>
-              <span id="cloud-status-pill" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">
-                Offline / Local
+              <span id="cloud-status-pill" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300">
+                Connected Auto
               </span>
             </div>
 
@@ -924,7 +950,7 @@
         <i data-lucide="calendar-off" class="w-4 h-4"></i>
         <span class="text-[10px] font-bold">Apply Leave</span>
       </button>
-      <button id="nav-tab-admin" onclick="switchPortalTab('admin')" class="hidden py-2 rounded-xl flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-white transition">
+      <button id="nav-tab-admin" onclick="switchPortalTab('admin')" class="hidden py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-white transition">
         <i data-lucide="shield" class="w-4 h-4"></i>
         <span class="text-[10px] font-bold">Admin Console</span>
       </button>
@@ -944,6 +970,8 @@
     const DEVICE_FP_KEY = 'mitraz_android_hw_fingerprint_v2';
     const SESSION_KEY = 'mitraz_attendguard_session_v2';
     const CLOUD_CACHE_KEY = 'mitraz_cloud_endpoint_cache_v1';
+    const DEFAULT_CLOUD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbz1FpmB4JlWOVSeUbA5aPe_nohnNtAkNrbRaLxgMwG6_nbg-mzRLi14AJouLGMTqlxQIw/exec';
+    const DEFAULT_CLOUD_SECRET = 'MITRAZ-CLOUD-KEY-2026';
     const HMAC_SECRET = 'MITRAZ-ENTERPRISE-ZERO-TRUST-SECRET-2026';
     const GROUPS = ['Employees', 'GDA', 'IT', 'MFs'];
 
@@ -1028,7 +1056,6 @@
       link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
       document.head.appendChild(link);
 
-      // Show "+ Install App" helper on iPhone Safari when not already installed
       if (isIOSDevice() && !isStandaloneMode()) {
         document.getElementById('btn-install-pwa')?.classList.remove('hidden');
       }
@@ -1113,7 +1140,6 @@
         let cached = localStorage.getItem(DEVICE_FP_KEY);
         if (cached && /^HW-[A-F0-9]{12}$/.test(cached)) return cached;
 
-        // Try cookie fallback in case Safari/Chrome cleared localStorage
         const cookieMatch = document.cookie.match(/(?:^|;\s*)mitraz_hw_fp=(HW-[A-F0-9]{12})/);
         if (cookieMatch && cookieMatch[1]) {
           localStorage.setItem(DEVICE_FP_KEY, cookieMatch[1]);
@@ -1264,9 +1290,9 @@
           maxRadiusMeters: 250
         },
         cloudSync: {
-          enabled: false,
-          endpointUrl: '',
-          secretToken: 'MITRAZ-CLOUD-KEY-2026',
+          enabled: true,
+          endpointUrl: DEFAULT_CLOUD_ENDPOINT,
+          secretToken: DEFAULT_CLOUD_SECRET,
           lastSyncAt: null,
           pendingQueue: []
         },
@@ -1322,17 +1348,17 @@
         }
         if (!parsed.cloudSync) {
           parsed.cloudSync = {
-            enabled: false,
-            endpointUrl: '',
-            secretToken: 'MITRAZ-CLOUD-KEY-2026',
+            enabled: true,
+            endpointUrl: DEFAULT_CLOUD_ENDPOINT,
+            secretToken: DEFAULT_CLOUD_SECRET,
             lastSyncAt: null,
             pendingQueue: []
           };
         }
-        if (!parsed.cloudSync.endpointUrl && cachedCloud && cachedCloud.endpointUrl) {
-          parsed.cloudSync.enabled = Boolean(cachedCloud.enabled);
-          parsed.cloudSync.endpointUrl = cachedCloud.endpointUrl;
-          parsed.cloudSync.secretToken = cachedCloud.secretToken || 'MITRAZ-CLOUD-KEY-2026';
+        if (!parsed.cloudSync.endpointUrl) {
+          parsed.cloudSync.enabled = true;
+          parsed.cloudSync.endpointUrl = (cachedCloud && cachedCloud.endpointUrl) || DEFAULT_CLOUD_ENDPOINT;
+          parsed.cloudSync.secretToken = (cachedCloud && cachedCloud.secretToken) || DEFAULT_CLOUD_SECRET;
         }
         if (!Array.isArray(parsed.cloudSync.pendingQueue)) parsed.cloudSync.pendingQueue = [];
         return parsed;
@@ -1352,7 +1378,7 @@
             JSON.stringify({
               enabled: Boolean(appState.cloudSync.enabled),
               endpointUrl: appState.cloudSync.endpointUrl,
-              secretToken: appState.cloudSync.secretToken || 'MITRAZ-CLOUD-KEY-2026'
+              secretToken: appState.cloudSync.secretToken || DEFAULT_CLOUD_SECRET
             })
           );
         }
@@ -1426,13 +1452,12 @@
 
       appState.cloudSync.enabled = enabled;
       appState.cloudSync.endpointUrl = endpointUrl;
-      appState.cloudSync.secretToken = secretToken || 'MITRAZ-CLOUD-KEY-2026';
+      appState.cloudSync.secretToken = secretToken || DEFAULT_CLOUD_SECRET;
       saveState();
       updateCloudStatusUI();
       logSecurityIncident('INFO', `Admin updated Cloud Sheet Sync (${enabled ? 'ENABLED' : 'DISABLED'}).`);
       showToast(enabled ? 'Cloud Sheet Sync enabled (auto-syncing every 12s)!' : 'Cloud Sheet Sync saved (Local mode).', 'success');
       if (enabled && endpointUrl) {
-        // Push all locally enrolled users to Google Sheet so new phones can log in immediately
         (appState.registeredUsers || []).forEach((u) => {
           queueCloudSyncEvent('USER_ENROLLED', u);
         });
@@ -1453,7 +1478,6 @@
             passHash: remoteU.passHash || localU?.passHash || ''
           };
         });
-        // Preserve any locally enrolled users not yet flushed to Google Sheet
         (appState.registeredUsers || []).forEach((localU) => {
           if (!mergedUsers.some((m) => String(m.userId).toLowerCase() === String(localU.userId).toLowerCase())) {
             mergedUsers.push(localU);
@@ -1612,7 +1636,7 @@
     function handleForgotPasswordRequest() {
       const identifier = (document.getElementById('login-identifier')?.value || '').trim();
       if (!identifier) {
-        showLoginError('Enter Member ID or Email First', 'Type your Member ID or Email above, then tap "Forgot Password? Notify Admin".');
+        showLoginError('Enter Member ID or Email First', 'Type your Member ID, Name, or Email above, then tap "Forgot Password? Notify Admin".');
         return;
       }
       if (identifier.toUpperCase() === 'ADMIN') {
@@ -1620,11 +1644,15 @@
         return;
       }
 
+      const idNorm = identifier.toLowerCase().replace(/\s+/g, ' ');
       const user = appState.registeredUsers.find(
-        (u) => u.userId.toLowerCase() === identifier.toLowerCase() || u.email.toLowerCase() === identifier.toLowerCase()
+        (u) =>
+          String(u.userId || '').trim().toLowerCase() === idNorm ||
+          String(u.email || '').trim().toLowerCase() === idNorm ||
+          `${u.firstName || ''} ${u.lastName || ''}`.trim().toLowerCase().replace(/\s+/g, ' ') === idNorm
       );
       if (!user) {
-        showLoginError('Member Not Found', 'No enrolled account matches that ID or email.');
+        showLoginError('Member Not Found', 'No enrolled account matches that ID, Name, or Email.');
         return;
       }
 
@@ -1635,6 +1663,197 @@
       queueCloudSyncEvent('PASSWORD_RESET_REQUESTED', { userId: user.userId, requestedAt: user.resetRequestedAt });
       hideLoginError();
       showToast(`Reset request sent to Admin for ${user.firstName} (${user.userId}).`, 'success');
+    }
+
+    function createAuthenticatedSession(claims) {
+      const issuedAt = Date.now();
+      const rawToken = `${claims.role}|${claims.userId}|${claims.group}|${claims.deviceId}|${issuedAt}`;
+      const sig = computeMAC(rawToken);
+      currentSession = { ...claims, issuedAt, sig };
+      try {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentSession));
+      } catch (e) {}
+
+      enterPortalUI();
+      showToast(`Welcome, ${claims.name} (${claims.role === 'ROLE_ADMIN' ? 'Admin' : claims.group})`, 'success');
+    }
+
+    function validateActiveSession() {
+      if (!currentSession) return false;
+      const rawToken = `${currentSession.role}|${currentSession.userId}|${currentSession.group}|${currentSession.deviceId}|${currentSession.issuedAt}`;
+      const expectedSig = computeMAC(rawToken);
+      if (!constantTimeEqual(currentSession.sig, expectedSig)) {
+        logSecurityIncident('CRITICAL', 'TAMPER ALERT: Session HMAC signature mismatch detected! Terminating session.');
+        logoutSession('Security violation: tampered session terminated.');
+        return false;
+      }
+      return true;
+    }
+
+    function logoutSession(reason = 'Signed out.') {
+      stopCameraScanner();
+      currentSession = null;
+      try {
+        sessionStorage.removeItem(SESSION_KEY);
+      } catch (e) {}
+
+      document.getElementById('authenticated-portal')?.classList.add('hidden');
+      document.getElementById('auth-gate-screen')?.classList.remove('hidden');
+      const pwEl = document.getElementById('login-password');
+      if (pwEl) pwEl.value = '';
+      showToast(reason, 'info');
+    }
+
+    function enterPortalUI() {
+      if (!validateActiveSession()) return;
+
+      document.getElementById('auth-gate-screen')?.classList.add('hidden');
+      document.getElementById('authenticated-portal')?.classList.remove('hidden');
+
+      const isAdmin = currentSession.role === 'ROLE_ADMIN';
+
+      const roleBadge = document.getElementById('header-role-badge');
+      const subtitle = document.getElementById('header-user-subtitle');
+      if (roleBadge) {
+        roleBadge.textContent = isAdmin ? 'ADMIN MASTER' : currentSession.group.toUpperCase();
+        roleBadge.className = isAdmin
+          ? 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40'
+          : 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      }
+      if (subtitle) {
+        subtitle.textContent = isAdmin
+          ? `${currentSession.deviceId} • Full Access`
+          : `${currentSession.userId} • ${currentSession.group}`;
+      }
+
+      const nameEl = document.getElementById('member-full-name');
+      const pillEl = document.getElementById('member-group-pill');
+      const avatarEl = document.getElementById('member-avatar');
+      if (nameEl) nameEl.textContent = currentSession.name;
+      if (pillEl) pillEl.textContent = isAdmin ? 'Admin Master Account • All Groups' : `${currentSession.userId} • Group: ${currentSession.group}`;
+      if (avatarEl) {
+        avatarEl.textContent = currentSession.name
+          .split(/\s+/)
+          .map((w) => w[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase();
+      }
+
+      const navBar = document.getElementById('bottom-nav-bar');
+      const navAdminBtn = document.getElementById('nav-tab-admin');
+      if (navBar && navAdminBtn) {
+        if (isAdmin) {
+          navBar.classList.remove('grid-cols-3');
+          navBar.classList.add('grid-cols-4');
+          navAdminBtn.classList.remove('hidden');
+          navAdminBtn.classList.add('flex');
+        } else {
+          navBar.classList.remove('grid-cols-4');
+          navBar.classList.add('grid-cols-3');
+          navAdminBtn.classList.add('hidden');
+          navAdminBtn.classList.remove('flex');
+        }
+      }
+
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const startEl = document.getElementById('leave-start-date');
+      const endEl = document.getElementById('leave-end-date');
+      if (startEl && !startEl.value) startEl.value = todayIso;
+      if (endEl && !endEl.value) endEl.value = todayIso;
+
+      updateCloudStatusUI();
+      switchPortalTab(isAdmin ? 'admin' : 'scan');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function handleFirstLoginPasswordChange(event) {
+      event.preventDefault();
+      const p1 = document.getElementById('new-user-pass-1')?.value || '';
+      const p2 = document.getElementById('new-user-pass-2')?.value || '';
+      const errEl = document.getElementById('first-login-pass-error');
+
+      const showModalErr = (msg) => {
+        if (errEl) {
+          errEl.textContent = msg;
+          errEl.classList.remove('hidden');
+        }
+      };
+
+      if (p1 !== p2) {
+        showModalErr('Passphrases do not match.');
+        return;
+      }
+      if (p1 === 'Mitraz@User1!') {
+        showModalErr('Please choose a new personal passphrase different from the temporary default.');
+        return;
+      }
+      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+      if (!strongRegex.test(p1)) {
+        showModalErr('Must be 8+ characters with uppercase, lowercase, number, and symbol.');
+        return;
+      }
+
+      const user = appState.registeredUsers.find((u) => u.userId === pendingFirstLoginUserId);
+      if (!user) return;
+
+      user.salt = `SALT-${user.userId}-${Date.now().toString(36)}`;
+      user.passHash = hashPassphrase(p1, user.salt);
+      user.mustChangePassword = false;
+      saveState();
+      logSecurityIncident('INFO', `Member ${user.userId} completed first-login personal passphrase setup.`);
+      queueCloudSyncEvent('USER_PASSWORD_UPDATED', { userId: user.userId, salt: user.salt, passHash: user.passHash });
+
+      document.getElementById('first-login-modal')?.classList.add('hidden');
+      pendingFirstLoginUserId = null;
+
+      createAuthenticatedSession({
+        role: 'ROLE_USER',
+        userId: user.userId,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        group: user.group,
+        deviceId: getHardwareFingerprint()
+      });
+    }
+
+    function handleAdminRotatePassword(event) {
+      event.preventDefault();
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const p1 = document.getElementById('admin-new-pass-1')?.value || '';
+      const p2 = document.getElementById('admin-new-pass-2')?.value || '';
+      if (p1 !== p2) {
+        showToast('New Admin passphrases do not match.', 'error');
+        return;
+      }
+      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
+      if (!strongRegex.test(p1)) {
+        showToast('Use 10+ characters with uppercase, lowercase, number, and symbol.', 'error');
+        return;
+      }
+      const newSalt = 'SALT-MITRAZ-ADMIN-' + Date.now().toString(36);
+      appState.adminAccount.salt = newSalt;
+      appState.adminAccount.passHash = hashPassphrase(p1, newSalt);
+      saveState();
+      logSecurityIncident('INFO', 'Admin Master passphrase rotated successfully.');
+      const i1 = document.getElementById('admin-new-pass-1');
+      const i2 = document.getElementById('admin-new-pass-2');
+      if (i1) i1.value = '';
+      if (i2) i2.value = '';
+      showToast('Admin Master passphrase updated!', 'success');
+    }
+
+    function setScanMode(mode) {
+      activeScanMode = mode;
+      const inBtn = document.getElementById('btn-scan-in');
+      const outBtn = document.getElementById('btn-scan-out');
+      if (inBtn && outBtn) {
+        inBtn.className = mode === 'CHECK-IN'
+          ? 'py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow transition'
+          : 'py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition';
+        outBtn.className = mode === 'CHECK-OUT'
+          ? 'py-2.5 rounded-xl text-xs font-extrabold bg-amber-600 text-white shadow transition'
+          : 'py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition';
+      }
     }
 
     function toggleLoginPasswordVisibility() {
@@ -1695,25 +1914,23 @@
           return;
         }
 
+        const idNorm = identifier.toLowerCase().replace(/\s+/g, ' ');
         const user = appState.registeredUsers.find(
           (u) =>
-            String(u.userId || '').trim().toLowerCase() === identifier.toLowerCase() ||
-            String(u.email || '').trim().toLowerCase() === identifier.toLowerCase()
+            String(u.userId || '').trim().toLowerCase() === idNorm ||
+            String(u.email || '').trim().toLowerCase() === idNorm ||
+            `${u.firstName || ''} ${u.lastName || ''}`.trim().toLowerCase().replace(/\s+/g, ' ') === idNorm
         );
 
         if (!user) {
           logSecurityIncident('WARNING', `Unregistered login attempt for "${identifier}" from ${currentHw}.`);
-          const cloudHint = !(appState.cloudSync?.enabled && appState.cloudSync?.endpointUrl)
-            ? ' (Note: Cloud Sync is not connected on this phone yet—ask Admin to connect Google Sheets or enroll your ID on this device.)'
-            : '';
           showLoginError(
             'Account Not Found',
-            `Only users enrolled by the Admin can access this portal.${cloudHint}`
+            'No enrolled user matches that Member ID, Full Name, or Email. Ask Admin to enroll your account or check Cloud Sync.'
           );
           return;
         }
 
-        // Fallback if user row came from Cloud Sheet without salt/passHash yet
         if (!user.salt || !user.passHash) {
           user.salt = `SALT-${user.userId}-INIT`;
           user.passHash = hashPassphrase('Mitraz@User1!', user.salt);
@@ -2071,6 +2288,7 @@
         return;
       }
 
+      const customIdRaw = (document.getElementById('enroll-custom-id')?.value || '').trim().toUpperCase();
       const firstName = document.getElementById('enroll-first-name')?.value.trim() || '';
       const lastName = document.getElementById('enroll-last-name')?.value.trim() || '';
       const phone = document.getElementById('enroll-phone')?.value.trim() || '';
@@ -2080,6 +2298,18 @@
       if (!firstName || !lastName || !phone || !email) {
         showToast('All fields (First Name, Last Name, Phone, Email) are required.', 'error');
         return;
+      }
+
+      if (customIdRaw) {
+        if (!/^[A-Z0-9_-]{2,24}$/.test(customIdRaw)) {
+          showToast('Custom ID must be 2–24 letters, numbers, hyphens, or underscores.', 'error');
+          return;
+        }
+        const idTaken = appState.registeredUsers.some((u) => String(u.userId).toUpperCase() === customIdRaw);
+        if (idTaken || customIdRaw === 'ADMIN') {
+          showToast(`Member ID [${customIdRaw}] is already assigned. Choose a unique ID.`, 'error');
+          return;
+        }
       }
 
       const duplicate = appState.registeredUsers.find(
@@ -2092,7 +2322,10 @@
 
       const prefixMap = { Employees: 'EMP', GDA: 'GDA', IT: 'IT', MFs: 'MFS' };
       const prefix = prefixMap[group] || 'EMP';
-      const userId = `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
+      let userId = customIdRaw || `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
+      while (!customIdRaw && appState.registeredUsers.some((u) => u.userId === userId)) {
+        userId = `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
+      }
       const salt = `SALT-${userId}-${Date.now().toString(36)}`;
 
       const newUser = {
@@ -2133,7 +2366,7 @@
       logSecurityIncident('INFO', `Admin enrolled ${firstName} ${lastName} (${userId}) into [${group}].`);
       queueCloudSyncEvent('USER_ENROLLED', newUser);
 
-      ['enroll-first-name', 'enroll-last-name', 'enroll-phone', 'enroll-email'].forEach((id) => {
+      ['enroll-custom-id', 'enroll-first-name', 'enroll-last-name', 'enroll-phone', 'enroll-email'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -2223,11 +2456,11 @@
       }
       const wb = XLSX.utils.book_new();
       const aoa = [
-        ['First Name', 'Last Name', 'Phone Number', 'Email', 'Group'],
-        ['Kavita', 'Nair', '+91 9876543210', 'kavita.nair@mitraz.org', 'Employees'],
-        ['Arjun', 'Menon', '+91 9876543211', 'arjun.menon@mitraz.org', 'GDA'],
-        ['Divya', 'Rao', '+91 9876543212', 'divya.rao@mitraz.org', 'IT'],
-        ['Suresh', 'Patel', '+91 9876543213', 'suresh.patel@mitraz.org', 'MFs']
+        ['Member ID (Optional)', 'First Name', 'Last Name', 'Phone Number', 'Email', 'Group'],
+        ['EMP-105', 'Kavita', 'Nair', '+91 9876543210', 'kavita.nair@mitraz.org', 'Employees'],
+        ['GDA-205', 'Arjun', 'Menon', '+91 9876543211', 'arjun.menon@mitraz.org', 'GDA'],
+        ['', 'Divya', 'Rao', '+91 9876543212', 'divya.rao@mitraz.org', 'IT'],
+        ['', 'Suresh', 'Patel', '+91 9876543213', 'suresh.patel@mitraz.org', 'MFs']
       ];
       const ws = XLSX.utils.aoa_to_sheet(aoa);
       XLSX.utils.book_append_sheet(wb, ws, 'Bulk_Users_Template');
@@ -2255,14 +2488,18 @@
           let added = 0;
           let skipped = 0;
           const prefixMap = { Employees: 'EMP', GDA: 'GDA', IT: 'IT', MFs: 'MFS' };
+          const headerFirst = String(rows[0]?.[0] || '').toLowerCase();
+          const hasCustomIdCol = headerFirst.includes('id');
 
           for (let i = 1; i < rows.length; i++) {
             const r = rows[i] || [];
-            const firstName = String(r[0] || '').trim();
-            const lastName = String(r[1] || '').trim();
-            const phone = String(r[2] || '').trim();
-            const email = String(r[3] || '').trim().toLowerCase();
-            const rawGroup = String(r[4] || 'Employees').trim();
+            const customId = hasCustomIdCol ? String(r[0] || '').trim().toUpperCase() : '';
+            const offset = hasCustomIdCol ? 1 : 0;
+            const firstName = String(r[offset] || '').trim();
+            const lastName = String(r[offset + 1] || '').trim();
+            const phone = String(r[offset + 2] || '').trim();
+            const email = String(r[offset + 3] || '').trim().toLowerCase();
+            const rawGroup = String(r[offset + 4] || 'Employees').trim();
             const group = GROUPS.find((g) => g.toLowerCase() === rawGroup.toLowerCase()) || 'Employees';
 
             if (!firstName || !lastName || !phone || !email) {
@@ -2271,7 +2508,10 @@
             }
 
             const exists = appState.registeredUsers.some(
-              (u) => u.email.toLowerCase() === email || u.phone.replace(/\s+/g, '') === phone.replace(/\s+/g, '')
+              (u) =>
+                (customId && String(u.userId).toUpperCase() === customId) ||
+                u.email.toLowerCase() === email ||
+                u.phone.replace(/\s+/g, '') === phone.replace(/\s+/g, '')
             );
             if (exists) {
               skipped++;
@@ -2279,7 +2519,7 @@
             }
 
             const prefix = prefixMap[group] || 'EMP';
-            const userId = `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
+            const userId = customId || `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
             const salt = `SALT-${userId}-${Date.now().toString(36)}-${i}`;
 
             const newUser = {
@@ -3206,11 +3446,38 @@
 
       const usersTbody = document.getElementById('admin-users-tbody');
       const deleteSelect = document.getElementById('admin-delete-user-select');
+      const filterCountEl = document.getElementById('admin-users-filter-count');
+
+      const searchTerm = (document.getElementById('admin-users-search')?.value || '').trim().toLowerCase();
+      const filterGroup = document.getElementById('admin-users-filter-group')?.value || 'ALL';
+      const filterStatus = document.getElementById('admin-users-filter-status')?.value || 'ALL';
+
+      const filteredUsers = appState.registeredUsers.filter((u) => {
+        if (filterGroup !== 'ALL' && u.group !== filterGroup) return false;
+        if (filterStatus === 'BOUND' && !u.boundDeviceId) return false;
+        if (filterStatus === 'UNBOUND' && u.boundDeviceId) return false;
+        if (filterStatus === 'RESET_REQ' && !u.passwordResetRequested) return false;
+
+        if (searchTerm) {
+          const haystack = `${u.userId} ${u.firstName} ${u.lastName} ${u.email} ${u.phone} ${u.group} ${u.boundDeviceId || 'unbound'}`.toLowerCase();
+          if (!haystack.includes(searchTerm)) return false;
+        }
+        return true;
+      });
+
+      if (filterCountEl) {
+        filterCountEl.textContent = `${filteredUsers.length} of ${appState.registeredUsers.length}`;
+      }
+
       if (usersTbody) {
         usersTbody.innerHTML =
-          appState.registeredUsers.length === 0
-            ? `<tr><td colspan="5" class="py-5 text-center text-slate-500">No members enrolled yet. Use the form above.</td></tr>`
-            : appState.registeredUsers
+          filteredUsers.length === 0
+            ? `<tr><td colspan="5" class="py-5 text-center text-slate-500">${
+                appState.registeredUsers.length === 0
+                  ? 'No members enrolled yet. Use the form above.'
+                  : 'No members match your search or attribute filters.'
+              }</td></tr>`
+            : filteredUsers
                 .map((u) => {
                   const isConfirming = pendingDeleteUserId === u.userId;
                   return `
@@ -3320,8 +3587,8 @@
       const cloudUrlInp = document.getElementById('cfg-cloud-endpoint');
       const cloudSecInp = document.getElementById('cfg-cloud-secret');
       if (cloudEnChk) cloudEnChk.checked = Boolean(cloudCfg.enabled);
-      if (cloudUrlInp && document.activeElement !== cloudUrlInp) cloudUrlInp.value = cloudCfg.endpointUrl || '';
-      if (cloudSecInp && document.activeElement !== cloudSecInp) cloudSecInp.value = cloudCfg.secretToken || 'MITRAZ-CLOUD-KEY-2026';
+      if (cloudUrlInp && document.activeElement !== cloudUrlInp) cloudUrlInp.value = cloudCfg.endpointUrl || DEFAULT_CLOUD_ENDPOINT;
+      if (cloudSecInp && document.activeElement !== cloudSecInp) cloudSecInp.value = cloudCfg.secretToken || DEFAULT_CLOUD_SECRET;
       updateCloudStatusUI();
 
       const policy = appState.securityPolicy || {};
@@ -3425,8 +3692,6 @@
       }, 3200);
     }
 
-    // Live Clock, Automatic Month-End Check & Background Cloud Auto-Sync (every 12s)
-    setInterval(() => {
     // Automatic Month-End Check & Background Cloud Auto-Sync (every 12s)
     setInterval(() => {
       const now = new Date();
@@ -3465,6 +3730,10 @@
 
       ensureCurrentMonthSheetsExist(new Date());
       refreshGPS(false);
+
+      if (appState.cloudSync?.enabled && appState.cloudSync?.endpointUrl) {
+        syncWithCloudServer(false);
+      }
 
       try {
         const saved = sessionStorage.getItem(SESSION_KEY);
