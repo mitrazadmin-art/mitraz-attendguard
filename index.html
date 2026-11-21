@@ -174,7 +174,7 @@
           <button type="button" onclick="handleForgotPasswordRequest()" class="text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 transition">
             Forgot Password? Notify Admin
           </button>
-          <span class="font-mono text-slate-400">v2.3 Auto-Sync</span>
+          <span class="font-mono text-slate-400">v2.4 Enterprise</span>
         </div>
       </div>
     </main>
@@ -186,7 +186,7 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- MODAL: MANDATORY FIRST-LOGIN PASSPHRASE SETUP                         -->
+  <!-- MODAL: MANDATORY FIRST-LOGIN / RESET PASSPHRASE SETUP                 -->
   <!-- ===================================================================== -->
   <div id="first-login-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
     <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl space-y-4">
@@ -196,7 +196,7 @@
         </div>
         <div>
           <h3 class="text-sm font-extrabold text-white">Set Your Personal Passphrase</h3>
-          <p class="text-[11px] text-slate-400">Required on first sign-in so only you know your password</p>
+          <p class="text-[11px] text-slate-400">Required on first sign-in or after a password reset</p>
         </div>
       </div>
 
@@ -317,7 +317,7 @@
         <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 space-y-3">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Group Checkpoint Scanner</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Group Checkpoint QR Scanner</h3>
               <p class="text-[11px] text-slate-400">Scan your assigned MITRAZ group QR badge</p>
             </div>
             <button id="btn-toggle-camera" onclick="toggleCameraScanner()" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 transition">
@@ -331,10 +331,10 @@
             <div id="qr-reader" class="w-full h-full"></div>
             <div id="camera-placeholder" class="absolute inset-0 flex flex-col items-center justify-center p-4 text-center space-y-2 pointer-events-none">
               <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-rose-500">
-                <i data-lucide="scan-line" class="w-6 h-6"></i>
+                <i data-lucide="qr-code" class="w-6 h-6"></i>
               </div>
-              <p class="text-xs font-semibold text-slate-300">Tap "Start Camera" & Point at Group QR</p>
-              <p class="text-[10px] text-slate-500">Works on Android Chrome & iPhone Safari (HTTPS)</p>
+              <p class="text-xs font-semibold text-slate-300">QR Scanner Ready • Tap "Start Camera"</p>
+              <p class="text-[10px] text-slate-500">Point camera at your MITRAZ Group QR Badge (iOS & Android)</p>
             </div>
             <div id="scanner-laser-line" class="hidden scanner-laser absolute left-4 right-4 h-0.5 bg-rose-500 shadow-[0_0_12px_#f43f5e] pointer-events-none"></div>
           </div>
@@ -553,6 +553,21 @@
               </button>
             </div>
 
+            <!-- Download Any Month's Attendance for Last 12 Months -->
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <div class="text-[10px] font-bold text-emerald-300">Export Last 12 Months Attendance</div>
+                <div class="text-[9px] text-slate-400">Select any month from the past 1 year</div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <select id="admin-history-month-select" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[10px] font-mono text-white"></select>
+                <button type="button" onclick="exportSelectedHistoryMonthXLSX()" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[10px] font-bold text-white flex items-center gap-1 transition">
+                  <i data-lucide="calendar-arrow-down" class="w-3 h-3"></i>
+                  Download
+                </button>
+              </div>
+            </div>
+
             <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950">
               <table class="w-full text-left border-collapse text-[11px]">
                 <thead id="matrix-table-head"></thead>
@@ -603,7 +618,34 @@
             </div>
 
             <div class="pt-2 border-t border-slate-800 space-y-2">
-              <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Group QR → Excel Sheet Links</h4>
+              <div class="flex items-center justify-between">
+                <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Group QR → Excel Sheet Links</h4>
+                <button type="button" onclick="toggleQrSheetLinkerBox()" class="px-2 py-0.5 rounded-lg bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/40 text-[10px] font-bold text-indigo-200 transition">
+                  + Link New Sheet / URL
+                </button>
+              </div>
+
+              <!-- Easy 1-Click Create & Link OR Paste Google Sheet URL -->
+              <div id="qr-sheet-linker-box" class="hidden bg-slate-950 border border-indigo-500/40 rounded-xl p-3 space-y-2.5">
+                <div class="text-[10px] font-bold text-indigo-300">Link Group QR to a New Excel Workbook or Google Sheet Link</div>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <select id="qr-link-target-group" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-[11px] text-white">
+                    <option value="Employees">Group: Employees</option>
+                    <option value="GDA">Group: GDA</option>
+                    <option value="IT">Group: IT</option>
+                    <option value="MFs">Group: MFs</option>
+                  </select>
+                  <input id="qr-link-sheet-name" type="text" placeholder="Sheet Name (e.g. GDA_2026)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-[11px] text-white" />
+                </div>
+                <input id="qr-link-external-url" type="url" placeholder="Optional: Paste Google Sheet link (https://docs.google.com/spreadsheets/d/...)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] font-mono text-white" />
+                <div class="flex justify-end gap-1.5">
+                  <button type="button" onclick="toggleQrSheetLinkerBox()" class="px-2.5 py-1 rounded-lg bg-slate-800 text-[10px] font-bold text-slate-300">Cancel</button>
+                  <button type="button" onclick="handleCreateOrLinkGroupSheet()" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[10px] font-bold text-white">
+                    Create & Link Sheet
+                  </button>
+                </div>
+              </div>
+
               <div id="group-qr-links-list" class="space-y-2"></div>
             </div>
           </div>
@@ -708,6 +750,7 @@
                   <option value="BOUND">Device: Bound</option>
                   <option value="UNBOUND">Device: Unbound</option>
                   <option value="RESET_REQ">Flag: Reset Requested</option>
+                  <option value="MUST_CHANGE">Flag: Must Set Password</option>
                 </select>
               </div>
             </div>
@@ -742,132 +785,52 @@
                 </button>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- --------------------------------------------------------------- -->
-        <!-- ADMIN SUB-VIEW 3B: LEAVE APPROVALS & EXCEL SYNC                 -->
-        <!-- --------------------------------------------------------------- -->
-        <div id="admin-view-leaves" class="hidden space-y-3">
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Member Leave Requests</h3>
-                <p class="text-[11px] text-slate-400">Approving marks <span class="font-mono text-amber-300">L (Leave)</span> in group Excel sheet</p>
-              </div>
-              <span id="admin-leaves-summary" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-amber-300">
-                0 pending
-              </span>
-            </div>
-
-            <div id="admin-leaves-list" class="space-y-2"></div>
-          </div>
-        </div>
-
-        <!-- --------------------------------------------------------------- -->
-        <!-- ADMIN SUB-VIEW 3C: ORGANIZATION HOLIDAYS (ADD / EDIT / DELETE)  -->
-        <!-- --------------------------------------------------------------- -->
-        <div id="admin-view-holidays" class="hidden space-y-3">
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Organization Holidays</h3>
-                <p class="text-[11px] text-slate-400">Add, edit, or delete holidays (auto-syncs <span class="font-mono text-sky-300">H (Holiday)</span> to Excel)</p>
-              </div>
-              <span id="admin-holidays-count" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-sky-300">
-                0 holidays
-              </span>
-            </div>
-
-            <form onsubmit="handleAdminSaveHoliday(event)" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+            <!-- Bulk Delete Users from Selected Groups (Admin Password + Explicit Warning) -->
+            <div class="bg-rose-950/50 border border-rose-500/50 rounded-2xl p-3.5 space-y-2.5">
               <div class="flex items-center justify-between">
-                <span id="holiday-form-mode-label" class="text-[11px] font-bold text-sky-300">Add New Organization Holiday</span>
-                <button id="btn-cancel-holiday-edit" type="button" onclick="cancelEditHoliday()" class="hidden text-[10px] font-bold text-slate-400 hover:text-white">
-                  Cancel Edit
-                </button>
+                <span class="text-[11px] font-extrabold text-rose-300 flex items-center gap-1.5">
+                  <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i>
+                  Bulk Delete Users by Group
+                </span>
+                <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-200 border border-rose-500/40">PASSWORD PROTECTED</span>
               </div>
-
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-[10px] text-slate-400 mb-1">Holiday Date *</label>
-                  <input id="holiday-date-input" type="date" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
-                </div>
-                <div>
-                  <label class="block text-[10px] text-slate-400 mb-1">Category *</label>
-                  <select id="holiday-type-input" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
-                    <option value="National Holiday">National Holiday</option>
-                    <option value="Festival Holiday">Festival Holiday</option>
-                    <option value="Organization Off">Organization Off</option>
-                    <option value="Optional / Restricted">Optional / Restricted</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-[10px] text-slate-400 mb-1">Holiday Name / Occasion *</label>
-                <input id="holiday-name-input" type="text" required maxlength="80" placeholder="e.g. Republic Day / Diwali / Foundation Day" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
-              </div>
-
-              <button id="btn-submit-holiday" type="submit" class="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition">
-                <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
-                Save Holiday & Sync Excel
-              </button>
-            </form>
-
-            <div id="admin-holidays-list" class="space-y-2"></div>
-          </div>
-        </div>
-
-        <!-- --------------------------------------------------------------- -->
-        <!-- ADMIN SUB-VIEW 3D: MULTI-DEVICE CLOUD SYNC (GOOGLE SHEETS API)  -->
-        <!-- --------------------------------------------------------------- -->
-        <div id="admin-view-cloud" class="hidden space-y-3">
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Live Multi-Device Cloud Sync</h3>
-                <p class="text-[11px] text-slate-400">Pre-configured • Auto-polls every 12s across all devices</p>
-              </div>
-              <span id="cloud-status-pill" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300">
-                Connected Auto
-              </span>
-            </div>
-
-            <form onsubmit="handleSaveCloudSyncConfig(event)" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2.5">
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-sky-300">Google Apps Script Web App URL</span>
-                <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 cursor-pointer">
-                  <input id="cfg-cloud-enabled" type="checkbox" class="accent-rose-600 rounded" />
-                  Auto-Sync
+              <p class="text-[10px] text-rose-200/85 leading-relaxed">
+                Warning: Permanently removes all enrolled members in the selected group(s) from the directory and active attendance sheets. Historical audit logs remain preserved.
+              </p>
+              <div class="grid grid-cols-4 gap-1.5 text-[10px] font-bold">
+                <label class="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 cursor-pointer">
+                  <input type="checkbox" value="Employees" class="bulk-del-group-chk accent-rose-600" />
+                  <span>Employees</span>
+                </label>
+                <label class="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 cursor-pointer">
+                  <input type="checkbox" value="GDA" class="bulk-del-group-chk accent-rose-600" />
+                  <span>GDA</span>
+                </label>
+                <label class="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 cursor-pointer">
+                  <input type="checkbox" value="IT" class="bulk-del-group-chk accent-rose-600" />
+                  <span>IT</span>
+                </label>
+                <label class="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 cursor-pointer">
+                  <input type="checkbox" value="MFs" class="bulk-del-group-chk accent-rose-600" />
+                  <span>MFs</span>
                 </label>
               </div>
-
-              <input id="cfg-cloud-endpoint" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-[11px] font-mono text-white focus:outline-none focus:border-sky-500" />
-
-              <div>
-                <label class="block text-[10px] text-slate-400 mb-1">Shared Organization Sync Secret Token *</label>
-                <input id="cfg-cloud-secret" type="text" placeholder="MITRAZ-CLOUD-KEY-2026" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-sky-500" />
-              </div>
-
-              <div class="grid grid-cols-2 gap-2 pt-1">
-                <button type="submit" class="py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition">
-                  Save Cloud Config
-                </button>
-                <button type="button" onclick="syncWithCloudServer(true)" class="py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition">
-                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                  Sync Now
+              <div class="flex gap-2">
+                <input id="bulk-delete-admin-pass" type="password" placeholder="Enter Admin Master Password to authorize" class="flex-1 bg-slate-950 border border-rose-500/40 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500" />
+                <button type="button" onclick="openBulkDeleteGroupWarning()" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shrink-0 transition">
+                  Bulk Delete
                 </button>
               </div>
-            </form>
-
-            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5 text-[11px]">
-              <div class="flex items-center justify-between">
-                <span class="text-slate-400">Pending Offline Queue:</span>
-                <span id="cloud-queue-count" class="font-mono font-bold text-amber-300">0 events queued</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-slate-400">Last Cloud Sync:</span>
-                <span id="cloud-last-sync-time" class="font-mono text-slate-300">Never</span>
+              <div id="bulk-delete-confirm-banner" class="hidden rounded-xl bg-slate-950 border border-rose-500 p-3 space-y-2">
+                <div class="text-[11px] font-extrabold text-rose-300 flex items-center gap-1.5">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                  <span id="bulk-delete-warning-text">Final Warning: Confirm permanent deletion</span>
+                </div>
+                <div class="flex justify-end gap-2">
+                  <button type="button" onclick="cancelBulkDeleteGroup()" class="px-3 py-1 rounded-lg bg-slate-800 text-[10px] font-bold text-slate-300">Cancel</button>
+                  <button type="button" onclick="executeBulkDeleteSelectedGroups()" class="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-[10px] font-extrabold text-white">Yes, Permanently Delete</button>
+                </div>
               </div>
             </div>
           </div>
@@ -884,7 +847,7 @@
                 <p class="text-[11px] text-slate-400">Block off-site QR scans outside campus perimeter</p>
               </div>
               <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 cursor-pointer">
-                <input id="cfg-geofence-enforced" type="checkbox" onchange="saveSecurityPolicySettings()" class="accent-rose-600 rounded" />
+                <input id="cfg-geofence-enforced" type="checkbox" onchange="saveSecurityPolicySettings(true)" class="accent-rose-600 rounded" />
                 Enforce Lock
               </label>
             </div>
@@ -933,6 +896,107 @@
           </div>
         </div>
 
+        <!-- --------------------------------------------------------------- -->
+        <!-- ADMIN SUB-VIEW 5: LEAVE REQUESTS APPROVAL CONSOLE               -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="admin-view-leaves" class="hidden space-y-3">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Member Leave Applications</h3>
+                <p class="text-[11px] text-slate-400">Approve, reject, cancel, or re-approve leaves with auto-Excel sync</p>
+              </div>
+              <span id="admin-leaves-summary" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-amber-300">0 pending</span>
+            </div>
+            <div id="admin-leaves-list" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- ADMIN SUB-VIEW 6: ORGANIZATION HOLIDAYS CALENDAR                -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="admin-view-holidays" class="hidden space-y-3">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Organization Holidays</h3>
+                <p id="holiday-form-mode-label" class="text-[11px] text-slate-400">Add New Organization Holiday</p>
+              </div>
+              <span id="admin-holidays-count" class="text-[10px] font-mono text-amber-300">0 holidays</span>
+            </div>
+
+            <form onsubmit="handleAdminSaveHoliday(event)" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">Holiday Date *</label>
+                  <input id="holiday-date-input" type="date" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-1">Category *</label>
+                  <select id="holiday-type-input" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
+                    <option value="National Holiday">National Holiday</option>
+                    <option value="Festival Holiday">Festival Holiday</option>
+                    <option value="Organization Off">Organization Off</option>
+                    <option value="Optional / Restricted">Optional / Restricted</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Holiday Name *</label>
+                <input id="holiday-name-input" type="text" required placeholder="e.g. Republic Day / Diwali" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500" />
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" id="btn-cancel-holiday-edit" onclick="cancelEditHoliday()" class="hidden px-3 py-2 rounded-xl bg-slate-800 text-xs font-bold text-slate-300">Cancel</button>
+                <button type="submit" id="btn-submit-holiday" class="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                  <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                  Save Holiday & Sync Excel
+                </button>
+              </div>
+            </form>
+
+            <div id="admin-holidays-list" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- ADMIN SUB-VIEW 7: GOOGLE SHEETS CLOUD SYNC CONFIGURATION        -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="admin-view-cloud" class="hidden space-y-3">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Google Sheets Auto-Sync</h3>
+                <p class="text-[11px] text-slate-400">Multi-device background sync every 12 seconds</p>
+              </div>
+              <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 cursor-pointer">
+                <input id="cfg-cloud-enabled" type="checkbox" checked class="accent-rose-600 rounded" />
+                Auto-Sync
+              </label>
+            </div>
+
+            <div class="space-y-2">
+              <div>
+                <label class="block text-[10px] font-mono text-slate-400 mb-1">Apps Script Web App URL</label>
+                <input id="cfg-cloud-endpoint" type="url" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-[11px] font-mono text-emerald-300 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-mono text-slate-400 mb-1">Shared Secret Token</label>
+                <input id="cfg-cloud-secret" type="text" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-[11px] font-mono text-white focus:outline-none" />
+              </div>
+              <div class="text-[10px] font-mono text-slate-400" id="cloud-sync-meta-text">Status: Connected & Automated</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="saveCloudSyncSettings()" class="py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
+                Save Cloud Config
+              </button>
+              <button type="button" onclick="pushAllLocalUsersToCloud()" class="py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">
+                Sync & Push All Now
+              </button>
+            </div>
+          </div>
+        </div>
+
       </section>
     </main>
 
@@ -969,7 +1033,6 @@
     const STORAGE_KEY = 'mitraz_attendguard_prod_v2';
     const DEVICE_FP_KEY = 'mitraz_android_hw_fingerprint_v2';
     const SESSION_KEY = 'mitraz_attendguard_session_v2';
-    const CLOUD_CACHE_KEY = 'mitraz_cloud_endpoint_cache_v1';
     const DEFAULT_CLOUD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbz1FpmB4JlWOVSeUbA5aPe_nohnNtAkNrbRaLxgMwG6_nbg-mzRLi14AJouLGMTqlxQIw/exec';
     const DEFAULT_CLOUD_SECRET = 'MITRAZ-CLOUD-KEY-2026';
     const HMAC_SECRET = 'MITRAZ-ENTERPRISE-ZERO-TRUST-SECRET-2026';
@@ -995,100 +1058,8 @@
     let deferredInstallPrompt = null;
     let isSyncInFlight = false;
     let lastAutoSyncTick = 0;
+    let pendingBulkDeleteGroups = [];
     let currentGPS = { lat: 12.971598, lng: 77.594566, accuracy: 16, distanceMeters: 0, verified: false };
-
-    function isIOSDevice() {
-      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    }
-
-    function isStandaloneMode() {
-      return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-    }
-
-    function computeDistanceMeters(lat1, lon1, lat2, lon2) {
-      const R = 6371000;
-      const toRad = (deg) => (deg * Math.PI) / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-    }
-
-    function registerMobilePWAAndAppleIcons() {
-      const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" rx="36" fill="#020617"/><defs><radialGradient id="g" cx="35%" cy="30%" r="68%"><stop offset="0%" stop-color="#FF525E"/><stop offset="50%" stop-color="#E30613"/><stop offset="100%" stop-color="#8A0008"/></radialGradient><linearGradient id="w" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#F5111E"/><stop offset="65%" stop-color="#D90411"/><stop offset="100%" stop-color="#A8000A"/></linearGradient></defs><g transform="translate(30,14)"><circle cx="60" cy="14" r="10.5" fill="url(#g)"/><path d="M12 16 C10 28, 18 46, 35 61 C44 69, 41 81, 33 93 C31 96.5, 33.5 100, 37 99.5 C41 99, 45 91, 48.5 81 C52.5 68, 53 56, 48 46 C44 38, 50 33, 60 33 C70 33, 76 38, 72 46 C67 56, 67.5 68, 71.5 81 C75 91, 79 99, 83 99.5 C86.5 100, 89 96.5, 87 93 C79 81, 76 69, 85 61 C102 46, 110 28, 108 16 C107 11.5, 103 11, 99.5 15 C89 26, 73 28.5, 60 28.5 C47 28.5, 31 26, 20.5 15 C17 11, 13 11.5, 12 16 Z" fill="url(#w)"/></g><text x="90" y="138" text-anchor="middle" fill="#ffffff" font-family="Inter,Arial,sans-serif" font-weight="900" font-size="22" letter-spacing="3">MITRAZ</text><text x="90" y="155" text-anchor="middle" fill="#cbd5e1" font-family="Inter,Arial,sans-serif" font-weight="600" font-size="9.5" letter-spacing="0.4">A Journey to Excellence</text></svg>`;
-      const svgDataUrl = 'data:image/svg+xml,' + encodeURIComponent(iconSvg);
-
-      const appleIcon = document.createElement('link');
-      appleIcon.rel = 'apple-touch-icon';
-      appleIcon.href = svgDataUrl;
-      document.head.appendChild(appleIcon);
-
-      const manifest = {
-        name: 'MITRAZ AttendGuard Enterprise',
-        short_name: 'MITRAZ Attend',
-        description: 'Zero-Trust Attendance & Leave Portal for MITRAZ (Web, iPhone & Android)',
-        start_url: './index.html',
-        scope: './',
-        display: 'standalone',
-        orientation: 'portrait',
-        background_color: '#020617',
-        theme_color: '#020617',
-        icons: [
-          {
-            src: svgDataUrl,
-            sizes: '192x192',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          },
-          {
-            src: svgDataUrl,
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          }
-        ]
-      };
-      const link = document.createElement('link');
-      link.rel = 'manifest';
-      link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
-      document.head.appendChild(link);
-
-      if (isIOSDevice() && !isStandaloneMode()) {
-        document.getElementById('btn-install-pwa')?.classList.remove('hidden');
-      }
-    }
-
-    function applyMitrazFavicon() {
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 112"><rect width="120" height="112" rx="24" fill="#020617"/><defs><radialGradient id="g" cx="35%" cy="30%" r="68%"><stop offset="0%" stop-color="#FF525E"/><stop offset="50%" stop-color="#E30613"/><stop offset="100%" stop-color="#8A0008"/></radialGradient><linearGradient id="w" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#F5111E"/><stop offset="65%" stop-color="#D90411"/><stop offset="100%" stop-color="#A8000A"/></linearGradient></defs><circle cx="60" cy="14" r="10.5" fill="url(#g)"/><path d="M12 16 C10 28, 18 46, 35 61 C44 69, 41 81, 33 93 C31 96.5, 33.5 100, 37 99.5 C41 99, 45 91, 48.5 81 C52.5 68, 53 56, 48 46 C44 38, 50 33, 60 33 C70 33, 76 38, 72 46 C67 56, 67.5 68, 71.5 81 C75 91, 79 99, 83 99.5 C86.5 100, 89 96.5, 87 93 C79 81, 76 69, 85 61 C102 46, 110 28, 108 16 C107 11.5, 103 11, 99.5 15 C89 26, 73 28.5, 60 28.5 C47 28.5, 31 26, 20.5 15 C17 11, 13 11.5, 12 16 Z" fill="url(#w)"/></svg>`;
-      const link = document.createElement('link');
-      link.rel = 'icon';
-      link.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
-      document.head.appendChild(link);
-    }
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredInstallPrompt = e;
-      document.getElementById('btn-install-pwa')?.classList.remove('hidden');
-    });
-
-    async function triggerPWAInstall() {
-      if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        await deferredInstallPrompt.userChoice;
-        deferredInstallPrompt = null;
-        document.getElementById('btn-install-pwa')?.classList.add('hidden');
-        return;
-      }
-      if (isIOSDevice()) {
-        showToast('On iPhone Safari: tap Share (↑) at the bottom, then tap "Add to Home Screen".', 'info');
-      } else {
-        showToast('Open browser menu (⋮) and tap "Install app" or "Add to Home screen".', 'info');
-      }
-    }
 
     function escapeHTML(str) {
       return String(str ?? '')
@@ -1104,102 +1075,90 @@
       return /^[=+\-@]/.test(s) ? `'${s}` : s;
     }
 
-    function computeMAC(payload) {
-      const raw = `${HMAC_SECRET}::${payload}`;
-      let h1 = 0xdeadbeef;
-      let h2 = 0x41c6ce57;
-      for (let i = 0; i < raw.length; i++) {
-        const c = raw.charCodeAt(i);
-        h1 = Math.imul(h1 ^ c, 2654435761);
-        h2 = Math.imul(h2 ^ c, 1597334677);
+    function generateSalt() {
+      const arr = new Uint8Array(8);
+      crypto.getRandomValues(arr);
+      return Array.from(arr, (b) => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function hashPassphrase(passphrase, salt) {
+      const clean = String(passphrase || '').trim();
+      const s = String(salt || '');
+      let h1 = 0x811c9dc5 ^ s.length;
+      let h2 = 0x1b873593 ^ clean.length;
+      const input = `${s}::${clean}::MITRAZ_ZERO_TRUST_PEPPER`;
+      for (let round = 0; round < 120; round++) {
+        for (let i = 0; i < input.length; i++) {
+          const ch = input.charCodeAt(i) ^ (round & 0xff);
+          h1 = Math.imul(h1 ^ ch, 0x01000193);
+          h2 = Math.imul(h2 ^ (ch + round), 0x85ebca6b);
+        }
       }
-      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-      return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+      return (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0');
+    }
+
+    function computeMAC(message) {
+      return hashPassphrase(message, HMAC_SECRET);
     }
 
     function constantTimeEqual(a, b) {
-      if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+      const sa = String(a || '');
+      const sb = String(b || '');
+      if (sa.length !== sb.length) return false;
       let diff = 0;
-      for (let i = 0; i < a.length; i++) {
-        diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+      for (let i = 0; i < sa.length; i++) {
+        diff |= sa.charCodeAt(i) ^ sb.charCodeAt(i);
       }
       return diff === 0;
     }
 
-    function hashPassphrase(passphrase, salt) {
-      let acc = `${salt}:${passphrase}`;
-      for (let r = 0; r < 120; r++) {
-        acc = computeMAC(`${r}:${acc}`);
+    function getDeviceFingerprint() {
+      let fp = localStorage.getItem(DEVICE_FP_KEY);
+      if (!fp) {
+        const m = document.cookie.match(new RegExp(`(?:^|;\\s*)${DEVICE_FP_KEY}=([^;]+)`));
+        if (m) fp = m[1];
       }
-      return acc;
+      if (!fp) {
+        const arr = new Uint8Array(6);
+        crypto.getRandomValues(arr);
+        fp = 'HW-' + Array.from(arr, (b) => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+      }
+      localStorage.setItem(DEVICE_FP_KEY, fp);
+      document.cookie = `${DEVICE_FP_KEY}=${fp}; path=/; max-age=31536000; SameSite=Lax`;
+      return fp;
     }
 
-    function getHardwareFingerprint() {
-      try {
-        let cached = localStorage.getItem(DEVICE_FP_KEY);
-        if (cached && /^HW-[A-F0-9]{12}$/.test(cached)) return cached;
-
-        const cookieMatch = document.cookie.match(/(?:^|;\s*)mitraz_hw_fp=(HW-[A-F0-9]{12})/);
-        if (cookieMatch && cookieMatch[1]) {
-          localStorage.setItem(DEVICE_FP_KEY, cookieMatch[1]);
-          return cookieMatch[1];
-        }
-
-        const signals = [
-          navigator.userAgent || '',
-          navigator.language || '',
-          String(screen.width) + 'x' + String(screen.height),
-          String(screen.colorDepth || 24),
-          String(navigator.hardwareConcurrency || 4),
-          Intl.DateTimeFormat().resolvedOptions().timeZone || '',
-          crypto.getRandomValues ? Array.from(crypto.getRandomValues(new Uint8Array(6))).map((b) => b.toString(16).padStart(2, '0')).join('') : String(Date.now())
-        ].join('|');
-
-        const digest = computeMAC(signals).slice(0, 12).toUpperCase();
-        cached = `HW-${digest}`;
-        localStorage.setItem(DEVICE_FP_KEY, cached);
-        document.cookie = `mitraz_hw_fp=${cached}; max-age=315360000; path=/; SameSite=Lax`;
-        return cached;
-      } catch (e) {
-        return 'HW-MOBILE-LOCK';
-      }
-    }
-
-    // -----------------------------------------------------------------------
-    // 2. MONTHLY MATRIX SHEET HELPERS (NAMES IN ROWS × DATES IN COLUMNS)
-    // -----------------------------------------------------------------------
-    function getMonthSheetName(dateObj = new Date()) {
+    function getMonthSheetName(dateObj) {
       return dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     }
 
-    function getDateColumnLabel(dateObj = new Date()) {
-      const day = String(dateObj.getDate()).padStart(2, '0');
+    function getDateColumnLabel(dateObj) {
+      const dd = String(dateObj.getDate()).padStart(2, '0');
       const mon = dateObj.toLocaleDateString('en-US', { month: 'short' });
-      return `${day} ${mon}`;
+      return `${dd} ${mon}`;
     }
 
-    function generateMonthDateColumns(dateObj = new Date()) {
+    function createMatrixSheetForGroup(dateObj, groupName, usersList = [], holidaysList = []) {
       const year = dateObj.getFullYear();
       const month = dateObj.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const mon = dateObj.toLocaleDateString('en-US', { month: 'short' });
-      const cols = [];
+      const dateColumns = [];
+      const isoByCol = {};
       for (let d = 1; d <= daysInMonth; d++) {
-        cols.push(`${String(d).padStart(2, '0')} ${mon}`);
+        const cur = new Date(year, month, d);
+        const col = getDateColumnLabel(cur);
+        dateColumns.push(col);
+        isoByCol[col] = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       }
-      return cols;
-    }
-
-    function createMatrixSheetForGroup(monthDateObj, groupName, usersList, holidaysList = null) {
-      const monthName = getMonthSheetName(monthDateObj);
-      const dateColumns = generateMonthDateColumns(monthDateObj);
       const rows = {};
       (usersList || [])
         .filter((u) => u.group === groupName)
         .forEach((u) => {
           const days = {};
-          dateColumns.forEach((col) => { days[col] = ''; });
+          dateColumns.forEach((col) => {
+            const hol = (holidaysList || []).find((h) => h.date === isoByCol[col]);
+            days[col] = hol ? `H (${hol.name})` : '';
+          });
           rows[u.userId] = {
             userId: u.userId,
             name: `${u.firstName} ${u.lastName}`.trim(),
@@ -1207,39 +1166,21 @@
             days
           };
         });
-
-      const activeHolidays = Array.isArray(holidaysList)
-        ? holidaysList
-        : (typeof appState !== 'undefined' && appState && Array.isArray(appState.holidays) ? appState.holidays : []);
-      activeHolidays.forEach((h) => {
-        const hDate = new Date(h.date + 'T00:00:00');
-        if (getMonthSheetName(hDate) === monthName) {
-          const colLabel = getDateColumnLabel(hDate);
-          Object.values(rows).forEach((r) => {
-            if (Object.prototype.hasOwnProperty.call(r.days, colLabel) && !r.days[colLabel]) {
-              r.days[colLabel] = `H (${h.name})`;
-            }
-          });
-        }
-      });
-      return { monthName, dateColumns, rows };
+      return { dateColumns, rows };
     }
 
-    // -----------------------------------------------------------------------
-    // 3. CLEAN PRODUCTION STATE INITIALIZATION
-    // -----------------------------------------------------------------------
     function buildDefaultState() {
       const now = new Date();
-      const currentMonth = getMonthSheetName(now);
-
-      const defaultHolidays = [
-        { id: 'HOL-2026-01', date: '2026-01-26', name: 'Republic Day', type: 'National Holiday' },
-        { id: 'HOL-2026-08', date: '2026-08-15', name: 'Independence Day', type: 'National Holiday' },
-        { id: 'HOL-2026-10', date: '2026-10-02', name: 'Gandhi Jayanti', type: 'National Holiday' },
-        { id: 'HOL-2026-12', date: '2026-12-25', name: 'Christmas Day', type: 'Festival Holiday' }
-      ];
-
-      const workbooks = {};
+      const monthTab = getMonthSheetName(now);
+      const adminSalt = generateSalt();
+      const workbooks = {
+        wb_users_directory: {
+          id: 'wb_users_directory',
+          fileName: 'MITRAZ_Registered_Users_Directory.xlsx',
+          isUsersDirectory: true,
+          sheets: { Enrolled_Users: { rows: {} } }
+        }
+      };
       const groupQRs = {};
 
       GROUPS.forEach((grp) => {
@@ -1249,7 +1190,7 @@
           group: grp,
           fileName: meta.fileName,
           sheets: {
-            [currentMonth]: createMatrixSheetForGroup(now, grp, [], defaultHolidays)
+            [monthTab]: createMatrixSheetForGroup(now, grp, [], [])
           }
         };
         groupQRs[grp] = {
@@ -1257,34 +1198,20 @@
           group: grp,
           wbId: meta.wbId,
           checkpoint: meta.checkpoint,
-          sig: computeMAC(`${meta.qrId}|${grp}|${meta.wbId}|${meta.checkpoint}`),
-          scansCount: 0
+          scansCount: 0,
+          sig: computeMAC(`${meta.qrId}|${grp}|${meta.wbId}|${meta.checkpoint}`)
         };
       });
 
-      workbooks['wb_users_directory'] = {
-        id: 'wb_users_directory',
-        isUsersDirectory: true,
-        fileName: 'MITRAZ_Registered_Users_Directory.xlsx',
-        sheets: {
-          'Enrolled_Users': { isDirectorySheet: true }
-        }
-      };
-
       return {
         adminAccount: {
-          adminId: 'ADMIN',
-          salt: 'SALT-MITRAZ-ADMIN-2026',
-          passHash: hashPassphrase('Mitraz@Admin#2026!', 'SALT-MITRAZ-ADMIN-2026')
+          userId: 'ADMIN',
+          name: 'MITRAZ Admin Master',
+          salt: adminSalt,
+          passHash: hashPassphrase('Mitraz@Admin#2026!', adminSalt)
         },
-        registeredUsers: [],
-        workbooks,
-        groupQRs,
-        activeWorkbookId: 'wb_employees',
-        selectedSheetTab: currentMonth,
-        lastCheckedMonth: currentMonth,
         securityPolicy: {
-          geofenceEnforced: true,
+          geofenceEnforced: false,
           campusLat: 12.971598,
           campusLng: 77.594566,
           maxRadiusMeters: 250
@@ -1293,575 +1220,260 @@
           enabled: true,
           endpointUrl: DEFAULT_CLOUD_ENDPOINT,
           secretToken: DEFAULT_CLOUD_SECRET,
-          lastSyncAt: null,
-          pendingQueue: []
+          pendingEvents: [],
+          lastSyncedAt: null
         },
+        registeredUsers: [],
         attendanceLogs: [],
         leaveRequests: [],
-        holidays: defaultHolidays,
-        securityIncidents: [
-          {
-            id: 'SEC-BOOT',
-            severity: 'INFO',
-            time: now.toLocaleTimeString(),
-            message: 'MITRAZ AttendGuard Web Portal (iOS & Android) initialized.'
-          }
-        ]
+        holidays: [],
+        securityIncidents: [],
+        workbooks,
+        groupQRs,
+        activeWorkbookId: 'wb_employees',
+        selectedSheetTab: monthTab,
+        lastCheckedMonth: monthTab
       };
     }
 
-    let appState = null;
-
-    function loadState() {
-      let cachedCloud = null;
-      try {
-        const rawCloud = localStorage.getItem(CLOUD_CACHE_KEY);
-        if (rawCloud) cachedCloud = JSON.parse(rawCloud);
-      } catch (e) {}
-
+    function loadAppState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          const fresh = buildDefaultState();
-          if (cachedCloud && cachedCloud.endpointUrl) {
-            fresh.cloudSync = { ...fresh.cloudSync, ...cachedCloud, pendingQueue: [] };
-          }
-          return fresh;
-        }
-        const parsed = JSON.parse(raw);
-        if (!parsed || !parsed.workbooks || !parsed.registeredUsers || !parsed.groupQRs) {
-          const fresh = buildDefaultState();
-          if (cachedCloud && cachedCloud.endpointUrl) {
-            fresh.cloudSync = { ...fresh.cloudSync, ...cachedCloud, pendingQueue: [] };
-          }
-          return fresh;
-        }
-        if (!Array.isArray(parsed.leaveRequests)) parsed.leaveRequests = [];
-        if (!Array.isArray(parsed.holidays)) parsed.holidays = [];
-        if (!parsed.securityPolicy) {
-          parsed.securityPolicy = {
-            geofenceEnforced: true,
-            campusLat: 12.971598,
-            campusLng: 77.594566,
-            maxRadiusMeters: 250
-          };
-        }
-        if (!parsed.cloudSync) {
-          parsed.cloudSync = {
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const base = buildDefaultState();
+          const merged = { ...base, ...parsed };
+          merged.cloudSync = {
+            ...base.cloudSync,
+            ...(parsed.cloudSync || {}),
             enabled: true,
-            endpointUrl: DEFAULT_CLOUD_ENDPOINT,
-            secretToken: DEFAULT_CLOUD_SECRET,
-            lastSyncAt: null,
-            pendingQueue: []
+            endpointUrl: (parsed.cloudSync && parsed.cloudSync.endpointUrl) || DEFAULT_CLOUD_ENDPOINT,
+            secretToken: (parsed.cloudSync && parsed.cloudSync.secretToken) || DEFAULT_CLOUD_SECRET,
+            pendingEvents: Array.isArray(parsed.cloudSync?.pendingEvents) ? parsed.cloudSync.pendingEvents : []
           };
+          return merged;
         }
-        if (!parsed.cloudSync.endpointUrl) {
-          parsed.cloudSync.enabled = true;
-          parsed.cloudSync.endpointUrl = (cachedCloud && cachedCloud.endpointUrl) || DEFAULT_CLOUD_ENDPOINT;
-          parsed.cloudSync.secretToken = (cachedCloud && cachedCloud.secretToken) || DEFAULT_CLOUD_SECRET;
-        }
-        if (!Array.isArray(parsed.cloudSync.pendingQueue)) parsed.cloudSync.pendingQueue = [];
-        return parsed;
-      } catch (e) {
-        return buildDefaultState();
-      }
+      } catch (e) {}
+      return buildDefaultState();
     }
 
-    appState = loadState();
+    let appState = loadAppState();
 
     function saveState() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-        if (appState && appState.cloudSync && appState.cloudSync.endpointUrl) {
-          localStorage.setItem(
-            CLOUD_CACHE_KEY,
-            JSON.stringify({
-              enabled: Boolean(appState.cloudSync.enabled),
-              endpointUrl: appState.cloudSync.endpointUrl,
-              secretToken: appState.cloudSync.secretToken || DEFAULT_CLOUD_SECRET
-            })
-          );
-        }
-      } catch (e) {
-        showToast('Storage warning: unable to persist locally.', 'warning');
-      }
+      } catch (e) {}
     }
 
     function logSecurityIncident(severity, message) {
+      if (!Array.isArray(appState.securityIncidents)) appState.securityIncidents = [];
       appState.securityIncidents.unshift({
-        id: 'SEC-' + Date.now().toString(36).toUpperCase(),
         severity,
-        time: new Date().toLocaleTimeString(),
-        message
+        message,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
       });
-      if (appState.securityIncidents.length > 80) {
-        appState.securityIncidents.length = 80;
-      }
+      if (appState.securityIncidents.length > 60) appState.securityIncidents.length = 60;
       saveState();
     }
 
-    function ensureCurrentMonthSheetsExist(targetDate = new Date()) {
-      const targetMonth = getMonthSheetName(targetDate);
-      let createdCount = 0;
-
-      GROUPS.forEach((grp) => {
-        const wb = appState.workbooks[GROUP_WB_META[grp].wbId];
-        if (wb && !wb.sheets[targetMonth]) {
-          wb.sheets[targetMonth] = createMatrixSheetForGroup(targetDate, grp, appState.registeredUsers);
-          createdCount++;
-        }
-      });
-
-      appState.lastCheckedMonth = targetMonth;
-      if (createdCount > 0) {
-        saveState();
-        logSecurityIncident('INFO', `Automatic month-end rollover created [${targetMonth}] tabs across all 4 group workbooks.`);
-      }
-      return createdCount;
-    }
-
-    // -----------------------------------------------------------------------
-    // 3B. MULTI-DEVICE CLOUD SYNC ENGINE (AUTO-POLLING + REAL-TIME MERGE)
-    // -----------------------------------------------------------------------
     function queueCloudSyncEvent(eventType, payload) {
       if (!appState.cloudSync) return;
-      appState.cloudSync.pendingQueue.push({
-        eventId: 'EVT-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 5).toUpperCase(),
+      if (!Array.isArray(appState.cloudSync.pendingEvents)) appState.cloudSync.pendingEvents = [];
+      appState.cloudSync.pendingEvents.push({
         eventType,
-        timestamp: new Date().toISOString(),
-        payload
+        payload,
+        queuedAt: new Date().toISOString()
       });
       saveState();
-      updateCloudStatusUI();
       if (appState.cloudSync.enabled && appState.cloudSync.endpointUrl) {
         syncWithCloudServer(false);
       }
     }
 
-    function handleSaveCloudSyncConfig(event) {
-      event.preventDefault();
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const enabled = Boolean(document.getElementById('cfg-cloud-enabled')?.checked);
-      const endpointUrl = (document.getElementById('cfg-cloud-endpoint')?.value || '').trim();
-      const secretToken = (document.getElementById('cfg-cloud-secret')?.value || '').trim();
-
-      if (enabled && !endpointUrl) {
-        showToast('Enter your Google Apps Script Web App URL to enable Cloud Sync.', 'error');
-        return;
-      }
-
-      appState.cloudSync.enabled = enabled;
-      appState.cloudSync.endpointUrl = endpointUrl;
-      appState.cloudSync.secretToken = secretToken || DEFAULT_CLOUD_SECRET;
-      saveState();
-      updateCloudStatusUI();
-      logSecurityIncident('INFO', `Admin updated Cloud Sheet Sync (${enabled ? 'ENABLED' : 'DISABLED'}).`);
-      showToast(enabled ? 'Cloud Sheet Sync enabled (auto-syncing every 12s)!' : 'Cloud Sheet Sync saved (Local mode).', 'success');
-      if (enabled && endpointUrl) {
-        (appState.registeredUsers || []).forEach((u) => {
-          queueCloudSyncEvent('USER_ENROLLED', u);
-        });
-        syncWithCloudServer(true);
-      }
-    }
-
-    function mergeCloudSnapshot(data) {
-      let stateChanged = false;
-
-      if (Array.isArray(data.registeredUsers)) {
-        const localById = new Map((appState.registeredUsers || []).map((u) => [u.userId, u]));
-        const mergedUsers = data.registeredUsers.map((remoteU) => {
-          const localU = localById.get(remoteU.userId);
-          return {
-            ...remoteU,
-            salt: remoteU.salt || localU?.salt || '',
-            passHash: remoteU.passHash || localU?.passHash || ''
-          };
-        });
-        (appState.registeredUsers || []).forEach((localU) => {
-          if (!mergedUsers.some((m) => String(m.userId).toLowerCase() === String(localU.userId).toLowerCase())) {
-            mergedUsers.push(localU);
-          }
-        });
-        if (JSON.stringify(mergedUsers) !== JSON.stringify(appState.registeredUsers)) {
-          appState.registeredUsers = mergedUsers;
-          stateChanged = true;
-        }
-
-        GROUPS.forEach((grp) => {
-          const wb = appState.workbooks[GROUP_WB_META[grp].wbId];
-          if (wb) {
-            Object.values(wb.sheets).forEach((sheet) => {
-              if (!sheet || !sheet.rows) return;
-              appState.registeredUsers
-                .filter((u) => u.group === grp)
-                .forEach((u) => {
-                  if (!sheet.rows[u.userId]) {
-                    const days = {};
-                    (sheet.dateColumns || []).forEach((col) => { days[col] = ''; });
-                    sheet.rows[u.userId] = {
-                      userId: u.userId,
-                      name: `${u.firstName} ${u.lastName}`.trim(),
-                      group: u.group,
-                      days
-                    };
-                    stateChanged = true;
-                  }
-                });
-            });
-          }
-        });
-      }
-
-      if (Array.isArray(data.leaveRequests)) {
-        if (JSON.stringify(data.leaveRequests) !== JSON.stringify(appState.leaveRequests)) {
-          appState.leaveRequests = data.leaveRequests;
-          stateChanged = true;
-        }
-      }
-
-      if (Array.isArray(data.holidays)) {
-        if (JSON.stringify(data.holidays) !== JSON.stringify(appState.holidays)) {
-          appState.holidays = data.holidays;
-          stateChanged = true;
-        }
-      }
-
-      if (Array.isArray(data.matrixUpdates)) {
-        data.matrixUpdates.forEach((m) => {
-          const wbId = appState.groupQRs[m.group]?.wbId || GROUP_WB_META[m.group]?.wbId;
-          const wb = appState.workbooks[wbId];
-          if (wb) {
-            if (!wb.sheets[m.monthTab]) {
-              const parsedDate = new Date(`01 ${m.monthTab}`);
-              wb.sheets[m.monthTab] = createMatrixSheetForGroup(
-                Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate,
-                m.group,
-                appState.registeredUsers
-              );
-              stateChanged = true;
-            }
-            const sheet = wb.sheets[m.monthTab];
-            if (sheet && sheet.rows && sheet.rows[m.userId]) {
-              if (sheet.rows[m.userId].days[m.dateCol] !== m.cellValue) {
-                sheet.rows[m.userId].days[m.dateCol] = m.cellValue;
-                stateChanged = true;
-              }
-            }
-          }
-        });
-      }
-
-      return stateChanged;
-    }
-
-    async function syncWithCloudServer(manualTrigger = false) {
-      const cfg = appState.cloudSync;
-      if (!cfg || !cfg.enabled || !cfg.endpointUrl) {
-        if (manualTrigger) {
-          showToast('Configure & enable Google Sheets Web App URL in Admin → Cloud first.', 'info');
-        }
-        return;
-      }
-
-      if (isSyncInFlight) return;
-      isSyncInFlight = true;
-
+    function updateCloudStatusUI(stateLabel = null) {
       const labelEl = document.getElementById('header-sync-label');
-      if (labelEl) labelEl.textContent = 'Syncing...';
+      const metaEl = document.getElementById('cloud-sync-meta-text');
+      const pending = appState.cloudSync?.pendingEvents?.length || 0;
+      if (labelEl) {
+        labelEl.textContent = stateLabel || (pending > 0 ? `Sync (${pending})` : 'Live Auto');
+      }
+      if (metaEl) {
+        metaEl.textContent = appState.cloudSync?.lastSyncedAt
+          ? `Last synced: ${appState.cloudSync.lastSyncedAt} • Queued: ${pending}`
+          : 'Auto-sync active across all devices';
+      }
+    }
 
+    async function syncWithCloudServer(manual = false) {
+      const cfg = appState.cloudSync;
+      if (!cfg || !cfg.enabled || !cfg.endpointUrl || isSyncInFlight) return false;
+      isSyncInFlight = true;
+      updateCloudStatusUI('Syncing...');
+
+      const batch = [...(cfg.pendingEvents || [])];
       try {
         const res = await fetch(cfg.endpointUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
-            secretToken: cfg.secretToken,
-            deviceId: getHardwareFingerprint(),
-            events: cfg.pendingQueue,
-            snapshotRequest: true
+            secretToken: cfg.secretToken || DEFAULT_CLOUD_SECRET,
+            events: batch
           })
         });
-
         const data = await res.json();
-        if (!data || data.ok !== true) {
-          throw new Error(data?.error || 'Cloud endpoint rejected sync token.');
+        if (!data || !data.ok) {
+          throw new Error(data?.error || 'Cloud sync rejected');
         }
 
-        cfg.pendingQueue = [];
-        cfg.lastSyncAt = new Date().toLocaleTimeString();
+        cfg.pendingEvents = cfg.pendingEvents.slice(batch.length);
+        cfg.lastSyncedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        let stateChanged = batch.length > 0;
 
-        const changed = mergeCloudSnapshot(data);
+        if (Array.isArray(data.registeredUsers)) {
+          const localMap = new Map(appState.registeredUsers.map((u) => [u.userId.toUpperCase(), u]));
+          data.registeredUsers.forEach((ru) => {
+            if (!ru || !ru.userId) return;
+            const key = String(ru.userId).trim().toUpperCase();
+            const existing = localMap.get(key);
+            const salt = ru.salt || existing?.salt || generateSalt();
+            const passHash = ru.passHash || existing?.passHash || hashPassphrase('Mitraz@User1!', salt);
+            const mergedUser = {
+              ...(existing || {}),
+              ...ru,
+              userId: key,
+              salt,
+              passHash,
+              mustChangePassword: ru.mustChangePassword === true || String(ru.mustChangePassword).toUpperCase() === 'TRUE',
+              passwordResetRequested: ru.passwordResetRequested === true || String(ru.passwordResetRequested).toUpperCase() === 'TRUE'
+            };
+            if (JSON.stringify(existing) !== JSON.stringify(mergedUser)) {
+              stateChanged = true;
+            }
+            localMap.set(key, mergedUser);
+          });
+          appState.registeredUsers = Array.from(localMap.values());
+          ensureCurrentMonthSheetsExist(new Date());
+        }
+
+        if (Array.isArray(data.leaveRequests)) {
+          const lvMap = new Map((appState.leaveRequests || []).map((l) => [l.id, l]));
+          data.leaveRequests.forEach((rlv) => {
+            if (!rlv || !rlv.id) return;
+            const prev = lvMap.get(rlv.id);
+            const mergedLv = { ...(prev || {}), ...rlv };
+            if (JSON.stringify(prev) !== JSON.stringify(mergedLv)) {
+              stateChanged = true;
+            }
+            lvMap.set(rlv.id, mergedLv);
+          });
+          appState.leaveRequests = Array.from(lvMap.values());
+        }
+
+        if (Array.isArray(data.holidays)) {
+          if (JSON.stringify(data.holidays) !== JSON.stringify(appState.holidays)) {
+            appState.holidays = data.holidays;
+            stateChanged = true;
+          }
+        }
+
+        if (data.securityPolicy && typeof data.securityPolicy === 'object') {
+          const mergedPol = {
+            ...appState.securityPolicy,
+            ...data.securityPolicy,
+            geofenceEnforced: data.securityPolicy.geofenceEnforced !== false && String(data.securityPolicy.geofenceEnforced).toUpperCase() !== 'FALSE'
+          };
+          if (JSON.stringify(mergedPol) !== JSON.stringify(appState.securityPolicy)) {
+            appState.securityPolicy = mergedPol;
+            stateChanged = true;
+          }
+        }
+
+        if (Array.isArray(data.matrixUpdates)) {
+          data.matrixUpdates.forEach((mu) => {
+            const wbId = appState.groupQRs[mu.group]?.wbId || GROUP_WB_META[mu.group]?.wbId;
+            const wb = appState.workbooks[wbId];
+            const sh = wb?.sheets?.[mu.monthTab];
+            if (sh && sh.rows && sh.rows[mu.userId] && Object.prototype.hasOwnProperty.call(sh.rows[mu.userId].days, mu.dateCol)) {
+              if (sh.rows[mu.userId].days[mu.dateCol] !== mu.cellValue) {
+                sh.rows[mu.userId].days[mu.dateCol] = mu.cellValue;
+                stateChanged = true;
+              }
+            }
+          });
+        }
+
         saveState();
-        updateCloudStatusUI();
-        if (changed || manualTrigger) {
-          renderAllViews();
-        }
-        if (manualTrigger) showToast('Synced live with MITRAZ Master Google Sheet!', 'success');
+        updateCloudStatusUI('Live Auto');
+        if (stateChanged) renderAllViews();
+        if (manual) showToast('Cloud sheet synchronized successfully.', 'success');
+        return true;
       } catch (err) {
-        updateCloudStatusUI(true);
-        if (manualTrigger) showToast(`Cloud Sync queued offline: ${err.message}`, 'warning');
+        updateCloudStatusUI('Offline');
+        if (manual) showToast(`Sync failed: ${err.message}`, 'error');
+        return false;
       } finally {
         isSyncInFlight = false;
       }
     }
 
-    function updateCloudStatusUI(hasError = false) {
-      const cfg = appState.cloudSync || {};
-      const active = Boolean(cfg.enabled && cfg.endpointUrl);
-      const qLen = Array.isArray(cfg.pendingQueue) ? cfg.pendingQueue.length : 0;
-
-      const labelEl = document.getElementById('header-sync-label');
-      const pillEl = document.getElementById('cloud-status-pill');
-      const qCountEl = document.getElementById('cloud-queue-count');
-      const lastSyncEl = document.getElementById('cloud-last-sync-time');
-
-      if (labelEl) {
-        labelEl.textContent = !active ? 'Local' : hasError ? `Queue (${qLen})` : qLen > 0 ? `Sync (${qLen})` : 'Live Auto';
-      }
-      if (pillEl) {
-        pillEl.textContent = !active ? 'Offline / Local' : hasError ? 'Queued (Retry)' : 'Connected Auto';
-        pillEl.className = !active
-          ? 'text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-400'
-          : hasError
-          ? 'text-[10px] font-mono px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300'
-          : 'text-[10px] font-mono px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300';
-      }
-      if (qCountEl) qCountEl.textContent = `${qLen} event${qLen === 1 ? '' : 's'} queued`;
-      if (lastSyncEl) lastSyncEl.textContent = cfg.lastSyncAt || 'Never';
-    }
-
-    // -----------------------------------------------------------------------
-    // 4. AUTHENTICATION, HARDWARE ANTI-PROXY BINDING & SESSION GUARD
-    // -----------------------------------------------------------------------
-    function handleForgotPasswordRequest() {
-      const identifier = (document.getElementById('login-identifier')?.value || '').trim();
-      if (!identifier) {
-        showLoginError('Enter Member ID or Email First', 'Type your Member ID, Name, or Email above, then tap "Forgot Password? Notify Admin".');
-        return;
-      }
-      if (identifier.toUpperCase() === 'ADMIN') {
-        showLoginError('Admin Master Account', 'Admin Master passphrase can only be rotated inside Admin Console → Security.');
-        return;
-      }
-
-      const idNorm = identifier.toLowerCase().replace(/\s+/g, ' ');
-      const user = appState.registeredUsers.find(
-        (u) =>
-          String(u.userId || '').trim().toLowerCase() === idNorm ||
-          String(u.email || '').trim().toLowerCase() === idNorm ||
-          `${u.firstName || ''} ${u.lastName || ''}`.trim().toLowerCase().replace(/\s+/g, ' ') === idNorm
-      );
-      if (!user) {
-        showLoginError('Member Not Found', 'No enrolled account matches that ID, Name, or Email.');
-        return;
-      }
-
-      user.passwordResetRequested = true;
-      user.resetRequestedAt = new Date().toLocaleTimeString();
-      saveState();
-      logSecurityIncident('WARNING', `Member ${user.firstName} ${user.lastName} (${user.userId}) requested a password reset.`);
-      queueCloudSyncEvent('PASSWORD_RESET_REQUESTED', { userId: user.userId, requestedAt: user.resetRequestedAt });
-      hideLoginError();
-      showToast(`Reset request sent to Admin for ${user.firstName} (${user.userId}).`, 'success');
-    }
-
-    function createAuthenticatedSession(claims) {
-      const issuedAt = Date.now();
-      const rawToken = `${claims.role}|${claims.userId}|${claims.group}|${claims.deviceId}|${issuedAt}`;
-      const sig = computeMAC(rawToken);
-      currentSession = { ...claims, issuedAt, sig };
-      try {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentSession));
-      } catch (e) {}
-
-      enterPortalUI();
-      showToast(`Welcome, ${claims.name} (${claims.role === 'ROLE_ADMIN' ? 'Admin' : claims.group})`, 'success');
-    }
-
-    function validateActiveSession() {
-      if (!currentSession) return false;
-      const rawToken = `${currentSession.role}|${currentSession.userId}|${currentSession.group}|${currentSession.deviceId}|${currentSession.issuedAt}`;
-      const expectedSig = computeMAC(rawToken);
-      if (!constantTimeEqual(currentSession.sig, expectedSig)) {
-        logSecurityIncident('CRITICAL', 'TAMPER ALERT: Session HMAC signature mismatch detected! Terminating session.');
-        logoutSession('Security violation: tampered session terminated.');
-        return false;
-      }
-      return true;
-    }
-
-    function logoutSession(reason = 'Signed out.') {
-      stopCameraScanner();
-      currentSession = null;
-      try {
-        sessionStorage.removeItem(SESSION_KEY);
-      } catch (e) {}
-
-      document.getElementById('authenticated-portal')?.classList.add('hidden');
-      document.getElementById('auth-gate-screen')?.classList.remove('hidden');
-      const pwEl = document.getElementById('login-password');
-      if (pwEl) pwEl.value = '';
-      showToast(reason, 'info');
-    }
-
-    function enterPortalUI() {
-      if (!validateActiveSession()) return;
-
-      document.getElementById('auth-gate-screen')?.classList.add('hidden');
-      document.getElementById('authenticated-portal')?.classList.remove('hidden');
-
-      const isAdmin = currentSession.role === 'ROLE_ADMIN';
-
-      const roleBadge = document.getElementById('header-role-badge');
-      const subtitle = document.getElementById('header-user-subtitle');
-      if (roleBadge) {
-        roleBadge.textContent = isAdmin ? 'ADMIN MASTER' : currentSession.group.toUpperCase();
-        roleBadge.className = isAdmin
-          ? 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40'
-          : 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-      }
-      if (subtitle) {
-        subtitle.textContent = isAdmin
-          ? `${currentSession.deviceId} • Full Access`
-          : `${currentSession.userId} • ${currentSession.group}`;
-      }
-
-      const nameEl = document.getElementById('member-full-name');
-      const pillEl = document.getElementById('member-group-pill');
-      const avatarEl = document.getElementById('member-avatar');
-      if (nameEl) nameEl.textContent = currentSession.name;
-      if (pillEl) pillEl.textContent = isAdmin ? 'Admin Master Account • All Groups' : `${currentSession.userId} • Group: ${currentSession.group}`;
-      if (avatarEl) {
-        avatarEl.textContent = currentSession.name
-          .split(/\s+/)
-          .map((w) => w[0])
-          .join('')
-          .slice(0, 2)
-          .toUpperCase();
-      }
-
-      const navBar = document.getElementById('bottom-nav-bar');
-      const navAdminBtn = document.getElementById('nav-tab-admin');
-      if (navBar && navAdminBtn) {
-        if (isAdmin) {
-          navBar.classList.remove('grid-cols-3');
-          navBar.classList.add('grid-cols-4');
-          navAdminBtn.classList.remove('hidden');
-          navAdminBtn.classList.add('flex');
-        } else {
-          navBar.classList.remove('grid-cols-4');
-          navBar.classList.add('grid-cols-3');
-          navAdminBtn.classList.add('hidden');
-          navAdminBtn.classList.remove('flex');
-        }
-      }
-
-      const todayIso = new Date().toISOString().slice(0, 10);
-      const startEl = document.getElementById('leave-start-date');
-      const endEl = document.getElementById('leave-end-date');
-      if (startEl && !startEl.value) startEl.value = todayIso;
-      if (endEl && !endEl.value) endEl.value = todayIso;
-
-      updateCloudStatusUI();
-      switchPortalTab(isAdmin ? 'admin' : 'scan');
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-
-    function handleFirstLoginPasswordChange(event) {
-      event.preventDefault();
-      const p1 = document.getElementById('new-user-pass-1')?.value || '';
-      const p2 = document.getElementById('new-user-pass-2')?.value || '';
-      const errEl = document.getElementById('first-login-pass-error');
-
-      const showModalErr = (msg) => {
-        if (errEl) {
-          errEl.textContent = msg;
-          errEl.classList.remove('hidden');
-        }
-      };
-
-      if (p1 !== p2) {
-        showModalErr('Passphrases do not match.');
-        return;
-      }
-      if (p1 === 'Mitraz@User1!') {
-        showModalErr('Please choose a new personal passphrase different from the temporary default.');
-        return;
-      }
-      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-      if (!strongRegex.test(p1)) {
-        showModalErr('Must be 8+ characters with uppercase, lowercase, number, and symbol.');
-        return;
-      }
-
-      const user = appState.registeredUsers.find((u) => u.userId === pendingFirstLoginUserId);
-      if (!user) return;
-
-      user.salt = `SALT-${user.userId}-${Date.now().toString(36)}`;
-      user.passHash = hashPassphrase(p1, user.salt);
-      user.mustChangePassword = false;
-      saveState();
-      logSecurityIncident('INFO', `Member ${user.userId} completed first-login personal passphrase setup.`);
-      queueCloudSyncEvent('USER_PASSWORD_UPDATED', { userId: user.userId, salt: user.salt, passHash: user.passHash });
-
-      document.getElementById('first-login-modal')?.classList.add('hidden');
-      pendingFirstLoginUserId = null;
-
-      createAuthenticatedSession({
-        role: 'ROLE_USER',
-        userId: user.userId,
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        group: user.group,
-        deviceId: getHardwareFingerprint()
-      });
-    }
-
-    function handleAdminRotatePassword(event) {
-      event.preventDefault();
+    function saveCloudSyncSettings() {
       if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const p1 = document.getElementById('admin-new-pass-1')?.value || '';
-      const p2 = document.getElementById('admin-new-pass-2')?.value || '';
-      if (p1 !== p2) {
-        showToast('New Admin passphrases do not match.', 'error');
-        return;
-      }
-      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
-      if (!strongRegex.test(p1)) {
-        showToast('Use 10+ characters with uppercase, lowercase, number, and symbol.', 'error');
-        return;
-      }
-      const newSalt = 'SALT-MITRAZ-ADMIN-' + Date.now().toString(36);
-      appState.adminAccount.salt = newSalt;
-      appState.adminAccount.passHash = hashPassphrase(p1, newSalt);
+      const enabled = Boolean(document.getElementById('cfg-cloud-enabled')?.checked);
+      const endpointUrl = (document.getElementById('cfg-cloud-endpoint')?.value || '').trim() || DEFAULT_CLOUD_ENDPOINT;
+      const secretToken = (document.getElementById('cfg-cloud-secret')?.value || '').trim() || DEFAULT_CLOUD_SECRET;
+      appState.cloudSync = { ...appState.cloudSync, enabled, endpointUrl, secretToken };
       saveState();
-      logSecurityIncident('INFO', 'Admin Master passphrase rotated successfully.');
-      const i1 = document.getElementById('admin-new-pass-1');
-      const i2 = document.getElementById('admin-new-pass-2');
-      if (i1) i1.value = '';
-      if (i2) i2.value = '';
-      showToast('Admin Master passphrase updated!', 'success');
+      updateCloudStatusUI();
+      showToast('Cloud sync settings saved.', 'success');
+      if (enabled) syncWithCloudServer(true);
     }
 
-    function setScanMode(mode) {
-      activeScanMode = mode;
-      const inBtn = document.getElementById('btn-scan-in');
-      const outBtn = document.getElementById('btn-scan-out');
-      if (inBtn && outBtn) {
-        inBtn.className = mode === 'CHECK-IN'
-          ? 'py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow transition'
-          : 'py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition';
-        outBtn.className = mode === 'CHECK-OUT'
-          ? 'py-2.5 rounded-xl text-xs font-extrabold bg-amber-600 text-white shadow transition'
-          : 'py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition';
-      }
+    async function pushAllLocalUsersToCloud() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      appState.registeredUsers.forEach((u) => {
+        appState.cloudSync.pendingEvents.push({
+          eventType: 'USER_ENROLLED',
+          payload: u,
+          queuedAt: new Date().toISOString()
+        });
+      });
+      saveState();
+      await syncWithCloudServer(true);
     }
 
-    function toggleLoginPasswordVisibility() {
-      const pwEl = document.getElementById('login-password');
-      if (!pwEl) return;
-      pwEl.type = pwEl.type === 'password' ? 'text' : 'password';
+    function ensureCurrentMonthSheetsExist(dateObj) {
+      const monthTab = getMonthSheetName(dateObj);
+      appState.lastCheckedMonth = monthTab;
+      GROUPS.forEach((grp) => {
+        const wbId = appState.groupQRs[grp]?.wbId || GROUP_WB_META[grp]?.wbId;
+        const wb = appState.workbooks[wbId];
+        if (!wb) return;
+        if (!wb.sheets[monthTab]) {
+          wb.sheets[monthTab] = createMatrixSheetForGroup(dateObj, grp, appState.registeredUsers, appState.holidays);
+        } else {
+          const sh = wb.sheets[monthTab];
+          appState.registeredUsers
+            .filter((u) => u.group === grp)
+            .forEach((u) => {
+              if (!sh.rows[u.userId]) {
+                const days = {};
+                (sh.dateColumns || []).forEach((col) => { days[col] = ''; });
+                sh.rows[u.userId] = {
+                  userId: u.userId,
+                  name: `${u.firstName} ${u.lastName}`.trim(),
+                  group: u.group,
+                  days
+                };
+              }
+            });
+        }
+      });
+      saveState();
     }
 
+    // -----------------------------------------------------------------------
+    // 2. AUTHENTICATION, ANTI-PROXY HARDWARE LOCK & SESSION MANAGEMENT
+    // -----------------------------------------------------------------------
     function showLoginError(title, desc) {
       const box = document.getElementById('login-error-box');
       const tEl = document.getElementById('login-error-title');
@@ -1872,462 +1484,504 @@
     }
 
     function hideLoginError() {
-      const box = document.getElementById('login-error-box');
-      if (box) box.classList.add('hidden');
+      document.getElementById('login-error-box')?.classList.add('hidden');
+    }
+
+    function toggleLoginPasswordVisibility() {
+      const inp = document.getElementById('login-password');
+      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
     }
 
     async function handleLoginSubmit(event) {
       event.preventDefault();
       hideLoginError();
 
-      const submitBtn = event.target?.querySelector('button[type="submit"]');
-      const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<span class="animate-pulse">Verifying Credentials...</span>`;
+      const rawId = (document.getElementById('login-identifier')?.value || '').trim();
+      const rawPass = (document.getElementById('login-password')?.value || '').trim();
+      if (!rawId || !rawPass) return;
+
+      if (appState.cloudSync?.enabled && appState.cloudSync?.endpointUrl) {
+        await syncWithCloudServer(false);
       }
 
-      try {
-        if (appState.cloudSync?.enabled && appState.cloudSync?.endpointUrl) {
-          await syncWithCloudServer(false);
-        }
+      const idUpper = rawId.toUpperCase();
+      const idLower = rawId.toLowerCase();
 
-        const identifier = (document.getElementById('login-identifier')?.value || '').trim();
-        const password = (document.getElementById('login-password')?.value || '').trim();
-        const currentHw = getHardwareFingerprint();
-
-        if (identifier.toUpperCase() === 'ADMIN') {
-          const expectedHash = appState.adminAccount.passHash;
-          const actualHash = hashPassphrase(password, appState.adminAccount.salt);
-          if (!constantTimeEqual(actualHash, expectedHash)) {
-            logSecurityIncident('CRITICAL', `Failed Admin Master login attempt from ${currentHw}.`);
-            showLoginError('Invalid Admin Credentials', 'Admin Master passphrase verification failed.');
-            return;
-          }
-          createAuthenticatedSession({
-            role: 'ROLE_ADMIN',
-            userId: 'ADMIN',
-            name: 'MITRAZ Administrator',
-            group: 'ALL_GROUPS',
-            deviceId: currentHw
-          });
+      if (idUpper === 'ADMIN') {
+        const expected = appState.adminAccount.passHash;
+        const actual = hashPassphrase(rawPass, appState.adminAccount.salt);
+        if (!constantTimeEqual(actual, expected)) {
+          logSecurityIncident('CRITICAL', 'Failed Admin Master login attempt.');
+          showLoginError('Invalid Admin Passphrase', 'The Admin Master passphrase entered is incorrect.');
           return;
         }
-
-        const idNorm = identifier.toLowerCase().replace(/\s+/g, ' ');
-        const user = appState.registeredUsers.find(
-          (u) =>
-            String(u.userId || '').trim().toLowerCase() === idNorm ||
-            String(u.email || '').trim().toLowerCase() === idNorm ||
-            `${u.firstName || ''} ${u.lastName || ''}`.trim().toLowerCase().replace(/\s+/g, ' ') === idNorm
-        );
-
-        if (!user) {
-          logSecurityIncident('WARNING', `Unregistered login attempt for "${identifier}" from ${currentHw}.`);
-          showLoginError(
-            'Account Not Found',
-            'No enrolled user matches that Member ID, Full Name, or Email. Ask Admin to enroll your account or check Cloud Sync.'
-          );
-          return;
-        }
-
-        if (!user.salt || !user.passHash) {
-          user.salt = `SALT-${user.userId}-INIT`;
-          user.passHash = hashPassphrase('Mitraz@User1!', user.salt);
-          user.mustChangePassword = true;
-          saveState();
-        }
-
-        const userHash = hashPassphrase(password, user.salt);
-        if (!constantTimeEqual(userHash, user.passHash)) {
-          logSecurityIncident('WARNING', `Invalid passphrase for ${user.userId} from ${currentHw}.`);
-          showLoginError('Authentication Failed', 'Incorrect passphrase for this member account.');
-          return;
-        }
-
-        const otherUserOnPhone = appState.registeredUsers.find(
-          (u) => u.boundDeviceId && u.boundDeviceId === currentHw && u.userId !== user.userId
-        );
-        if (otherUserOnPhone) {
-          logSecurityIncident(
-            'CRITICAL',
-            `PROXY BLOCKED: ${user.userId} attempted login on ${currentHw}, locked to ${otherUserOnPhone.userId}.`
-          );
-          showLoginError(
-            'Proxy Attempt Blocked (Shared Device)',
-            `This mobile device (${currentHw}) is permanently bound to ${otherUserOnPhone.firstName} (${otherUserOnPhone.userId}). Logging in for a colleague is blocked.`
-          );
-          return;
-        }
-
-        if (user.boundDeviceId && user.boundDeviceId !== currentHw) {
-          logSecurityIncident(
-            'CRITICAL',
-            `PROXY BLOCKED: ${user.userId} (bound to ${user.boundDeviceId}) attempted login from ${currentHw}.`
-          );
-          showLoginError(
-            'Proxy Attempt Blocked (Unrecognized Device)',
-            `${user.firstName}'s account is locked to ${user.boundDeviceId}. Contact Admin to unbind if you changed phones.`
-          );
-          return;
-        }
-
-        if (!user.boundDeviceId) {
-          user.boundDeviceId = currentHw;
-          saveState();
-          logSecurityIncident('INFO', `First-time device binding: ${user.userId} bound to ${currentHw}.`);
-          queueCloudSyncEvent('DEVICE_BOUND', { userId: user.userId, boundDeviceId: currentHw });
-        }
-
-        if (user.mustChangePassword) {
-          pendingFirstLoginUserId = user.userId;
-          document.getElementById('first-login-pass-error')?.classList.add('hidden');
-          document.getElementById('first-login-modal')?.classList.remove('hidden');
-          return;
-        }
-
-        createAuthenticatedSession({
-          role: 'ROLE_USER',
-          userId: user.userId,
-          name: `${user.firstName} ${user.lastName}`.trim(),
-          group: user.group,
-          deviceId: currentHw
-        });
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = origBtnHtml;
-        }
-      }
-    }
-
-    async function toggleCameraScanner() {
-      if (isCameraActive) {
-        await stopCameraScanner();
-        return;
-      }
-      if (typeof Html5Qrcode === 'undefined') {
-        showToast('Camera library unavailable. Check internet connection.', 'error');
-        return;
-      }
-      try {
-        html5QrInstance = new Html5Qrcode('qr-reader');
-        await html5QrInstance.start(
-          { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 220, height: 220 } },
-          (decodedText) => {
-            stopCameraScanner();
-            processScannedQRPayload(decodedText);
-          },
-          () => {}
-        );
-        isCameraActive = true;
-        document.getElementById('camera-placeholder')?.classList.add('hidden');
-        document.getElementById('scanner-laser-line')?.classList.remove('hidden');
-        const label = document.getElementById('camera-btn-label');
-        if (label) label.textContent = 'Stop Camera';
-      } catch (err) {
-        const msg = isIOSDevice()
-          ? 'iPhone Safari blocked camera: enable Camera in iOS Settings → Safari, or open over HTTPS.'
-          : 'Camera permission denied. Enable camera permission in your phone browser settings.';
-        showToast(msg, 'error');
-      }
-    }
-
-    async function stopCameraScanner() {
-      if (html5QrInstance && isCameraActive) {
-        try {
-          await html5QrInstance.stop();
-          html5QrInstance.clear();
-        } catch (e) {}
-      }
-      isCameraActive = false;
-      document.getElementById('camera-placeholder')?.classList.remove('hidden');
-      document.getElementById('scanner-laser-line')?.classList.add('hidden');
-      const label = document.getElementById('camera-btn-label');
-      if (label) label.textContent = 'Start Camera';
-    }
-
-    function processScannedQRPayload(rawText) {
-      if (!validateActiveSession()) return;
-
-      let parsed;
-      try {
-        parsed = JSON.parse(rawText);
-      } catch (e) {
-        logSecurityIncident('WARNING', `Malformed QR scanned by ${currentSession.userId}.`);
-        showToast('Invalid QR format: not a MITRAZ signed checkpoint.', 'error');
-        return;
-      }
-
-      const expectedSig = computeMAC(`${parsed.qrId}|${parsed.group}|${parsed.wbId}|${parsed.checkpoint}`);
-      if (parsed.org !== 'MITRAZ' || !constantTimeEqual(String(parsed.sig || ''), expectedSig)) {
-        logSecurityIncident('CRITICAL', `FORGED QR BLOCKED: ${currentSession.userId} scanned invalid signature.`);
-        showToast('Security Alert: Forged or tampered QR signature rejected!', 'error');
-        return;
-      }
-
-      if (currentSession.role === 'ROLE_USER' && parsed.group !== currentSession.group) {
-        logSecurityIncident(
-          'WARNING',
-          `GROUP MISMATCH: ${currentSession.userId} (${currentSession.group}) scanned ${parsed.group} QR (${parsed.qrId}).`
-        );
-        showToast(`Wrong Group QR! You belong to [${currentSession.group}], not [${parsed.group}].`, 'error');
-        return;
-      }
-
-      const policy = appState.securityPolicy || { geofenceEnforced: true, maxRadiusMeters: 250 };
-      if (policy.geofenceEnforced && (!currentGPS.verified || currentGPS.distanceMeters > policy.maxRadiusMeters)) {
-        logSecurityIncident(
-          'CRITICAL',
-          `GEOFENCE VIOLATION: ${currentSession.userId} attempted scan ${currentGPS.distanceMeters}m away (verified=${currentGPS.verified}, max ${policy.maxRadiusMeters}m).`
-        );
-        showToast(
-          !currentGPS.verified
-            ? 'GPS Location Required: Enable Location Services and tap Refresh before scanning.'
-            : `Geofence Blocked: You are ${currentGPS.distanceMeters}m from campus (limit ${policy.maxRadiusMeters}m).`,
-          'error'
-        );
-        return;
-      }
-
-      const targetGroup = parsed.group;
-      const targetUserId = currentSession.role === 'ROLE_USER'
-        ? currentSession.userId
-        : (appState.registeredUsers.find((u) => u.group === targetGroup)?.userId || null);
-      const targetUser = appState.registeredUsers.find((u) => u.userId === targetUserId);
-      if (!targetUser) {
-        showToast(`No enrolled user found in ${targetGroup} to log attendance.`, 'error');
-        return;
-      }
-
-      const linkedWbId = appState.groupQRs[targetGroup]?.wbId || parsed.wbId;
-      const targetWb = appState.workbooks[linkedWbId];
-      if (!targetWb) {
-        showToast('Linked Excel workbook not found.', 'error');
-        return;
-      }
-
-      const now = new Date();
-      ensureCurrentMonthSheetsExist(now);
-      const monthTab = getMonthSheetName(now);
-      const dateCol = getDateColumnLabel(now);
-      const timeStr = now.toTimeString().slice(0, 5);
-      const fullTimeStr = now.toLocaleTimeString();
-
-      const sheet = targetWb.sheets[monthTab];
-      if (!sheet.rows[targetUser.userId]) {
-        const emptyDays = {};
-        sheet.dateColumns.forEach((c) => { emptyDays[c] = ''; });
-        sheet.rows[targetUser.userId] = {
-          userId: targetUser.userId,
-          name: `${targetUser.firstName} ${targetUser.lastName}`.trim(),
-          group: targetUser.group,
-          days: emptyDays
+        currentSession = {
+          role: 'ROLE_ADMIN',
+          userId: 'ADMIN',
+          name: appState.adminAccount.name,
+          group: 'ALL',
+          issuedAt: Date.now()
         };
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentSession));
+        enterPortalUI();
+        return;
       }
 
-      const prevCell = sheet.rows[targetUser.userId].days[dateCol] || '';
-      let updatedCell = '';
-      if (activeScanMode === 'CHECK-IN') {
-        updatedCell = `P (${timeStr} IN)`;
-      } else {
-        updatedCell = prevCell.includes('IN')
-          ? `${prevCell.replace(')', '')} / ${timeStr} OUT)`
-          : `P (${timeStr} OUT)`;
-      }
-      sheet.rows[targetUser.userId].days[dateCol] = updatedCell;
+      const user = appState.registeredUsers.find((u) => {
+        const fullName = `${u.firstName} ${u.lastName}`.trim().toLowerCase();
+        return (
+          String(u.userId).trim().toUpperCase() === idUpper ||
+          String(u.email).trim().toLowerCase() === idLower ||
+          fullName === idLower
+        );
+      });
 
-      if (appState.groupQRs[targetGroup]) {
-        appState.groupQRs[targetGroup].scansCount = (appState.groupQRs[targetGroup].scansCount || 0) + 1;
+      if (!user) {
+        showLoginError('Account Not Found', 'Only members enrolled by the Admin can access this portal. Check your ID, Name, or Email.');
+        return;
       }
 
-      const recordHash = computeMAC(`${targetUser.userId}|${now.toISOString()}|${updatedCell}|${currentSession.deviceId}`);
-      const logEntry = {
-        id: 'LOG-' + Date.now().toString(36).toUpperCase(),
-        userId: targetUser.userId,
-        name: `${targetUser.firstName} ${targetUser.lastName}`.trim(),
-        group: targetGroup,
-        action: activeScanMode,
-        dateCol,
-        monthTab,
-        time: fullTimeStr,
-        cellValue: updatedCell,
-        workbookName: targetWb.fileName,
-        checkpoint: parsed.checkpoint,
-        gps: `${currentGPS.lat.toFixed(5)}, ${currentGPS.lng.toFixed(5)} (${currentGPS.distanceMeters}m)`,
-        deviceId: currentSession.deviceId,
-        hash: recordHash
+      const computedHash = hashPassphrase(rawPass, user.salt);
+      const starterFallback = !user.passHash && rawPass === 'Mitraz@User1!';
+      if (!constantTimeEqual(computedHash, user.passHash) && !starterFallback) {
+        logSecurityIncident('WARNING', `Failed passphrase attempt for ${user.userId}.`);
+        showLoginError('Incorrect Passphrase', 'Passphrase does not match. Tap "Forgot Password? Notify Admin" if you need a reset.');
+        return;
+      }
+
+      const hwFp = getDeviceFingerprint();
+      const conflictUser = appState.registeredUsers.find((u) => u.userId !== user.userId && u.boundDeviceId === hwFp);
+      if (conflictUser) {
+        logSecurityIncident('CRITICAL', `Shared-device proxy blocked: ${user.userId} attempted login on ${conflictUser.userId}'s device.`);
+        showLoginError('Shared Device Proxy Blocked', `This smartphone is permanently bound to ${conflictUser.firstName} (${conflictUser.userId}).`);
+        return;
+      }
+
+      if (user.boundDeviceId && user.boundDeviceId !== hwFp) {
+        logSecurityIncident('CRITICAL', `Foreign-device proxy blocked for ${user.userId}.`);
+        showLoginError('Unrecognized Device Blocked', 'Your account is locked to your primary registered phone. Ask Admin to click "Unbind" if you switched devices.');
+        return;
+      }
+
+      if (!user.boundDeviceId) {
+        user.boundDeviceId = hwFp;
+        saveState();
+        queueCloudSyncEvent('DEVICE_BOUND', { userId: user.userId, boundDeviceId: hwFp });
+      }
+
+      currentSession = {
+        role: 'ROLE_USER',
+        userId: user.userId,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        group: user.group,
+        issuedAt: Date.now()
       };
-      appState.attendanceLogs.unshift(logEntry);
-      saveState();
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentSession));
+      enterPortalUI();
 
-      queueCloudSyncEvent('ATTENDANCE_SCAN', logEntry);
-
-      const receiptEl = document.getElementById('last-scan-receipt');
-      const rTimeEl = document.getElementById('receipt-time');
-      const rDetEl = document.getElementById('receipt-details');
-      if (rTimeEl) rTimeEl.textContent = fullTimeStr;
-      if (rDetEl) {
-        rDetEl.textContent = `${logEntry.name} (${logEntry.userId}) • Sheet: ${targetWb.fileName} [${monthTab}] • Col [${dateCol}] = ${updatedCell}`;
+      if (user.mustChangePassword) {
+        pendingFirstLoginUserId = user.userId;
+        document.getElementById('first-login-modal')?.classList.remove('hidden');
       }
-      if (receiptEl) receiptEl.classList.remove('hidden');
+    }
+
+    function validateActiveSession() {
+      if (!currentSession || !currentSession.userId || !currentSession.role) {
+        logoutSession('Session expired. Please sign in again.');
+        return false;
+      }
+      if (currentSession.role === 'ROLE_USER') {
+        const exists = appState.registeredUsers.some((u) => u.userId === currentSession.userId);
+        if (!exists) {
+          logoutSession('Account removed by Admin.');
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function enterPortalUI() {
+      if (!currentSession) return;
+      document.getElementById('auth-gate-screen')?.classList.add('hidden');
+      document.getElementById('authenticated-portal')?.classList.remove('hidden');
+
+      const isAdmin = currentSession.role === 'ROLE_ADMIN';
+      const roleBadge = document.getElementById('header-role-badge');
+      const subEl = document.getElementById('header-user-subtitle');
+      const navBar = document.getElementById('bottom-nav-bar');
+      const adminNavBtn = document.getElementById('nav-tab-admin');
+
+      if (roleBadge) {
+        roleBadge.textContent = isAdmin ? 'ADMIN' : 'MEMBER';
+        roleBadge.className = isAdmin
+          ? 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40'
+          : 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      }
+      if (subEl) {
+        subEl.textContent = `${currentSession.name} • ${currentSession.group}`;
+      }
+      if (adminNavBtn && navBar) {
+        adminNavBtn.classList.toggle('hidden', !isAdmin);
+        navBar.classList.toggle('grid-cols-4', isAdmin);
+        navBar.classList.toggle('grid-cols-3', !isAdmin);
+      }
+
+      const nameEl = document.getElementById('member-full-name');
+      const grpEl = document.getElementById('member-group-pill');
+      const avEl = document.getElementById('member-avatar');
+      if (nameEl) nameEl.textContent = currentSession.name;
+      if (grpEl) grpEl.textContent = `${currentSession.userId} • ${currentSession.group}`;
+      if (avEl) {
+        const parts = currentSession.name.split(' ');
+        avEl.textContent = ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || 'MZ';
+      }
 
       renderAllViews();
-      showToast(`${activeScanMode} logged to ${targetWb.fileName} [${monthTab}]!`, 'success');
+      switchPortalTab(isAdmin ? 'admin' : 'scan');
+    }
+
+    function logoutSession(msg = null) {
+      if (isCameraActive) stopCameraScanner();
+      currentSession = null;
+      pendingFirstLoginUserId = null;
+      sessionStorage.removeItem(SESSION_KEY);
+      document.getElementById('authenticated-portal')?.classList.add('hidden');
+      document.getElementById('first-login-modal')?.classList.add('hidden');
+      document.getElementById('auth-gate-screen')?.classList.remove('hidden');
+      const passInp = document.getElementById('login-password');
+      if (passInp) passInp.value = '';
+      hideLoginError();
+      if (msg) showToast(msg, 'info');
+    }
+
+    function handleForgotPasswordRequest() {
+      const rawId = (document.getElementById('login-identifier')?.value || '').trim();
+      if (!rawId) {
+        showLoginError('Enter Member ID or Name First', 'Type your Member ID, Full Name, or Email above, then tap "Forgot Password? Notify Admin".');
+        return;
+      }
+      const idUpper = rawId.toUpperCase();
+      const idLower = rawId.toLowerCase();
+      const user = appState.registeredUsers.find((u) => {
+        const fullName = `${u.firstName} ${u.lastName}`.trim().toLowerCase();
+        return u.userId.toUpperCase() === idUpper || u.email.toLowerCase() === idLower || fullName === idLower;
+      });
+      if (!user) {
+        showLoginError('Account Not Found', 'No enrolled user matches that ID, Name, or Email.');
+        return;
+      }
+      user.passwordResetRequested = true;
+      saveState();
+      queueCloudSyncEvent('PASSWORD_RESET_REQUESTED', {
+        userId: user.userId,
+        requestedAt: new Date().toLocaleTimeString()
+      });
+      showToast(`Password reset request sent to Admin for ${user.firstName} (${user.userId}).`, 'success');
+    }
+
+    function handleFirstLoginPasswordChange(event) {
+      event.preventDefault();
+      const p1 = (document.getElementById('new-user-pass-1')?.value || '').trim();
+      const p2 = (document.getElementById('new-user-pass-2')?.value || '').trim();
+      const errEl = document.getElementById('first-login-pass-error');
+
+      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+      if (!strongRegex.test(p1)) {
+        if (errEl) {
+          errEl.textContent = 'Passphrase must be 8+ characters with uppercase, lowercase, number, and symbol.';
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+      if (p1 === 'Mitraz@User1!') {
+        if (errEl) {
+          errEl.textContent = 'Choose a new secret passphrase different from the starter password.';
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+      if (p1 !== p2) {
+        if (errEl) {
+          errEl.textContent = 'Passphrases do not match.';
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      const targetId = pendingFirstLoginUserId || currentSession?.userId;
+      const user = appState.registeredUsers.find((u) => u.userId === targetId);
+      if (!user) return;
+
+      user.salt = generateSalt();
+      user.passHash = hashPassphrase(p1, user.salt);
+      user.mustChangePassword = false;
+      user.passwordResetRequested = false;
+      saveState();
+
+      if (errEl) errEl.classList.add('hidden');
+      logSecurityIncident('INFO', `Member ${user.userId} completed personal passphrase update.`);
+      queueCloudSyncEvent('USER_PASSWORD_UPDATED', {
+        userId: user.userId,
+        salt: user.salt,
+        passHash: user.passHash,
+        mustChangePassword: false
+      });
+
+      document.getElementById('first-login-modal')?.classList.add('hidden');
+      pendingFirstLoginUserId = null;
+      showToast('Personal passphrase saved!', 'success');
+    }
+
+    // -----------------------------------------------------------------------
+    // 3. GPS GEOFENCE & QR SCANNER ENGINE
+    // -----------------------------------------------------------------------
+    function computeHaversineMeters(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const toRad = (d) => (d * Math.PI) / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function updateGPSLabel() {
+      const el = document.getElementById('gps-status-text');
+      if (!el) return;
+      const pol = appState.securityPolicy || {};
+      if (pol.geofenceEnforced === false) {
+        el.textContent = currentGPS.verified
+          ? `Geofence Unlocked • GPS Ready (${currentGPS.distanceMeters}m)`
+          : 'Geofence Unlocked (Open Perimeter)';
+        return;
+      }
+      el.textContent = currentGPS.verified
+        ? `Locked (${pol.maxRadiusMeters}m) • Distance: ${currentGPS.distanceMeters}m`
+        : 'Acquiring high-accuracy GPS...';
     }
 
     function refreshGPS(notify = false) {
-      const policy = appState.securityPolicy || { campusLat: 12.971598, campusLng: 77.594566, maxRadiusMeters: 250 };
       if (!navigator.geolocation) {
-        currentGPS.verified = false;
         updateGPSLabel();
         return;
       }
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          currentGPS.lat = pos.coords.latitude;
-          currentGPS.lng = pos.coords.longitude;
-          currentGPS.accuracy = Math.round(pos.coords.accuracy || 15);
-          currentGPS.distanceMeters = computeDistanceMeters(
-            currentGPS.lat,
-            currentGPS.lng,
-            policy.campusLat,
-            policy.campusLng
+          const pol = appState.securityPolicy || {};
+          const dist = computeHaversineMeters(
+            pos.coords.latitude,
+            pos.coords.longitude,
+            pol.campusLat ?? 12.971598,
+            pol.campusLng ?? 77.594566
           );
-          currentGPS.verified = true;
+          currentGPS = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: Math.round(pos.coords.accuracy || 10),
+            distanceMeters: dist,
+            verified: true
+          };
           updateGPSLabel();
-          if (notify) showToast(`GPS verified (${currentGPS.distanceMeters}m from campus)`, 'info');
+          if (notify) showToast(`GPS updated (${dist}m from campus center)`, 'info');
         },
         () => {
           currentGPS.verified = false;
           updateGPSLabel();
-          if (notify) {
-            const msg = isIOSDevice()
-              ? 'Unable to read GPS: allow Location in iPhone Settings → Privacy & Security → Location Services.'
-              : 'Unable to get GPS lock. Turn on phone Location services.';
-            showToast(msg, 'error');
-          }
+          if (notify) showToast('Enable Location (GPS) permissions in your browser.', 'warning');
         },
-        { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 8000 }
       );
     }
 
-    function updateGPSLabel() {
-      const el = document.getElementById('gps-status-text');
-      const policy = appState.securityPolicy || { geofenceEnforced: true, maxRadiusMeters: 250 };
-      if (!el) return;
-
-      if (!policy.geofenceEnforced) {
-        el.textContent = currentGPS.verified
-          ? `GPS Active (${currentGPS.distanceMeters}m) • Perimeter Open`
-          : 'Perimeter Check Open';
-        el.className = 'text-emerald-300 truncate font-mono';
-        return;
+    function setScanMode(mode) {
+      activeScanMode = mode;
+      const inBtn = document.getElementById('btn-scan-in');
+      const outBtn = document.getElementById('btn-scan-out');
+      if (inBtn && outBtn) {
+        if (mode === 'CHECK-IN') {
+          inBtn.className = 'py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow transition';
+          outBtn.className = 'py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition';
+        } else {
+          outBtn.className = 'py-2.5 rounded-xl text-xs font-extrabold bg-amber-600 text-white shadow transition';
+          inBtn.className = 'py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition';
+        }
       }
-
-      if (!currentGPS.verified) {
-        el.textContent = 'GPS Lock Required • Tap Refresh';
-        el.className = 'text-amber-300 truncate font-mono';
-        return;
-      }
-
-      const withinBounds = currentGPS.distanceMeters <= policy.maxRadiusMeters;
-      el.textContent = `${withinBounds ? 'In-Zone' : 'Out-of-Zone'} • ${currentGPS.distanceMeters}m / ${policy.maxRadiusMeters}m`;
-      el.className = withinBounds ? 'text-emerald-300 truncate font-mono' : 'text-rose-400 truncate font-mono font-bold';
     }
 
-    function useCurrentGPSAsCampusCenter() {
-      if (!currentGPS.verified) {
-        showToast('Tap Refresh on GPS first so your current coordinates are locked.', 'warning');
-        return;
-      }
-      if (!appState.securityPolicy) appState.securityPolicy = {};
-      appState.securityPolicy.campusLat = Number(currentGPS.lat.toFixed(6));
-      appState.securityPolicy.campusLng = Number(currentGPS.lng.toFixed(6));
-      currentGPS.distanceMeters = 0;
-      saveState();
-      updateGPSLabel();
-      renderAdminConsole();
-      showToast('Updated campus center to your current GPS coordinates.', 'success');
+    function toggleCameraScanner() {
+      if (isCameraActive) stopCameraScanner();
+      else startCameraScanner();
     }
 
-    function saveSecurityPolicySettings(notify = false) {
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const lat = parseFloat(document.getElementById('cfg-campus-lat')?.value);
-      const lng = parseFloat(document.getElementById('cfg-campus-lng')?.value);
-      const rad = parseInt(document.getElementById('cfg-campus-radius')?.value, 10);
-      const enforced = Boolean(document.getElementById('cfg-geofence-enforced')?.checked);
+    function startCameraScanner() {
+      if (isCameraActive || typeof Html5Qrcode === 'undefined') return;
+      html5QrInstance = new Html5Qrcode('qr-reader');
+      html5QrInstance
+        .start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 220, height: 220 } }, onGroupQRDecoded)
+        .then(() => {
+          isCameraActive = true;
+          document.getElementById('camera-placeholder')?.classList.add('hidden');
+          document.getElementById('scanner-laser-line')?.classList.remove('hidden');
+          const lbl = document.getElementById('camera-btn-label');
+          if (lbl) lbl.textContent = 'Stop Camera';
+        })
+        .catch(() => {
+          showToast('Camera permission denied or unavailable over non-HTTPS.', 'error');
+        });
+    }
 
-      appState.securityPolicy = {
-        geofenceEnforced: enforced,
-        campusLat: Number.isFinite(lat) ? lat : 12.971598,
-        campusLng: Number.isFinite(lng) ? lng : 77.594566,
-        maxRadiusMeters: Number.isFinite(rad) && rad >= 20 ? rad : 250
+    function stopCameraScanner() {
+      if (!html5QrInstance) return;
+      html5QrInstance
+        .stop()
+        .then(() => {
+          html5QrInstance.clear();
+          html5QrInstance = null;
+          isCameraActive = false;
+          document.getElementById('camera-placeholder')?.classList.remove('hidden');
+          document.getElementById('scanner-laser-line')?.classList.add('hidden');
+          const lbl = document.getElementById('camera-btn-label');
+          if (lbl) lbl.textContent = 'Start Camera';
+        })
+        .catch(() => {
+          html5QrInstance = null;
+          isCameraActive = false;
+        });
+    }
+
+    function onGroupQRDecoded(decodedText) {
+      stopCameraScanner();
+      if (!validateActiveSession()) return;
+
+      let payload;
+      try {
+        payload = JSON.parse(decodedText);
+      } catch (e) {
+        showToast('Invalid QR code payload.', 'error');
+        return;
+      }
+
+      const expectedSig = computeMAC(`${payload.qrId}|${payload.group}|${payload.wbId}|${payload.checkpoint}`);
+      if (!constantTimeEqual(payload.sig, expectedSig)) {
+        logSecurityIncident('CRITICAL', `Forged QR payload rejected for ${currentSession.userId}.`);
+        showToast('Security Alert: Forged or tampered QR signature!', 'error');
+        return;
+      }
+
+      if (currentSession.role !== 'ROLE_ADMIN' && payload.group !== currentSession.group) {
+        logSecurityIncident('WARNING', `Cross-group scan blocked: ${currentSession.userId} (${currentSession.group}) scanned ${payload.group}.`);
+        showToast(`Group Mismatch: You belong to ${currentSession.group}, not ${payload.group}.`, 'error');
+        return;
+      }
+
+      const pol = appState.securityPolicy || {};
+      if (pol.geofenceEnforced !== false) {
+        if (!currentGPS.verified) {
+          refreshGPS(true);
+          showToast('Acquiring GPS lock—tap Start Camera again once GPS shows Verified.', 'warning');
+          return;
+        }
+        if (currentGPS.distanceMeters > (pol.maxRadiusMeters || 250)) {
+          logSecurityIncident('CRITICAL', `Off-site scan blocked for ${currentSession.userId} (${currentGPS.distanceMeters}m away).`);
+          showToast(`Outside Campus Perimeter (${currentGPS.distanceMeters}m > ${pol.maxRadiusMeters}m).`, 'error');
+          return;
+        }
+      }
+
+      const now = new Date();
+      const monthTab = getMonthSheetName(now);
+      const dateCol = getDateColumnLabel(now);
+      const timeStr = now.toTimeString().slice(0, 5);
+      const targetGroup = payload.group;
+      const wbId = appState.groupQRs[targetGroup]?.wbId || GROUP_WB_META[targetGroup]?.wbId;
+      const wb = appState.workbooks[wbId];
+
+      ensureCurrentMonthSheetsExist(now);
+      const sheet = wb?.sheets?.[monthTab];
+      let cellValue = activeScanMode === 'CHECK-IN' ? `P (${timeStr} IN)` : `P (${timeStr} OUT)`;
+
+      if (sheet && sheet.rows && sheet.rows[currentSession.userId]) {
+        const prev = String(sheet.rows[currentSession.userId].days[dateCol] || '');
+        const inMatch = prev.match(/(\d{2}:\d{2})\s*IN/);
+        if (activeScanMode === 'CHECK-OUT' && inMatch) {
+          cellValue = `P (${inMatch[1]} IN / ${timeStr} OUT)`;
+        }
+        sheet.rows[currentSession.userId].days[dateCol] = cellValue;
+      }
+
+      if (appState.groupQRs[targetGroup]) {
+        appState.groupQRs[targetGroup].scansCount = (appState.groupQRs[targetGroup].scansCount || 0) + 1;
+      }
+
+      const logEntry = {
+        id: 'LOG-' + Date.now().toString(36).toUpperCase(),
+        userId: currentSession.userId,
+        name: currentSession.name,
+        group: targetGroup,
+        action: activeScanMode,
+        dateCol,
+        monthTab,
+        time: timeStr,
+        cellValue,
+        workbookName: wb?.fileName || GROUP_WB_META[targetGroup]?.fileName || '',
+        gps: currentGPS.verified ? `${currentGPS.lat.toFixed(5)},${currentGPS.lng.toFixed(5)} (${currentGPS.distanceMeters}m)` : 'Open Perimeter',
+        deviceId: getDeviceFingerprint(),
+        hash: computeMAC(`${currentSession.userId}|${dateCol}|${timeStr}|${cellValue}`).slice(0, 12)
       };
-      if (currentGPS.verified) {
-        currentGPS.distanceMeters = computeDistanceMeters(
-          currentGPS.lat,
-          currentGPS.lng,
-          appState.securityPolicy.campusLat,
-          appState.securityPolicy.campusLng
-        );
-      }
+
+      appState.attendanceLogs.unshift(logEntry);
       saveState();
-      updateGPSLabel();
-      if (notify) showToast('Geofence policy saved.', 'success');
+      queueCloudSyncEvent('ATTENDANCE_SCAN', logEntry);
+
+      const receiptBox = document.getElementById('last-scan-receipt');
+      const rTime = document.getElementById('receipt-time');
+      const rDet = document.getElementById('receipt-details');
+      if (rTime) rTime.textContent = now.toTimeString().slice(0, 8);
+      if (rDet) rDet.textContent = `${logEntry.cellValue} • ${logEntry.workbookName} [${monthTab}]`;
+      if (receiptBox) receiptBox.classList.remove('hidden');
+
+      renderAllViews();
+      showToast(`${activeScanMode} verified and synced to ${targetGroup} sheet!`, 'success');
     }
 
     // -----------------------------------------------------------------------
-    // 6. ADMIN USER ENROLLMENT (ONE-TIME) & DELETION
+    // 4. ADMIN USER ENROLLMENT, BULK IMPORT, RESET, UNBIND & DELETE
     // -----------------------------------------------------------------------
-    function handleAdminEnrollUser(event) {
-      event.preventDefault();
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') {
-        showToast('Unauthorized: Only Admin can enroll new users.', 'error');
-        return;
-      }
-
-      const customIdRaw = (document.getElementById('enroll-custom-id')?.value || '').trim().toUpperCase();
-      const firstName = document.getElementById('enroll-first-name')?.value.trim() || '';
-      const lastName = document.getElementById('enroll-last-name')?.value.trim() || '';
-      const phone = document.getElementById('enroll-phone')?.value.trim() || '';
-      const email = document.getElementById('enroll-email')?.value.trim().toLowerCase() || '';
-      const group = document.getElementById('enroll-group')?.value || 'Employees';
-
-      if (!firstName || !lastName || !phone || !email) {
-        showToast('All fields (First Name, Last Name, Phone, Email) are required.', 'error');
-        return;
-      }
-
-      if (customIdRaw) {
-        if (!/^[A-Z0-9_-]{2,24}$/.test(customIdRaw)) {
-          showToast('Custom ID must be 2–24 letters, numbers, hyphens, or underscores.', 'error');
-          return;
-        }
-        const idTaken = appState.registeredUsers.some((u) => String(u.userId).toUpperCase() === customIdRaw);
-        if (idTaken || customIdRaw === 'ADMIN') {
-          showToast(`Member ID [${customIdRaw}] is already assigned. Choose a unique ID.`, 'error');
-          return;
-        }
-      }
-
-      const duplicate = appState.registeredUsers.find(
-        (u) => u.email.toLowerCase() === email || u.phone.replace(/\s+/g, '') === phone.replace(/\s+/g, '')
-      );
-      if (duplicate) {
-        showToast(`One-Time Policy: User already enrolled (${duplicate.userId} - ${duplicate.firstName} ${duplicate.lastName}).`, 'error');
-        return;
-      }
-
+    function generateUniqueMemberId(group) {
       const prefixMap = { Employees: 'EMP', GDA: 'GDA', IT: 'IT', MFs: 'MFS' };
       const prefix = prefixMap[group] || 'EMP';
-      let userId = customIdRaw || `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
-      while (!customIdRaw && appState.registeredUsers.some((u) => u.userId === userId)) {
-        userId = `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
+      let num = appState.registeredUsers.length + 101;
+      while (appState.registeredUsers.some((u) => u.userId.toUpperCase() === `${prefix}-${num}`)) {
+        num++;
       }
-      const salt = `SALT-${userId}-${Date.now().toString(36)}`;
+      return `${prefix}-${num}`;
+    }
 
+    function handleAdminEnrollUser(event) {
+      event.preventDefault();
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+
+      const customId = (document.getElementById('enroll-custom-id')?.value || '').trim().toUpperCase();
+      const firstName = (document.getElementById('enroll-first-name')?.value || '').trim();
+      const lastName = (document.getElementById('enroll-last-name')?.value || '').trim();
+      const phone = (document.getElementById('enroll-phone')?.value || '').trim();
+      const email = (document.getElementById('enroll-email')?.value || '').trim().toLowerCase();
+      const group = document.getElementById('enroll-group')?.value || 'Employees';
+
+      if (!firstName || !lastName || !phone || !email) return;
+
+      const userId = customId || generateUniqueMemberId(group);
+      if (appState.registeredUsers.some((u) => u.userId.toUpperCase() === userId)) {
+        showToast(`Member ID "${userId}" is already assigned.`, 'error');
+        return;
+      }
+      if (appState.registeredUsers.some((u) => u.email.toLowerCase() === email)) {
+        showToast(`Email "${email}" is already enrolled.`, 'error');
+        return;
+      }
+
+      const salt = generateSalt();
       const newUser = {
         userId,
         firstName,
@@ -2344,184 +1998,54 @@
       };
 
       appState.registeredUsers.push(newUser);
-
-      const targetGroupWbId = appState.groupQRs[group]?.wbId || GROUP_WB_META[group].wbId;
-      const grpWb = appState.workbooks[targetGroupWbId];
-      if (grpWb) {
-        Object.values(grpWb.sheets).forEach((sheet) => {
-          if (sheet && sheet.rows && !sheet.rows[userId]) {
-            const days = {};
-            (sheet.dateColumns || []).forEach((col) => { days[col] = ''; });
-            sheet.rows[userId] = {
-              userId,
-              name: `${firstName} ${lastName}`,
-              group,
-              days
-            };
-          }
-        });
-      }
-
+      ensureCurrentMonthSheetsExist(new Date());
       saveState();
-      logSecurityIncident('INFO', `Admin enrolled ${firstName} ${lastName} (${userId}) into [${group}].`);
       queueCloudSyncEvent('USER_ENROLLED', newUser);
 
-      ['enroll-custom-id', 'enroll-first-name', 'enroll-last-name', 'enroll-phone', 'enroll-email'].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-
+      event.target.reset();
       renderAllViews();
-      showToast(`Enrolled ${firstName} ${lastName} • ID: ${userId} • Temp Pass: Mitraz@User1!`, 'success');
-    }
-
-    function requestDeleteUser(userId) {
-      pendingDeleteUserId = userId;
-      renderAdminConsole();
-    }
-
-    function cancelDeleteUser() {
-      pendingDeleteUserId = null;
-      renderAdminConsole();
-    }
-
-    function confirmDeleteSelectedUser() {
-      const sel = document.getElementById('admin-delete-user-select');
-      if (!sel || !sel.value) {
-        showToast('Select a user to delete.', 'warning');
-        return;
-      }
-      adminDeleteUser(sel.value);
-    }
-
-    function adminDeleteUser(userId) {
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const idx = appState.registeredUsers.findIndex((u) => u.userId === userId);
-      if (idx === -1) return;
-
-      const removed = appState.registeredUsers[idx];
-      appState.registeredUsers.splice(idx, 1);
-      pendingDeleteUserId = null;
-
-      Object.values(appState.workbooks).forEach((wb) => {
-        if (wb && !wb.isUsersDirectory && wb.sheets) {
-          Object.values(wb.sheets).forEach((sheet) => {
-            if (sheet && sheet.rows && sheet.rows[userId]) {
-              delete sheet.rows[userId];
-            }
-          });
-        }
-      });
-
-      saveState();
-      logSecurityIncident('WARNING', `Admin deleted user ${removed.firstName} ${removed.lastName} (${userId}).`);
-      queueCloudSyncEvent('USER_DELETED', { userId });
-      renderAllViews();
-      showToast(`Deleted user ${removed.firstName} ${removed.lastName} (${userId}).`, 'info');
-    }
-
-    function adminUnbindUserDevice(userId) {
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const user = appState.registeredUsers.find((u) => u.userId === userId);
-      if (!user) return;
-      user.boundDeviceId = null;
-      saveState();
-      logSecurityIncident('INFO', `Admin reset hardware binding for ${user.userId}.`);
-      queueCloudSyncEvent('DEVICE_UNBOUND', { userId: user.userId });
-      renderAllViews();
-      showToast(`Reset device lock for ${user.firstName} (${user.userId}).`, 'info');
-    }
-
-    function adminResetUserPassword(userId) {
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const user = appState.registeredUsers.find((u) => u.userId === userId);
-      if (!user) return;
-
-      const newSalt = `SALT-${user.userId}-${Date.now().toString(36)}`;
-      user.salt = newSalt;
-      user.passHash = hashPassphrase('Mitraz@User1!', newSalt);
-      user.mustChangePassword = true;
-      user.passwordResetRequested = false;
-      saveState();
-      logSecurityIncident('INFO', `Admin reset passphrase for ${user.userId} to temporary starter password.`);
-      queueCloudSyncEvent('USER_PASSWORD_UPDATED', { userId: user.userId, salt: user.salt, passHash: user.passHash });
-      renderAllViews();
-      showToast(`Password reset for ${user.firstName} (${user.userId}) → Temp: Mitraz@User1!`, 'success');
+      showToast(`Enrolled ${firstName} ${lastName} (${userId}) • Temp Pass: Mitraz@User1!`, 'success');
     }
 
     function downloadBulkUserTemplate() {
-      if (typeof XLSX === 'undefined') {
-        showToast('Excel engine still loading...', 'warning');
-        return;
-      }
+      if (typeof XLSX === 'undefined') return;
+      const ws = XLSX.utils.json_to_sheet([
+        { 'Member ID': 'EMP-101', 'First Name': 'Giri', 'Last Name': 'Babu', 'Phone': '9876543210', 'Email': 'giri@mitraz.com', 'Group': 'Employees' }
+      ]);
       const wb = XLSX.utils.book_new();
-      const aoa = [
-        ['Member ID (Optional)', 'First Name', 'Last Name', 'Phone Number', 'Email', 'Group'],
-        ['EMP-105', 'Kavita', 'Nair', '+91 9876543210', 'kavita.nair@mitraz.org', 'Employees'],
-        ['GDA-205', 'Arjun', 'Menon', '+91 9876543211', 'arjun.menon@mitraz.org', 'GDA'],
-        ['', 'Divya', 'Rao', '+91 9876543212', 'divya.rao@mitraz.org', 'IT'],
-        ['', 'Suresh', 'Patel', '+91 9876543213', 'suresh.patel@mitraz.org', 'MFs']
-      ];
-      const ws = XLSX.utils.aoa_to_sheet(aoa);
-      XLSX.utils.book_append_sheet(wb, ws, 'Bulk_Users_Template');
+      XLSX.utils.book_append_sheet(wb, ws, 'Users_Template');
       XLSX.writeFile(wb, 'MITRAZ_Bulk_Users_Template.xlsx');
-      showToast('Downloaded MITRAZ_Bulk_Users_Template.xlsx', 'success');
     }
 
     function handleBulkImportUsers(event) {
       if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
       const file = event.target?.files?.[0];
-      if (!file) return;
-      if (typeof XLSX === 'undefined') {
-        showToast('Excel engine still loading...', 'warning');
-        return;
-      }
+      if (!file || typeof XLSX === 'undefined') return;
 
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const data = new Uint8Array(e.target.result);
-          const wb = XLSX.read(data, { type: 'array' });
-          const firstSheet = wb.Sheets[wb.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-
+          const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
           let added = 0;
-          let skipped = 0;
-          const prefixMap = { Employees: 'EMP', GDA: 'GDA', IT: 'IT', MFs: 'MFS' };
-          const headerFirst = String(rows[0]?.[0] || '').toLowerCase();
-          const hasCustomIdCol = headerFirst.includes('id');
 
-          for (let i = 1; i < rows.length; i++) {
-            const r = rows[i] || [];
-            const customId = hasCustomIdCol ? String(r[0] || '').trim().toUpperCase() : '';
-            const offset = hasCustomIdCol ? 1 : 0;
-            const firstName = String(r[offset] || '').trim();
-            const lastName = String(r[offset + 1] || '').trim();
-            const phone = String(r[offset + 2] || '').trim();
-            const email = String(r[offset + 3] || '').trim().toLowerCase();
-            const rawGroup = String(r[offset + 4] || 'Employees').trim();
-            const group = GROUPS.find((g) => g.toLowerCase() === rawGroup.toLowerCase()) || 'Employees';
+          rows.forEach((r) => {
+            const firstName = String(r['First Name'] || '').trim();
+            const lastName = String(r['Last Name'] || '').trim();
+            const phone = String(r['Phone'] || r['Phone Number'] || '').trim();
+            const email = String(r['Email'] || '').trim().toLowerCase();
+            const rawGrp = String(r['Group'] || '').trim();
+            const group = GROUPS.includes(rawGrp) ? rawGrp : 'Employees';
+            const customId = String(r['Member ID'] || r['User ID'] || '').trim().toUpperCase();
 
-            if (!firstName || !lastName || !phone || !email) {
-              skipped++;
-              continue;
-            }
+            if (!firstName || !email) return;
+            if (appState.registeredUsers.some((u) => u.email.toLowerCase() === email)) return;
 
-            const exists = appState.registeredUsers.some(
-              (u) =>
-                (customId && String(u.userId).toUpperCase() === customId) ||
-                u.email.toLowerCase() === email ||
-                u.phone.replace(/\s+/g, '') === phone.replace(/\s+/g, '')
-            );
-            if (exists) {
-              skipped++;
-              continue;
-            }
+            const userId = (customId && !appState.registeredUsers.some((u) => u.userId === customId))
+              ? customId
+              : generateUniqueMemberId(group);
 
-            const prefix = prefixMap[group] || 'EMP';
-            const userId = customId || `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
-            const salt = `SALT-${userId}-${Date.now().toString(36)}-${i}`;
-
+            const salt = generateSalt();
             const newUser = {
               userId,
               firstName,
@@ -2552,18 +2076,279 @@
               });
             }
             added++;
-          }
+          });
 
           saveState();
-          logSecurityIncident('INFO', `Admin bulk-imported ${added} users (${skipped} skipped/duplicates) from ${file.name}.`);
           renderAllViews();
-          showToast(`Bulk Import: ${added} enrolled, ${skipped} skipped (duplicates/blank).`, added > 0 ? 'success' : 'warning');
+          showToast(`Imported ${added} new user(s) into directory.`, 'success');
         } catch (err) {
-          showToast('Failed to parse file. Use .xlsx or .csv matching the template.', 'error');
+          showToast('Unable to parse spreadsheet file.', 'error');
         }
       };
       reader.readAsArrayBuffer(file);
       event.target.value = '';
+    }
+
+    function adminResetUserPassword(userId) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const user = appState.registeredUsers.find((u) => u.userId === userId);
+      if (!user) return;
+
+      user.salt = generateSalt();
+      user.passHash = hashPassphrase('Mitraz@User1!', user.salt);
+      user.mustChangePassword = true;
+      user.passwordResetRequested = false;
+      saveState();
+
+      logSecurityIncident('INFO', `Admin reset passphrase for ${user.userId} to temporary starter password.`);
+      queueCloudSyncEvent('USER_PASSWORD_UPDATED', {
+        userId: user.userId,
+        salt: user.salt,
+        passHash: user.passHash,
+        mustChangePassword: true
+      });
+      renderAllViews();
+      showToast(`Password reset for ${user.firstName} (${user.userId}) → Temp: Mitraz@User1!`, 'success');
+    }
+
+    function adminUnbindUserDevice(userId) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const user = appState.registeredUsers.find((u) => u.userId === userId);
+      if (!user) return;
+      user.boundDeviceId = null;
+      saveState();
+      logSecurityIncident('WARNING', `Admin unbound hardware device for ${user.userId}.`);
+      queueCloudSyncEvent('DEVICE_UNBOUND', { userId: user.userId, boundDeviceId: '' });
+      renderAllViews();
+      showToast(`Device lock cleared for ${user.firstName} (${user.userId}).`, 'info');
+    }
+
+    function requestDeleteUser(userId) {
+      pendingDeleteUserId = userId;
+      renderAdminConsole();
+    }
+
+    function cancelDeleteUser() {
+      pendingDeleteUserId = null;
+      renderAdminConsole();
+    }
+
+    function confirmDeleteSelectedUser() {
+      const uid = document.getElementById('admin-delete-user-select')?.value;
+      if (uid) adminDeleteUser(uid);
+    }
+
+    function adminDeleteUser(userId) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      appState.registeredUsers = appState.registeredUsers.filter((u) => u.userId !== userId);
+      Object.values(appState.workbooks).forEach((wb) => {
+        if (wb && !wb.isUsersDirectory && wb.sheets) {
+          Object.values(wb.sheets).forEach((sh) => {
+            if (sh && sh.rows) delete sh.rows[userId];
+          });
+        }
+      });
+      pendingDeleteUserId = null;
+      saveState();
+      logSecurityIncident('WARNING', `Admin deleted user ${userId}.`);
+      queueCloudSyncEvent('USER_DELETED', { userId });
+      renderAllViews();
+      showToast(`Deleted user ${userId}.`, 'info');
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. SECURITY POLICY, CAMPUS GPS & QR RENDERING
+    // -----------------------------------------------------------------------
+    function useCurrentGPSAsCampusCenter() {
+      if (!navigator.geolocation) {
+        showToast('Geolocation not supported.', 'error');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const latInp = document.getElementById('cfg-campus-lat');
+          const lngInp = document.getElementById('cfg-campus-lng');
+          if (latInp) latInp.value = pos.coords.latitude.toFixed(6);
+          if (lngInp) lngInp.value = pos.coords.longitude.toFixed(6);
+          saveSecurityPolicySettings(true);
+        },
+        () => showToast('Unable to read current GPS coordinates.', 'error'),
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+
+    function saveSecurityPolicySettings(notify = true) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const enforced = Boolean(document.getElementById('cfg-geofence-enforced')?.checked);
+      const lat = parseFloat(document.getElementById('cfg-campus-lat')?.value) || 12.971598;
+      const lng = parseFloat(document.getElementById('cfg-campus-lng')?.value) || 77.594566;
+      const radius = parseInt(document.getElementById('cfg-campus-radius')?.value, 10) || 250;
+
+      appState.securityPolicy = {
+        geofenceEnforced: enforced,
+        campusLat: lat,
+        campusLng: lng,
+        maxRadiusMeters: radius
+      };
+      saveState();
+      refreshGPS(false);
+      updateGPSLabel();
+      queueCloudSyncEvent('SECURITY_POLICY_UPDATED', appState.securityPolicy);
+      if (notify) showToast(`Geofence lock ${enforced ? 'ENABLED' : 'DISABLED'} & synced across devices.`, 'success');
+    }
+
+    function handleAdminRotatePassword(event) {
+      event.preventDefault();
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const p1 = (document.getElementById('admin-new-pass-1')?.value || '').trim();
+      const p2 = (document.getElementById('admin-new-pass-2')?.value || '').trim();
+      if (p1.length < 10) {
+        showToast('Admin passphrase must be at least 10 characters.', 'error');
+        return;
+      }
+      if (p1 !== p2) {
+        showToast('New Admin passphrases do not match.', 'error');
+        return;
+      }
+      appState.adminAccount.salt = generateSalt();
+      appState.adminAccount.passHash = hashPassphrase(p1, appState.adminAccount.salt);
+      saveState();
+      event.target.reset();
+      logSecurityIncident('INFO', 'Admin Master passphrase rotated.');
+      showToast('Admin Master passphrase updated successfully.', 'success');
+    }
+
+    function renderAdminQRCode() {
+      const target = document.getElementById('admin-qr-render-target');
+      const titleEl = document.getElementById('qr-badge-title');
+      const wbEl = document.getElementById('qr-badge-wb');
+      const qrObj = appState.groupQRs[activeGroupQrSelected];
+      if (!target || !qrObj || typeof QRCode === 'undefined') return;
+
+      target.innerHTML = '';
+      const linkedWb = appState.workbooks[qrObj.wbId];
+      if (titleEl) titleEl.textContent = `${qrObj.group} Checkpoint`;
+      if (wbEl) wbEl.textContent = `→ ${linkedWb?.fileName || GROUP_WB_META[qrObj.group].fileName}`;
+
+      new QRCode(target, {
+        text: JSON.stringify({
+          qrId: qrObj.qrId,
+          group: qrObj.group,
+          wbId: qrObj.wbId,
+          checkpoint: qrObj.checkpoint,
+          sig: qrObj.sig
+        }),
+        width: 170,
+        height: 170,
+        colorDark: '#0f172a',
+        colorLight: '#ffffff'
+      });
+    }
+
+    function applyMitrazFavicon() {
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='120' height='120' rx='24' fill='%230F172A'/><circle cx='60' cy='24' r='8' fill='%23E11D48'/><path d='M24 22 C36 22 46 38 60 44 C74 38 84 22 96 22 C98 46 84 62 74 72 C68 78 72 90 78 96 L68 98 C62 88 60 76 60 66 C60 76 58 88 52 98 L42 96 C48 90 52 78 46 72 C36 62 22 46 24 22 Z' fill='%23E11D48'/></svg>`;
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/svg+xml';
+      link.href = 'data:image/svg+xml,' + svg;
+      document.head.appendChild(link);
+    }
+
+    function registerMobilePWAAndAppleIcons() {
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        document.getElementById('btn-install-pwa')?.classList.remove('hidden');
+      });
+    }
+
+    function triggerPWAInstall() {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt = null;
+      document.getElementById('btn-install-pwa')?.classList.add('hidden');
+    }
+
+    // -----------------------------------------------------------------------
+    // 6. BULK DELETE BY GROUP, WORKBOOK CREATION, IMPORT & EXPORT
+    // -----------------------------------------------------------------------
+    function openBulkDeleteGroupWarning() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const selectedGroups = Array.from(document.querySelectorAll('.bulk-del-group-chk:checked')).map((el) => el.value);
+      const adminPass = (document.getElementById('bulk-delete-admin-pass')?.value || '').trim();
+
+      if (selectedGroups.length === 0) {
+        showToast('Select at least one group checkbox to bulk delete.', 'warning');
+        return;
+      }
+      if (!adminPass) {
+        showToast('Enter your Admin Master Password to authorize bulk deletion.', 'error');
+        return;
+      }
+
+      const expectedHash = appState.adminAccount.passHash;
+      const actualHash = hashPassphrase(adminPass, appState.adminAccount.salt);
+      if (!constantTimeEqual(actualHash, expectedHash)) {
+        logSecurityIncident('CRITICAL', 'Failed Admin password verification during Bulk Group Delete attempt.');
+        showToast('Incorrect Admin Master Password! Bulk deletion blocked.', 'error');
+        return;
+      }
+
+      const affectedCount = appState.registeredUsers.filter((u) => selectedGroups.includes(u.group)).length;
+      if (affectedCount === 0) {
+        showToast(`No enrolled users found in [${selectedGroups.join(', ')}].`, 'info');
+        return;
+      }
+
+      pendingBulkDeleteGroups = selectedGroups;
+      const warnEl = document.getElementById('bulk-delete-warning-text');
+      const bannerEl = document.getElementById('bulk-delete-confirm-banner');
+      if (warnEl) {
+        warnEl.textContent = `WARNING: Permanently delete ${affectedCount} member(s) from [${selectedGroups.join(', ')}]? This cannot be undone.`;
+      }
+      if (bannerEl) bannerEl.classList.remove('hidden');
+    }
+
+    function cancelBulkDeleteGroup() {
+      pendingBulkDeleteGroups = [];
+      document.getElementById('bulk-delete-confirm-banner')?.classList.add('hidden');
+    }
+
+    function executeBulkDeleteSelectedGroups() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      if (!Array.isArray(pendingBulkDeleteGroups) || pendingBulkDeleteGroups.length === 0) return;
+
+      const toRemoveIds = appState.registeredUsers
+        .filter((u) => pendingBulkDeleteGroups.includes(u.group))
+        .map((u) => u.userId);
+
+      appState.registeredUsers = appState.registeredUsers.filter((u) => !pendingBulkDeleteGroups.includes(u.group));
+
+      Object.values(appState.workbooks).forEach((wb) => {
+        if (wb && !wb.isUsersDirectory && wb.sheets) {
+          Object.values(wb.sheets).forEach((sheet) => {
+            if (sheet && sheet.rows) {
+              toRemoveIds.forEach((uid) => { delete sheet.rows[uid]; });
+            }
+          });
+        }
+      });
+
+      toRemoveIds.forEach((uid) => {
+        queueCloudSyncEvent('USER_DELETED', { userId: uid });
+      });
+
+      const deletedGroupsLabel = pendingBulkDeleteGroups.join(', ');
+      pendingBulkDeleteGroups = [];
+      document.getElementById('bulk-delete-confirm-banner')?.classList.add('hidden');
+      const pwInp = document.getElementById('bulk-delete-admin-pass');
+      if (pwInp) pwInp.value = '';
+      document.querySelectorAll('.bulk-del-group-chk').forEach((chk) => { chk.checked = false; });
+
+      saveState();
+      logSecurityIncident('CRITICAL', `Admin bulk-deleted ${toRemoveIds.length} user(s) from [${deletedGroupsLabel}].`);
+      renderAllViews();
+      showToast(`Deleted ${toRemoveIds.length} member(s) from [${deletedGroupsLabel}].`, 'success');
     }
 
     function toggleNewWorkbookForm() {
@@ -2588,7 +2373,7 @@
         group: targetGroup,
         fileName: rawName,
         sheets: {
-          [monthTab]: createMatrixSheetForGroup(now, targetGroup, appState.registeredUsers)
+          [monthTab]: createMatrixSheetForGroup(now, targetGroup, appState.registeredUsers, appState.holidays)
         }
       };
 
@@ -2601,13 +2386,10 @@
       appState.activeWorkbookId = wbId;
       appState.selectedSheetTab = monthTab;
       saveState();
-      logSecurityIncident('INFO', `Admin created custom Excel workbook [${rawName}] & linked to [${targetGroup}].`);
-
-      const nameInput = document.getElementById('custom-wb-name');
-      if (nameInput) nameInput.value = '';
+      event.target.reset();
       toggleNewWorkbookForm();
       renderAllViews();
-      showToast(`Created & switched to ${rawName} for [${targetGroup}]!`, 'success');
+      showToast(`Created & linked ${rawName} to ${targetGroup}.`, 'success');
     }
 
     function handleImportCustomWorkbook(event) {
@@ -2631,7 +2413,7 @@
 
           parsedWb.SheetNames.forEach((sName) => {
             const aoa = XLSX.utils.sheet_to_json(parsedWb.Sheets[sName], { header: 1 });
-            const matrix = createMatrixSheetForGroup(now, 'Employees', appState.registeredUsers);
+            const matrix = createMatrixSheetForGroup(now, 'Employees', appState.registeredUsers, appState.holidays);
             if (aoa.length > 1) {
               const headerRow = aoa[0].map((h) => String(h || '').trim());
               const dateCols = headerRow.slice(3).filter((h) => h && !['Present (P)', 'Leaves (L)', 'Holidays (H)', 'Attendance %', 'Status Flag'].includes(h));
@@ -2654,7 +2436,7 @@
           });
 
           if (Object.keys(sheets).length === 0) {
-            sheets[fallbackMonth] = createMatrixSheetForGroup(now, 'Employees', appState.registeredUsers);
+            sheets[fallbackMonth] = createMatrixSheetForGroup(now, 'Employees', appState.registeredUsers, appState.holidays);
           }
 
           appState.workbooks[wbId] = {
@@ -2666,11 +2448,10 @@
           appState.activeWorkbookId = wbId;
           appState.selectedSheetTab = Object.keys(sheets)[0];
           saveState();
-          logSecurityIncident('INFO', `Admin imported external Excel workbook [${file.name}].`);
           renderAllViews();
-          showToast(`Loaded workbook ${file.name}!`, 'success');
+          showToast(`Imported ${file.name} successfully.`, 'success');
         } catch (err) {
-          showToast('Could not parse Excel file. Ensure valid .xlsx format.', 'error');
+          showToast('Invalid Excel file format.', 'error');
         }
       };
       reader.readAsArrayBuffer(file);
@@ -2847,37 +2628,249 @@
       showToast(`Linked ${groupName} QR to ${appState.workbooks[newWbId].fileName}`, 'success');
     }
 
-    function renderAdminQRCode() {
-      const target = document.getElementById('admin-qr-render-target');
-      if (!target) return;
-      const qrObj = appState.groupQRs[activeGroupQrSelected] || appState.groupQRs['Employees'];
-      const wb = appState.workbooks[qrObj.wbId];
+    function toggleQrSheetLinkerBox() {
+      document.getElementById('qr-sheet-linker-box')?.classList.toggle('hidden');
+    }
 
-      const payload = JSON.stringify({
-        org: 'MITRAZ',
-        qrId: qrObj.qrId,
-        group: qrObj.group,
-        wbId: qrObj.wbId,
-        checkpoint: qrObj.checkpoint,
-        sig: qrObj.sig
-      });
+    function handleCreateOrLinkGroupSheet() {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const targetGroup = document.getElementById('qr-link-target-group')?.value || 'Employees';
+      let sheetName = (document.getElementById('qr-link-sheet-name')?.value || '').trim();
+      const externalUrl = (document.getElementById('qr-link-external-url')?.value || '').trim();
 
-      target.innerHTML = '';
-      if (typeof QRCode !== 'undefined') {
-        new QRCode(target, {
-          text: payload,
-          width: 172,
-          height: 172,
-          colorDark: '#0f172a',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.M
-        });
+      let externalSheetId = '';
+      if (externalUrl) {
+        const match = externalUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (!match || !match[1]) {
+          showToast('Invalid Google Sheet URL. Paste a link containing /spreadsheets/d/<ID>/.', 'error');
+          return;
+        }
+        externalSheetId = match[1];
+        if (!sheetName) sheetName = `MITRAZ_${targetGroup}_LinkedSheet.xlsx`;
+      } else if (!sheetName) {
+        sheetName = `MITRAZ_${targetGroup}_New_${new Date().getFullYear()}.xlsx`;
       }
 
-      const titleEl = document.getElementById('qr-badge-title');
-      const wbEl = document.getElementById('qr-badge-wb');
-      if (titleEl) titleEl.textContent = `${qrObj.group} • ${qrObj.checkpoint}`;
-      if (wbEl) wbEl.textContent = `→ ${wb ? wb.fileName : qrObj.wbId}`;
+      if (!sheetName.toLowerCase().endsWith('.xlsx')) sheetName += '.xlsx';
+
+      const wbId = 'wb_linked_' + Date.now().toString(36);
+      const now = new Date();
+      const monthTab = getMonthSheetName(now);
+
+      appState.workbooks[wbId] = {
+        id: wbId,
+        group: targetGroup,
+        fileName: sheetName,
+        externalSheetUrl: externalUrl || '',
+        externalSpreadsheetId: externalSheetId || '',
+        sheets: {
+          [monthTab]: createMatrixSheetForGroup(now, targetGroup, appState.registeredUsers, appState.holidays)
+        }
+      };
+
+      if (appState.groupQRs[targetGroup]) {
+        appState.groupQRs[targetGroup].wbId = wbId;
+        appState.groupQRs[targetGroup].externalSheetUrl = externalUrl || '';
+        const qrObj = appState.groupQRs[targetGroup];
+        qrObj.sig = computeMAC(`${qrObj.qrId}|${qrObj.group}|${wbId}|${qrObj.checkpoint}`);
+      }
+
+      saveState();
+      if (externalSheetId) {
+        queueCloudSyncEvent('GROUP_EXTERNAL_SHEET_LINKED', {
+          group: targetGroup,
+          spreadsheetId: externalSheetId,
+          sheetUrl: externalUrl,
+          fileName: sheetName
+        });
+      }
+      logSecurityIncident('INFO', `Admin linked [${targetGroup}] QR to [${sheetName}]${externalSheetId ? ' (External Google Sheet)' : ''}.`);
+      const nameEl = document.getElementById('qr-link-sheet-name');
+      const urlEl = document.getElementById('qr-link-external-url');
+      if (nameEl) nameEl.value = '';
+      if (urlEl) urlEl.value = '';
+      toggleQrSheetLinkerBox();
+      renderAllViews();
+      showToast(`Linked ${targetGroup} QR → ${sheetName}`, 'success');
+    }
+
+    function getLast12MonthsList() {
+      const list = [];
+      const base = new Date();
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+        list.push({
+          label: getMonthSheetName(d),
+          year: d.getFullYear(),
+          monthIndex: d.getMonth(),
+          dateObj: d
+        });
+      }
+      return list;
+    }
+
+    function exportSelectedHistoryMonthXLSX() {
+      if (typeof XLSX === 'undefined') {
+        showToast('Excel engine still loading...', 'warning');
+        return;
+      }
+      const activeWb = appState.workbooks[appState.activeWorkbookId];
+      if (!activeWb || activeWb.isUsersDirectory) {
+        showToast('Select a group attendance workbook (Employees, GDA, IT, or MFs) first.', 'warning');
+        return;
+      }
+      const selectedMonthLabel = document.getElementById('admin-history-month-select')?.value;
+      const monthMeta = getLast12MonthsList().find((m) => m.label === selectedMonthLabel);
+      if (!monthMeta) return;
+
+      const groupName = activeWb.group || 'Employees';
+      let sheetObj = activeWb.sheets[monthMeta.label];
+      if (!sheetObj) {
+        sheetObj = createMatrixSheetForGroup(monthMeta.dateObj, groupName, appState.registeredUsers, appState.holidays);
+        (appState.attendanceLogs || [])
+          .filter((l) => l.group === groupName && l.monthTab === monthMeta.label)
+          .forEach((l) => {
+            if (sheetObj.rows[l.userId] && Object.prototype.hasOwnProperty.call(sheetObj.rows[l.userId].days, l.dateCol)) {
+              sheetObj.rows[l.userId].days[l.dateCol] = l.cellValue;
+            }
+          });
+        (appState.leaveRequests || [])
+          .filter((lv) => lv.group === groupName && lv.status === 'APPROVED')
+          .forEach((lv) => {
+            const start = new Date(lv.startDate + 'T00:00:00');
+            const end = new Date(lv.endDate + 'T00:00:00');
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+              if (getMonthSheetName(d) === monthMeta.label) {
+                const col = getDateColumnLabel(d);
+                if (sheetObj.rows[lv.userId] && Object.prototype.hasOwnProperty.call(sheetObj.rows[lv.userId].days, col)) {
+                  sheetObj.rows[lv.userId].days[col] = `L (${String(lv.leaveType || 'CL').split(' ')[0]})`;
+                }
+              }
+            }
+          });
+      }
+
+      const dateCols = sheetObj.dateColumns || [];
+      const header = ['Member ID', 'Full Name', 'Group', ...dateCols, 'Present (P)', 'Leaves (L)', 'Holidays (H)', 'Attendance %', 'Status Flag'];
+      const rowObjects = Object.values(sheetObj.rows || {});
+      const rows = rowObjects.map((r) => {
+        let present = 0;
+        let leaves = 0;
+        let holidays = 0;
+        const dayCells = dateCols.map((d) => {
+          const rawCell = String(r.days[d] || '');
+          if (rawCell.startsWith('P')) present++;
+          else if (rawCell.startsWith('L')) leaves++;
+          else if (rawCell.startsWith('H')) holidays++;
+          return sanitizeExcelCell(rawCell);
+        });
+        const effectiveDays = Math.max(1, dateCols.length - holidays);
+        const pct = Math.round(((present + leaves) / effectiveDays) * 100);
+        const flag = pct >= 90 ? 'EXCELLENT' : pct >= 75 ? 'NORMAL' : 'LOW ATTENDANCE';
+        return [sanitizeExcelCell(r.userId), sanitizeExcelCell(r.name), sanitizeExcelCell(r.group), ...dayCells, present, leaves, holidays, `${pct}%`, flag];
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+      XLSX.utils.book_append_sheet(wb, ws, monthMeta.label.slice(0, 31));
+      const safeFileMonth = monthMeta.label.replace(/\s+/g, '_');
+      XLSX.writeFile(wb, `MITRAZ_${groupName}_Attendance_${safeFileMonth}.xlsx`);
+      showToast(`Downloaded ${groupName} attendance for ${monthMeta.label}!`, 'success');
+    }
+
+    function clearLeaveCellsFromMatrix(req) {
+      const linkedWbId = appState.groupQRs[req.group]?.wbId || GROUP_WB_META[req.group]?.wbId;
+      const targetWb = appState.workbooks[linkedWbId];
+      if (!targetWb) return;
+      const start = new Date(req.startDate + 'T00:00:00');
+      const end = new Date(req.endDate + 'T00:00:00');
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const monthTab = getMonthSheetName(d);
+        const dateCol = getDateColumnLabel(d);
+        const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const sheet = targetWb.sheets[monthTab];
+        if (sheet && sheet.rows && sheet.rows[req.userId] && Object.prototype.hasOwnProperty.call(sheet.rows[req.userId].days, dateCol)) {
+          const curVal = String(sheet.rows[req.userId].days[dateCol] || '');
+          if (curVal.startsWith('L (')) {
+            const hol = (appState.holidays || []).find((h) => h.date === isoDate);
+            sheet.rows[req.userId].days[dateCol] = hol ? `H (${hol.name})` : '';
+          }
+        }
+      }
+    }
+
+    function handleUserCancelLeave(leaveId) {
+      if (!validateActiveSession()) return;
+      const req = (appState.leaveRequests || []).find((r) => r.id === leaveId);
+      if (!req) return;
+      if (currentSession.role !== 'ROLE_ADMIN' && req.userId !== currentSession.userId) return;
+      if (req.status !== 'PENDING' && req.status !== 'APPROVED') return;
+
+      const wasApproved = req.status === 'APPROVED';
+      req.status = 'CANCELLED_BY_USER';
+      req.reviewedBy = currentSession.userId;
+      req.reviewedAt = new Date().toLocaleString();
+
+      if (wasApproved) {
+        clearLeaveCellsFromMatrix(req);
+      }
+
+      saveState();
+      logSecurityIncident('INFO', `Member ${req.userId} cancelled ${wasApproved ? 'APPROVED' : 'PENDING'} leave ${req.id}.`);
+      queueCloudSyncEvent('LEAVE_REVIEWED', req);
+      renderAllViews();
+      showToast(wasApproved ? 'Approved leave cancelled & Excel cells cleared.' : 'Leave request cancelled.', 'info');
+    }
+
+    function adminReviewLeaveRequest(leaveId, decision) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      if (!Array.isArray(appState.leaveRequests)) return;
+
+      const req = appState.leaveRequests.find((r) => r.id === leaveId);
+      if (!req) return;
+
+      const wasApproved = req.status === 'APPROVED';
+      req.status = decision;
+      req.reviewedBy = currentSession.userId;
+      req.reviewedAt = new Date().toLocaleString();
+
+      if (decision === 'APPROVED') {
+        const linkedWbId = appState.groupQRs[req.group]?.wbId || GROUP_WB_META[req.group]?.wbId;
+        const targetWb = appState.workbooks[linkedWbId];
+        if (targetWb) {
+          const start = new Date(req.startDate + 'T00:00:00');
+          const end = new Date(req.endDate + 'T00:00:00');
+          for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const monthTab = getMonthSheetName(d);
+            const dateCol = getDateColumnLabel(d);
+            if (!targetWb.sheets[monthTab]) {
+              targetWb.sheets[monthTab] = createMatrixSheetForGroup(d, req.group, appState.registeredUsers, appState.holidays);
+            }
+            const sheet = targetWb.sheets[monthTab];
+            if (!sheet.rows[req.userId]) {
+              const emptyDays = {};
+              sheet.dateColumns.forEach((c) => { emptyDays[c] = ''; });
+              sheet.rows[req.userId] = {
+                userId: req.userId,
+                name: req.name,
+                group: req.group,
+                days: emptyDays
+              };
+            }
+            if (Object.prototype.hasOwnProperty.call(sheet.rows[req.userId].days, dateCol)) {
+              sheet.rows[req.userId].days[dateCol] = `L (${req.leaveType.split(' ')[0]})`;
+            }
+          }
+        }
+      } else if (decision === 'CANCELLED_BY_ADMIN' && wasApproved) {
+        clearLeaveCellsFromMatrix(req);
+      }
+
+      saveState();
+      logSecurityIncident('INFO', `Admin set leave ${req.id} for ${req.userId} to ${decision}.`);
+      queueCloudSyncEvent('LEAVE_REVIEWED', req);
+      renderAllViews();
+      showToast(`Leave ${req.id} updated to ${decision}.`, decision === 'APPROVED' ? 'success' : 'info');
     }
 
     function downloadActiveQRPng() {
@@ -3135,54 +3128,6 @@
       showToast(`Leave request (${leaveReq.id}) submitted for Admin approval.`, 'success');
     }
 
-    function adminReviewLeaveRequest(leaveId, decision) {
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      if (!Array.isArray(appState.leaveRequests)) return;
-
-      const req = appState.leaveRequests.find((r) => r.id === leaveId);
-      if (!req) return;
-
-      req.status = decision;
-      req.reviewedBy = currentSession.userId;
-      req.reviewedAt = new Date().toLocaleString();
-
-      if (decision === 'APPROVED') {
-        const linkedWbId = appState.groupQRs[req.group]?.wbId || GROUP_WB_META[req.group]?.wbId;
-        const targetWb = appState.workbooks[linkedWbId];
-        if (targetWb) {
-          const start = new Date(req.startDate + 'T00:00:00');
-          const end = new Date(req.endDate + 'T00:00:00');
-          for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            const monthTab = getMonthSheetName(d);
-            const dateCol = getDateColumnLabel(d);
-            if (!targetWb.sheets[monthTab]) {
-              targetWb.sheets[monthTab] = createMatrixSheetForGroup(d, req.group, appState.registeredUsers);
-            }
-            const sheet = targetWb.sheets[monthTab];
-            if (!sheet.rows[req.userId]) {
-              const emptyDays = {};
-              sheet.dateColumns.forEach((c) => { emptyDays[c] = ''; });
-              sheet.rows[req.userId] = {
-                userId: req.userId,
-                name: req.name,
-                group: req.group,
-                days: emptyDays
-              };
-            }
-            if (Object.prototype.hasOwnProperty.call(sheet.rows[req.userId].days, dateCol)) {
-              sheet.rows[req.userId].days[dateCol] = `L (${req.leaveType.split(' ')[0]})`;
-            }
-          }
-        }
-      }
-
-      saveState();
-      logSecurityIncident('INFO', `Admin ${decision} leave ${req.id} for ${req.userId} (${req.startDate} to ${req.endDate}).`);
-      queueCloudSyncEvent('LEAVE_REVIEWED', req);
-      renderAllViews();
-      showToast(`Leave ${req.id} marked as ${decision}.`, decision === 'APPROVED' ? 'success' : 'info');
-    }
-
     function renderMyLogsView() {
       const container = document.getElementById('my-logs-container');
       const countEl = document.getElementById('my-logs-count');
@@ -3246,21 +3191,32 @@
       } else {
         container.innerHTML = myLeaves
           .map((r) => {
+            const isCancelled = r.status === 'CANCELLED_BY_USER' || r.status === 'CANCELLED_BY_ADMIN';
             const badgeClass =
               r.status === 'APPROVED'
                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                : r.status === 'REJECTED'
+                : r.status === 'REJECTED' || isCancelled
                 ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                 : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+            const canCancel = r.status === 'PENDING' || r.status === 'APPROVED';
             return `
               <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
                 <div class="flex items-center justify-between gap-2">
                   <span class="text-xs font-bold text-white">${escapeHTML(r.leaveType)}</span>
-                  <span class="px-2 py-0.5 rounded border text-[10px] font-mono font-bold ${badgeClass}">${escapeHTML(r.status)}</span>
+                  <span class="px-2 py-0.5 rounded border text-[10px] font-mono font-bold ${badgeClass}">${escapeHTML(r.status.replace(/_/g, ' '))}</span>
                 </div>
                 <div class="text-[11px] font-mono text-indigo-300">${escapeHTML(r.startDate)} → ${escapeHTML(r.endDate)}</div>
                 <p class="text-[11px] text-slate-300">${escapeHTML(r.reason)}</p>
-                <div class="text-[9px] font-mono text-slate-500">ID: ${escapeHTML(r.id)} • Applied: ${escapeHTML(r.appliedAt)}</div>
+                <div class="flex items-center justify-between gap-2 pt-1">
+                  <span class="text-[9px] font-mono text-slate-500">ID: ${escapeHTML(r.id)}</span>
+                  ${
+                    canCancel
+                      ? `<button type="button" onclick="handleUserCancelLeave('${escapeHTML(r.id)}')" class="px-2.5 py-1 rounded-lg bg-rose-600/25 hover:bg-rose-600/40 border border-rose-500/40 text-rose-200 text-[10px] font-bold transition">
+                           ${r.status === 'APPROVED' ? 'Cancel Approved Leave' : 'Cancel Request'}
+                         </button>`
+                      : ''
+                  }
+                </div>
               </div>
             `;
           })
@@ -3299,10 +3255,15 @@
         wbSelect.innerHTML = Object.values(appState.workbooks)
           .map(
             (wb) =>
-              `<option value="${escapeHTML(wb.id)}" ${wb.id === appState.activeWorkbookId ? 'selected' : ''}>${escapeHTML(
-                wb.fileName
-              )}</option>`
+              `<option value="${escapeHTML(wb.id)}" ${wb.id === appState.activeWorkbookId ? 'selected' : ''}>${escapeHTML(wb.fileName)}</option>`
           )
+          .join('');
+      }
+
+      const histMonthSel = document.getElementById('admin-history-month-select');
+      if (histMonthSel && histMonthSel.options.length === 0) {
+        histMonthSel.innerHTML = getLast12MonthsList()
+          .map((m) => `<option value="${escapeHTML(m.label)}">${escapeHTML(m.label)}</option>`)
           .join('');
       }
 
@@ -3457,6 +3418,7 @@
         if (filterStatus === 'BOUND' && !u.boundDeviceId) return false;
         if (filterStatus === 'UNBOUND' && u.boundDeviceId) return false;
         if (filterStatus === 'RESET_REQ' && !u.passwordResetRequested) return false;
+        if (filterStatus === 'MUST_CHANGE' && !u.mustChangePassword) return false;
 
         if (searchTerm) {
           const haystack = `${u.userId} ${u.firstName} ${u.lastName} ${u.email} ${u.phone} ${u.group} ${u.boundDeviceId || 'unbound'}`.toLowerCase();
@@ -3488,6 +3450,8 @@
                         ${
                           u.passwordResetRequested
                             ? `<span class="ml-1 px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-mono text-[8px] font-black">RESET REQ</span>`
+                            : u.mustChangePassword
+                            ? `<span class="ml-1 px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 font-mono text-[8px] font-bold">TEMP PASS</span>`
                             : ''
                         }
                       </td>
@@ -3547,12 +3511,41 @@
             ? `<div class="text-center py-6 text-xs text-slate-500">No leave requests submitted by members yet.</div>`
             : allLeaves
                 .map((r) => {
+                  const isCancelled = r.status === 'CANCELLED_BY_USER' || r.status === 'CANCELLED_BY_ADMIN';
                   const statusBadge =
                     r.status === 'APPROVED'
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                      : r.status === 'REJECTED'
+                      : r.status === 'REJECTED' || isCancelled
                       ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                       : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+                  let actionButtonsHtml = `<div class="text-[9px] font-mono text-slate-500">Status: ${escapeHTML(r.status.replace(/_/g, ' '))} (${escapeHTML(r.reviewedAt || '')})</div>`;
+                  if (r.status === 'PENDING') {
+                    actionButtonsHtml = `
+                      <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button type="button" onclick="adminReviewLeaveRequest('${escapeHTML(r.id)}', 'APPROVED')" class="py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition">
+                          Approve & Sync Excel
+                        </button>
+                        <button type="button" onclick="adminReviewLeaveRequest('${escapeHTML(r.id)}', 'REJECTED')" class="py-1.5 rounded-lg bg-rose-600/25 hover:bg-rose-600/40 border border-rose-500/40 text-rose-200 text-[11px] font-bold transition">
+                          Reject
+                        </button>
+                      </div>`;
+                  } else if (r.status === 'APPROVED') {
+                    actionButtonsHtml = `
+                      <div class="flex items-center justify-between gap-2 pt-1">
+                        <span class="text-[9px] font-mono text-emerald-300">Approved by ${escapeHTML(r.reviewedBy || 'ADMIN')}</span>
+                        <button type="button" onclick="adminReviewLeaveRequest('${escapeHTML(r.id)}', 'CANCELLED_BY_ADMIN')" class="px-2.5 py-1 rounded-lg bg-rose-600/25 hover:bg-rose-600/40 border border-rose-500/40 text-rose-200 text-[10px] font-bold transition">
+                          Cancel Approved Leave
+                        </button>
+                      </div>`;
+                  } else if (r.status === 'CANCELLED_BY_ADMIN') {
+                    actionButtonsHtml = `
+                      <div class="flex items-center justify-between gap-2 pt-1">
+                        <span class="text-[9px] font-mono text-rose-300">Cancelled by Admin</span>
+                        <button type="button" onclick="adminReviewLeaveRequest('${escapeHTML(r.id)}', 'APPROVED')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold transition">
+                          Re-Approve & Sync Excel
+                        </button>
+                      </div>`;
+                  }
                   return `
                     <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
                       <div class="flex items-center justify-between gap-2">
@@ -3560,22 +3553,11 @@
                           <span class="text-xs font-bold text-white">${escapeHTML(r.name)}</span>
                           <span class="text-[10px] font-mono text-indigo-300 ml-1">(${escapeHTML(r.userId)} • ${escapeHTML(r.group)})</span>
                         </div>
-                        <span class="px-2 py-0.5 rounded border text-[9px] font-mono font-bold ${statusBadge}">${escapeHTML(r.status)}</span>
+                        <span class="px-2 py-0.5 rounded border text-[9px] font-mono font-bold ${statusBadge}">${escapeHTML(r.status.replace(/_/g, ' '))}</span>
                       </div>
                       <div class="text-[11px] font-mono text-slate-300">${escapeHTML(r.leaveType)} • ${escapeHTML(r.startDate)} → ${escapeHTML(r.endDate)}</div>
                       <p class="text-[11px] text-slate-400">${escapeHTML(r.reason)}</p>
-                      ${
-                        r.status === 'PENDING'
-                          ? `<div class="grid grid-cols-2 gap-2 pt-1">
-                               <button type="button" onclick="adminReviewLeaveRequest('${escapeHTML(r.id)}', 'APPROVED')" class="py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition">
-                                 Approve & Sync Excel
-                               </button>
-                               <button type="button" onclick="adminReviewLeaveRequest('${escapeHTML(r.id)}', 'REJECTED')" class="py-1.5 rounded-lg bg-rose-600/25 hover:bg-rose-600/40 border border-rose-500/40 text-rose-200 text-[11px] font-bold transition">
-                                 Reject
-                               </button>
-                             </div>`
-                          : `<div class="text-[9px] font-mono text-slate-500">Reviewed by ${escapeHTML(r.reviewedBy || 'ADMIN')} at ${escapeHTML(r.reviewedAt || '')}</div>`
-                      }
+                      ${actionButtonsHtml}
                     </div>
                   `;
                 })
