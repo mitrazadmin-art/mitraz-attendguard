@@ -90,28 +90,33 @@
     <!-- Top Brand Header -->
     <header class="pt-2 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <!-- MITRAZ Crimson Butterfly Emblem -->
-        <div class="w-11 h-11 rounded-2xl bg-white p-1.5 shadow-lg shadow-rose-600/20 flex items-center justify-center shrink-0">
-          <svg viewBox="0 0 120 110" class="w-full h-full" aria-label="MITRAZ Logo">
+        <!-- MITRAZ Official Emblem -->
+        <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 p-1.5 shadow-lg shadow-rose-600/20 flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 120 112" class="w-full h-full" aria-label="MITRAZ Logo">
             <defs>
-              <radialGradient id="mitrazOrbGradLogin" cx="38%" cy="32%" r="65%">
-                <stop offset="0%" stop-color="#FF2A36" />
-                <stop offset="65%" stop-color="#E30613" />
-                <stop offset="100%" stop-color="#A8000A" />
+              <radialGradient id="mitrazHeadGradLogin" cx="35%" cy="30%" r="68%">
+                <stop offset="0%" stop-color="#FF525E" />
+                <stop offset="50%" stop-color="#E30613" />
+                <stop offset="100%" stop-color="#8A0008" />
               </radialGradient>
+              <linearGradient id="mitrazWingGradLogin" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#F5111E" />
+                <stop offset="65%" stop-color="#D90411" />
+                <stop offset="100%" stop-color="#A8000A" />
+              </linearGradient>
             </defs>
-            <circle cx="60" cy="13.5" r="10.5" fill="url(#mitrazOrbGradLogin)" />
-            <path d="M15.5 13.5 C12.5 14.5, 11.5 18, 12.5 22.5 C15.5 36.5, 22.5 48.5, 34.5 58.5 C43.5 66, 40.5 78, 34.5 89.5 C32.5 93.5, 34 97.5, 37.5 97.5 C41 97.5, 43.5 94, 45.5 89.5 C51.5 76, 53 63, 47.5 51.5 C43 42, 48.5 36, 60 36 C71.5 36, 77 42, 72.5 51.5 C67 63, 68.5 76, 74.5 89.5 C76.5 94, 79 97.5, 82.5 97.5 C86 97.5, 87.5 93.5, 85.5 89.5 C79.5 78, 76.5 66, 85.5 58.5 C97.5 48.5, 104.5 36.5, 107.5 22.5 C108.5 18, 107.5 14.5, 104.5 13.5 C101.5 12.5, 98.5 15, 95.5 18.5 C87.5 27.5, 72.5 28.5, 60 28.5 C47.5 28.5, 32.5 27.5, 24.5 18.5 C21.5 15, 18.5 12.5, 15.5 13.5 Z" fill="#E30613" />
+            <circle cx="60" cy="14" r="10.5" fill="url(#mitrazHeadGradLogin)" />
+            <path d="M12 16 C10 28, 18 46, 35 61 C44 69, 41 81, 33 93 C31 96.5, 33.5 100, 37 99.5 C41 99, 45 91, 48.5 81 C52.5 68, 53 56, 48 46 C44 38, 50 33, 60 33 C70 33, 76 38, 72 46 C67 56, 67.5 68, 71.5 81 C75 91, 79 99, 83 99.5 C86.5 100, 89 96.5, 87 93 C79 81, 76 69, 85 61 C102 46, 110 28, 108 16 C107 11.5, 103 11, 99.5 15 C89 26, 73 28.5, 60 28.5 C47 28.5, 31 26, 20.5 15 C17 11, 13 11.5, 12 16 Z" fill="url(#mitrazWingGradLogin)" />
           </svg>
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-base font-black tracking-tight text-white">MITRAZ</h1>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+            <h1 class="text-lg font-black tracking-widest text-white leading-none">MITRAZ</h1>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
               ENTERPRISE
             </span>
           </div>
-          <p class="text-[11px] text-slate-400 font-medium">AttendGuard Web Portal • Android & iPhone</p>
+          <p class="text-[10px] text-slate-300 font-semibold tracking-wide mt-0.5">A Journey to Excellence</p>
         </div>
       </div>
       <div class="flex items-center gap-1.5">
@@ -131,15 +136,6 @@
         <div>
           <h2 class="text-lg font-extrabold text-white tracking-tight">Verified Sign-In</h2>
           <p class="text-xs text-slate-400">Authorized MITRAZ members & Admin Master only</p>
-        </div>
-
-        <!-- Hardware Fingerprint Status Banner -->
-        <div class="bg-slate-950/90 border border-slate-800/90 rounded-2xl px-3 py-2 flex items-center justify-between text-[11px]">
-          <span class="text-slate-400 flex items-center gap-1.5">
-            <i data-lucide="smartphone" class="w-3.5 h-3.5 text-rose-500"></i>
-            Device Lock ID:
-          </span>
-          <span id="login-device-fp" class="font-mono font-bold text-slate-200">HW-INIT...</span>
         </div>
 
         <!-- Login Form -->
@@ -178,7 +174,7 @@
           <button type="button" onclick="handleForgotPasswordRequest()" class="text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 transition">
             Forgot Password? Notify Admin
           </button>
-          <span class="font-mono text-slate-400">v2.2 Web / iOS / Android</span>
+          <span class="font-mono text-slate-400">v2.3 Auto-Sync</span>
         </div>
       </div>
     </main>
@@ -229,22 +225,27 @@
     <!-- Top Sticky Navigation Bar -->
     <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/90 px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-white p-1 shadow flex items-center justify-center shrink-0">
-          <svg viewBox="0 0 120 110" class="w-full h-full" aria-label="MITRAZ Logo">
+        <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 p-1 shadow flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 120 112" class="w-full h-full" aria-label="MITRAZ Logo">
             <defs>
-              <radialGradient id="mitrazOrbGradPortal" cx="38%" cy="32%" r="65%">
-                <stop offset="0%" stop-color="#FF2A36" />
-                <stop offset="65%" stop-color="#E30613" />
-                <stop offset="100%" stop-color="#A8000A" />
+              <radialGradient id="mitrazHeadGradPortal" cx="35%" cy="30%" r="68%">
+                <stop offset="0%" stop-color="#FF525E" />
+                <stop offset="50%" stop-color="#E30613" />
+                <stop offset="100%" stop-color="#8A0008" />
               </radialGradient>
+              <linearGradient id="mitrazWingGradPortal" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#F5111E" />
+                <stop offset="65%" stop-color="#D90411" />
+                <stop offset="100%" stop-color="#A8000A" />
+              </linearGradient>
             </defs>
-            <circle cx="60" cy="13.5" r="10.5" fill="url(#mitrazOrbGradPortal)" />
-            <path d="M15.5 13.5 C12.5 14.5, 11.5 18, 12.5 22.5 C15.5 36.5, 22.5 48.5, 34.5 58.5 C43.5 66, 40.5 78, 34.5 89.5 C32.5 93.5, 34 97.5, 37.5 97.5 C41 97.5, 43.5 94, 45.5 89.5 C51.5 76, 53 63, 47.5 51.5 C43 42, 48.5 36, 60 36 C71.5 36, 77 42, 72.5 51.5 C67 63, 68.5 76, 74.5 89.5 C76.5 94, 79 97.5, 82.5 97.5 C86 97.5, 87.5 93.5, 85.5 89.5 C79.5 78, 76.5 66, 85.5 58.5 C97.5 48.5, 104.5 36.5, 107.5 22.5 C108.5 18, 107.5 14.5, 104.5 13.5 C101.5 12.5, 98.5 15, 95.5 18.5 C87.5 27.5, 72.5 28.5, 60 28.5 C47.5 28.5, 32.5 27.5, 24.5 18.5 C21.5 15, 18.5 12.5, 15.5 13.5 Z" fill="#E30613" />
+            <circle cx="60" cy="14" r="10.5" fill="url(#mitrazHeadGradPortal)" />
+            <path d="M12 16 C10 28, 18 46, 35 61 C44 69, 41 81, 33 93 C31 96.5, 33.5 100, 37 99.5 C41 99, 45 91, 48.5 81 C52.5 68, 53 56, 48 46 C44 38, 50 33, 60 33 C70 33, 76 38, 72 46 C67 56, 67.5 68, 71.5 81 C75 91, 79 99, 83 99.5 C86.5 100, 89 96.5, 87 93 C79 81, 76 69, 85 61 C102 46, 110 28, 108 16 C107 11.5, 103 11, 99.5 15 C89 26, 73 28.5, 60 28.5 C47 28.5, 31 26, 20.5 15 C17 11, 13 11.5, 12 16 Z" fill="url(#mitrazWingGradPortal)" />
           </svg>
         </div>
         <div>
           <div class="flex items-center gap-1.5">
-            <span class="text-sm font-black tracking-tight text-white">MITRAZ</span>
+            <span class="text-sm font-black tracking-widest text-white">MITRAZ</span>
             <span id="header-role-badge" class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
               MEMBER
             </span>
@@ -258,9 +259,6 @@
           <i data-lucide="cloud" class="w-3 h-3 text-sky-400"></i>
           <span id="header-sync-label">Local</span>
         </button>
-        <span id="live-clock" class="text-[10px] font-mono font-bold text-slate-300 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
-          00:00:00
-        </span>
         <button onclick="logoutSession('Signed out safely.')" title="Sign Out" class="p-2 rounded-xl bg-slate-900 hover:bg-rose-600/20 border border-slate-800 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 transition">
           <i data-lucide="log-out" class="w-4 h-4"></i>
         </button>
@@ -945,6 +943,7 @@
     const STORAGE_KEY = 'mitraz_attendguard_prod_v2';
     const DEVICE_FP_KEY = 'mitraz_android_hw_fingerprint_v2';
     const SESSION_KEY = 'mitraz_attendguard_session_v2';
+    const CLOUD_CACHE_KEY = 'mitraz_cloud_endpoint_cache_v1';
     const HMAC_SECRET = 'MITRAZ-ENTERPRISE-ZERO-TRUST-SECRET-2026';
     const GROUPS = ['Employees', 'GDA', 'IT', 'MFs'];
 
@@ -991,7 +990,7 @@
     }
 
     function registerMobilePWAAndAppleIcons() {
-      const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110"><rect width="120" height="110" rx="24" fill="#ffffff"/><defs><radialGradient id="g" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#FF2A36"/><stop offset="65%" stop-color="#E30613"/><stop offset="100%" stop-color="#A8000A"/></radialGradient></defs><circle cx="60" cy="13.5" r="10.5" fill="url(#g)"/><path d="M15.5 13.5 C12.5 14.5, 11.5 18, 12.5 22.5 C15.5 36.5, 22.5 48.5, 34.5 58.5 C43.5 66, 40.5 78, 34.5 89.5 C32.5 93.5, 34 97.5, 37.5 97.5 C41 97.5, 43.5 94, 45.5 89.5 C51.5 76, 53 63, 47.5 51.5 C43 42, 48.5 36, 60 36 C71.5 36, 77 42, 72.5 51.5 C67 63, 68.5 76, 74.5 89.5 C76.5 94, 79 97.5, 82.5 97.5 C86 97.5, 87.5 93.5, 85.5 89.5 C79.5 78, 76.5 66, 85.5 58.5 C97.5 48.5, 104.5 36.5, 107.5 22.5 C108.5 18, 107.5 14.5, 104.5 13.5 C101.5 12.5, 98.5 15, 95.5 18.5 C87.5 27.5, 72.5 28.5, 60 28.5 C47.5 28.5, 32.5 27.5, 24.5 18.5 C21.5 15, 18.5 12.5, 15.5 13.5 Z" fill="#E30613"/></svg>`;
+      const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" rx="36" fill="#020617"/><defs><radialGradient id="g" cx="35%" cy="30%" r="68%"><stop offset="0%" stop-color="#FF525E"/><stop offset="50%" stop-color="#E30613"/><stop offset="100%" stop-color="#8A0008"/></radialGradient><linearGradient id="w" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#F5111E"/><stop offset="65%" stop-color="#D90411"/><stop offset="100%" stop-color="#A8000A"/></linearGradient></defs><g transform="translate(30,14)"><circle cx="60" cy="14" r="10.5" fill="url(#g)"/><path d="M12 16 C10 28, 18 46, 35 61 C44 69, 41 81, 33 93 C31 96.5, 33.5 100, 37 99.5 C41 99, 45 91, 48.5 81 C52.5 68, 53 56, 48 46 C44 38, 50 33, 60 33 C70 33, 76 38, 72 46 C67 56, 67.5 68, 71.5 81 C75 91, 79 99, 83 99.5 C86.5 100, 89 96.5, 87 93 C79 81, 76 69, 85 61 C102 46, 110 28, 108 16 C107 11.5, 103 11, 99.5 15 C89 26, 73 28.5, 60 28.5 C47 28.5, 31 26, 20.5 15 C17 11, 13 11.5, 12 16 Z" fill="url(#w)"/></g><text x="90" y="138" text-anchor="middle" fill="#ffffff" font-family="Inter,Arial,sans-serif" font-weight="900" font-size="22" letter-spacing="3">MITRAZ</text><text x="90" y="155" text-anchor="middle" fill="#cbd5e1" font-family="Inter,Arial,sans-serif" font-weight="600" font-size="9.5" letter-spacing="0.4">A Journey to Excellence</text></svg>`;
       const svgDataUrl = 'data:image/svg+xml,' + encodeURIComponent(iconSvg);
 
       const appleIcon = document.createElement('link');
@@ -1036,7 +1035,7 @@
     }
 
     function applyMitrazFavicon() {
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110"><rect width="120" height="110" rx="24" fill="#ffffff"/><defs><radialGradient id="g" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#FF2A36"/><stop offset="65%" stop-color="#E30613"/><stop offset="100%" stop-color="#A8000A"/></radialGradient></defs><circle cx="60" cy="13.5" r="10.5" fill="url(#g)"/><path d="M15.5 13.5 C12.5 14.5, 11.5 18, 12.5 22.5 C15.5 36.5, 22.5 48.5, 34.5 58.5 C43.5 66, 40.5 78, 34.5 89.5 C32.5 93.5, 34 97.5, 37.5 97.5 C41 97.5, 43.5 94, 45.5 89.5 C51.5 76, 53 63, 47.5 51.5 C43 42, 48.5 36, 60 36 C71.5 36, 77 42, 72.5 51.5 C67 63, 68.5 76, 74.5 89.5 C76.5 94, 79 97.5, 82.5 97.5 C86 97.5, 87.5 93.5, 85.5 89.5 C79.5 78, 76.5 66, 85.5 58.5 C97.5 48.5, 104.5 36.5, 107.5 22.5 C108.5 18, 107.5 14.5, 104.5 13.5 C101.5 12.5, 98.5 15, 95.5 18.5 C87.5 27.5, 72.5 28.5, 60 28.5 C47.5 28.5, 32.5 27.5, 24.5 18.5 C21.5 15, 18.5 12.5, 15.5 13.5 Z" fill="#E30613"/></svg>`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 112"><rect width="120" height="112" rx="24" fill="#020617"/><defs><radialGradient id="g" cx="35%" cy="30%" r="68%"><stop offset="0%" stop-color="#FF525E"/><stop offset="50%" stop-color="#E30613"/><stop offset="100%" stop-color="#8A0008"/></radialGradient><linearGradient id="w" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#F5111E"/><stop offset="65%" stop-color="#D90411"/><stop offset="100%" stop-color="#A8000A"/></linearGradient></defs><circle cx="60" cy="14" r="10.5" fill="url(#g)"/><path d="M12 16 C10 28, 18 46, 35 61 C44 69, 41 81, 33 93 C31 96.5, 33.5 100, 37 99.5 C41 99, 45 91, 48.5 81 C52.5 68, 53 56, 48 46 C44 38, 50 33, 60 33 C70 33, 76 38, 72 46 C67 56, 67.5 68, 71.5 81 C75 91, 79 99, 83 99.5 C86.5 100, 89 96.5, 87 93 C79 81, 76 69, 85 61 C102 46, 110 28, 108 16 C107 11.5, 103 11, 99.5 15 C89 26, 73 28.5, 60 28.5 C47 28.5, 31 26, 20.5 15 C17 11, 13 11.5, 12 16 Z" fill="url(#w)"/></svg>`;
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
@@ -1114,6 +1113,13 @@
         let cached = localStorage.getItem(DEVICE_FP_KEY);
         if (cached && /^HW-[A-F0-9]{12}$/.test(cached)) return cached;
 
+        // Try cookie fallback in case Safari/Chrome cleared localStorage
+        const cookieMatch = document.cookie.match(/(?:^|;\s*)mitraz_hw_fp=(HW-[A-F0-9]{12})/);
+        if (cookieMatch && cookieMatch[1]) {
+          localStorage.setItem(DEVICE_FP_KEY, cookieMatch[1]);
+          return cookieMatch[1];
+        }
+
         const signals = [
           navigator.userAgent || '',
           navigator.language || '',
@@ -1127,6 +1133,7 @@
         const digest = computeMAC(signals).slice(0, 12).toUpperCase();
         cached = `HW-${digest}`;
         localStorage.setItem(DEVICE_FP_KEY, cached);
+        document.cookie = `mitraz_hw_fp=${cached}; max-age=315360000; path=/; SameSite=Lax`;
         return cached;
       } catch (e) {
         return 'HW-MOBILE-LOCK';
@@ -1280,12 +1287,28 @@
     let appState = null;
 
     function loadState() {
+      let cachedCloud = null;
+      try {
+        const rawCloud = localStorage.getItem(CLOUD_CACHE_KEY);
+        if (rawCloud) cachedCloud = JSON.parse(rawCloud);
+      } catch (e) {}
+
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return buildDefaultState();
+        if (!raw) {
+          const fresh = buildDefaultState();
+          if (cachedCloud && cachedCloud.endpointUrl) {
+            fresh.cloudSync = { ...fresh.cloudSync, ...cachedCloud, pendingQueue: [] };
+          }
+          return fresh;
+        }
         const parsed = JSON.parse(raw);
         if (!parsed || !parsed.workbooks || !parsed.registeredUsers || !parsed.groupQRs) {
-          return buildDefaultState();
+          const fresh = buildDefaultState();
+          if (cachedCloud && cachedCloud.endpointUrl) {
+            fresh.cloudSync = { ...fresh.cloudSync, ...cachedCloud, pendingQueue: [] };
+          }
+          return fresh;
         }
         if (!Array.isArray(parsed.leaveRequests)) parsed.leaveRequests = [];
         if (!Array.isArray(parsed.holidays)) parsed.holidays = [];
@@ -1306,6 +1329,11 @@
             pendingQueue: []
           };
         }
+        if (!parsed.cloudSync.endpointUrl && cachedCloud && cachedCloud.endpointUrl) {
+          parsed.cloudSync.enabled = Boolean(cachedCloud.enabled);
+          parsed.cloudSync.endpointUrl = cachedCloud.endpointUrl;
+          parsed.cloudSync.secretToken = cachedCloud.secretToken || 'MITRAZ-CLOUD-KEY-2026';
+        }
         if (!Array.isArray(parsed.cloudSync.pendingQueue)) parsed.cloudSync.pendingQueue = [];
         return parsed;
       } catch (e) {
@@ -1318,6 +1346,16 @@
     function saveState() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        if (appState && appState.cloudSync && appState.cloudSync.endpointUrl) {
+          localStorage.setItem(
+            CLOUD_CACHE_KEY,
+            JSON.stringify({
+              enabled: Boolean(appState.cloudSync.enabled),
+              endpointUrl: appState.cloudSync.endpointUrl,
+              secretToken: appState.cloudSync.secretToken || 'MITRAZ-CLOUD-KEY-2026'
+            })
+          );
+        }
       } catch (e) {
         showToast('Storage warning: unable to persist locally.', 'warning');
       }
@@ -1394,6 +1432,10 @@
       logSecurityIncident('INFO', `Admin updated Cloud Sheet Sync (${enabled ? 'ENABLED' : 'DISABLED'}).`);
       showToast(enabled ? 'Cloud Sheet Sync enabled (auto-syncing every 12s)!' : 'Cloud Sheet Sync saved (Local mode).', 'success');
       if (enabled && endpointUrl) {
+        // Push all locally enrolled users to Google Sheet so new phones can log in immediately
+        (appState.registeredUsers || []).forEach((u) => {
+          queueCloudSyncEvent('USER_ENROLLED', u);
+        });
         syncWithCloudServer(true);
       }
     }
@@ -1410,6 +1452,12 @@
             salt: remoteU.salt || localU?.salt || '',
             passHash: remoteU.passHash || localU?.passHash || ''
           };
+        });
+        // Preserve any locally enrolled users not yet flushed to Google Sheet
+        (appState.registeredUsers || []).forEach((localU) => {
+          if (!mergedUsers.some((m) => String(m.userId).toLowerCase() === String(localU.userId).toLowerCase())) {
+            mergedUsers.push(localU);
+          }
         });
         if (JSON.stringify(mergedUsers) !== JSON.stringify(appState.registeredUsers)) {
           appState.registeredUsers = mergedUsers;
@@ -1613,293 +1661,126 @@
       event.preventDefault();
       hideLoginError();
 
-      if (appState.cloudSync?.enabled && appState.cloudSync?.endpointUrl) {
-        await syncWithCloudServer(false);
+      const submitBtn = event.target?.querySelector('button[type="submit"]');
+      const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="animate-pulse">Verifying Credentials...</span>`;
       }
 
-      const identifier = (document.getElementById('login-identifier')?.value || '').trim();
-      const password = document.getElementById('login-password')?.value || '';
-      const currentHw = getHardwareFingerprint();
+      try {
+        if (appState.cloudSync?.enabled && appState.cloudSync?.endpointUrl) {
+          await syncWithCloudServer(false);
+        }
 
-      if (identifier.toUpperCase() === 'ADMIN') {
-        const expectedHash = appState.adminAccount.passHash;
-        const actualHash = hashPassphrase(password, appState.adminAccount.salt);
-        if (!constantTimeEqual(actualHash, expectedHash)) {
-          logSecurityIncident('CRITICAL', `Failed Admin Master login attempt from ${currentHw}.`);
-          showLoginError('Invalid Admin Credentials', 'Admin Master passphrase verification failed.');
+        const identifier = (document.getElementById('login-identifier')?.value || '').trim();
+        const password = (document.getElementById('login-password')?.value || '').trim();
+        const currentHw = getHardwareFingerprint();
+
+        if (identifier.toUpperCase() === 'ADMIN') {
+          const expectedHash = appState.adminAccount.passHash;
+          const actualHash = hashPassphrase(password, appState.adminAccount.salt);
+          if (!constantTimeEqual(actualHash, expectedHash)) {
+            logSecurityIncident('CRITICAL', `Failed Admin Master login attempt from ${currentHw}.`);
+            showLoginError('Invalid Admin Credentials', 'Admin Master passphrase verification failed.');
+            return;
+          }
+          createAuthenticatedSession({
+            role: 'ROLE_ADMIN',
+            userId: 'ADMIN',
+            name: 'MITRAZ Administrator',
+            group: 'ALL_GROUPS',
+            deviceId: currentHw
+          });
           return;
         }
+
+        const user = appState.registeredUsers.find(
+          (u) =>
+            String(u.userId || '').trim().toLowerCase() === identifier.toLowerCase() ||
+            String(u.email || '').trim().toLowerCase() === identifier.toLowerCase()
+        );
+
+        if (!user) {
+          logSecurityIncident('WARNING', `Unregistered login attempt for "${identifier}" from ${currentHw}.`);
+          const cloudHint = !(appState.cloudSync?.enabled && appState.cloudSync?.endpointUrl)
+            ? ' (Note: Cloud Sync is not connected on this phone yet—ask Admin to connect Google Sheets or enroll your ID on this device.)'
+            : '';
+          showLoginError(
+            'Account Not Found',
+            `Only users enrolled by the Admin can access this portal.${cloudHint}`
+          );
+          return;
+        }
+
+        // Fallback if user row came from Cloud Sheet without salt/passHash yet
+        if (!user.salt || !user.passHash) {
+          user.salt = `SALT-${user.userId}-INIT`;
+          user.passHash = hashPassphrase('Mitraz@User1!', user.salt);
+          user.mustChangePassword = true;
+          saveState();
+        }
+
+        const userHash = hashPassphrase(password, user.salt);
+        if (!constantTimeEqual(userHash, user.passHash)) {
+          logSecurityIncident('WARNING', `Invalid passphrase for ${user.userId} from ${currentHw}.`);
+          showLoginError('Authentication Failed', 'Incorrect passphrase for this member account.');
+          return;
+        }
+
+        const otherUserOnPhone = appState.registeredUsers.find(
+          (u) => u.boundDeviceId && u.boundDeviceId === currentHw && u.userId !== user.userId
+        );
+        if (otherUserOnPhone) {
+          logSecurityIncident(
+            'CRITICAL',
+            `PROXY BLOCKED: ${user.userId} attempted login on ${currentHw}, locked to ${otherUserOnPhone.userId}.`
+          );
+          showLoginError(
+            'Proxy Attempt Blocked (Shared Device)',
+            `This mobile device (${currentHw}) is permanently bound to ${otherUserOnPhone.firstName} (${otherUserOnPhone.userId}). Logging in for a colleague is blocked.`
+          );
+          return;
+        }
+
+        if (user.boundDeviceId && user.boundDeviceId !== currentHw) {
+          logSecurityIncident(
+            'CRITICAL',
+            `PROXY BLOCKED: ${user.userId} (bound to ${user.boundDeviceId}) attempted login from ${currentHw}.`
+          );
+          showLoginError(
+            'Proxy Attempt Blocked (Unrecognized Device)',
+            `${user.firstName}'s account is locked to ${user.boundDeviceId}. Contact Admin to unbind if you changed phones.`
+          );
+          return;
+        }
+
+        if (!user.boundDeviceId) {
+          user.boundDeviceId = currentHw;
+          saveState();
+          logSecurityIncident('INFO', `First-time device binding: ${user.userId} bound to ${currentHw}.`);
+          queueCloudSyncEvent('DEVICE_BOUND', { userId: user.userId, boundDeviceId: currentHw });
+        }
+
+        if (user.mustChangePassword) {
+          pendingFirstLoginUserId = user.userId;
+          document.getElementById('first-login-pass-error')?.classList.add('hidden');
+          document.getElementById('first-login-modal')?.classList.remove('hidden');
+          return;
+        }
+
         createAuthenticatedSession({
-          role: 'ROLE_ADMIN',
-          userId: 'ADMIN',
-          name: 'MITRAZ Administrator',
-          group: 'ALL_GROUPS',
+          role: 'ROLE_USER',
+          userId: user.userId,
+          name: `${user.firstName} ${user.lastName}`.trim(),
+          group: user.group,
           deviceId: currentHw
         });
-        return;
-      }
-
-      const user = appState.registeredUsers.find(
-        (u) => u.userId.toLowerCase() === identifier.toLowerCase() || u.email.toLowerCase() === identifier.toLowerCase()
-      );
-
-      if (!user) {
-        logSecurityIncident('WARNING', `Unregistered login attempt for "${identifier}" from ${currentHw}.`);
-        showLoginError('Account Not Found', 'Only users enrolled one-time by the Admin can access this portal.');
-        return;
-      }
-
-      const userHash = hashPassphrase(password, user.salt);
-      if (!constantTimeEqual(userHash, user.passHash)) {
-        logSecurityIncident('WARNING', `Invalid passphrase for ${user.userId} from ${currentHw}.`);
-        showLoginError('Authentication Failed', 'Incorrect passphrase for this member account.');
-        return;
-      }
-
-      const otherUserOnPhone = appState.registeredUsers.find(
-        (u) => u.boundDeviceId === currentHw && u.userId !== user.userId
-      );
-      if (otherUserOnPhone) {
-        logSecurityIncident(
-          'CRITICAL',
-          `PROXY BLOCKED: ${user.userId} attempted login on ${currentHw}, locked to ${otherUserOnPhone.userId}.`
-        );
-        showLoginError(
-          'Proxy Attempt Blocked (Shared Device)',
-          `This mobile device (${currentHw}) is permanently bound to ${otherUserOnPhone.firstName} (${otherUserOnPhone.userId}). Logging in for a colleague is blocked.`
-        );
-        return;
-      }
-
-      if (user.boundDeviceId && user.boundDeviceId !== currentHw) {
-        logSecurityIncident(
-          'CRITICAL',
-          `PROXY BLOCKED: ${user.userId} (bound to ${user.boundDeviceId}) attempted login from ${currentHw}.`
-        );
-        showLoginError(
-          'Proxy Attempt Blocked (Unrecognized Device)',
-          `${user.firstName}'s account is locked to ${user.boundDeviceId}. Contact Admin to unbind if you changed phones.`
-        );
-        return;
-      }
-
-      if (!user.boundDeviceId) {
-        user.boundDeviceId = currentHw;
-        saveState();
-        logSecurityIncident('INFO', `First-time device binding: ${user.userId} bound to ${currentHw}.`);
-        queueCloudSyncEvent('DEVICE_BOUND', { userId: user.userId, boundDeviceId: currentHw });
-      }
-
-      if (user.mustChangePassword) {
-        pendingFirstLoginUserId = user.userId;
-        document.getElementById('first-login-pass-error')?.classList.add('hidden');
-        document.getElementById('first-login-modal')?.classList.remove('hidden');
-        return;
-      }
-
-      createAuthenticatedSession({
-        role: 'ROLE_USER',
-        userId: user.userId,
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        group: user.group,
-        deviceId: currentHw
-      });
-    }
-
-    function handleFirstLoginPasswordChange(event) {
-      event.preventDefault();
-      const p1 = document.getElementById('new-user-pass-1')?.value || '';
-      const p2 = document.getElementById('new-user-pass-2')?.value || '';
-      const errEl = document.getElementById('first-login-pass-error');
-
-      const showModalErr = (msg) => {
-        if (errEl) {
-          errEl.textContent = msg;
-          errEl.classList.remove('hidden');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnHtml;
         }
-      };
-
-      if (p1 !== p2) {
-        showModalErr('Passphrases do not match.');
-        return;
-      }
-      if (p1 === 'Mitraz@User1!') {
-        showModalErr('Choose a personal passphrase different from the temporary default.');
-        return;
-      }
-      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-      if (!strongRegex.test(p1)) {
-        showModalErr('Must be 8+ characters with uppercase, lowercase, number, and symbol.');
-        return;
-      }
-
-      const user = appState.registeredUsers.find((u) => u.userId === pendingFirstLoginUserId);
-      if (!user) return;
-
-      user.salt = `SALT-${user.userId}-${Date.now().toString(36)}`;
-      user.passHash = hashPassphrase(p1, user.salt);
-      user.mustChangePassword = false;
-      saveState();
-      logSecurityIncident('INFO', `Member ${user.userId} completed first-login personal passphrase setup.`);
-      queueCloudSyncEvent('USER_PASSWORD_UPDATED', { userId: user.userId, salt: user.salt, passHash: user.passHash });
-
-      document.getElementById('first-login-modal')?.classList.add('hidden');
-      pendingFirstLoginUserId = null;
-
-      createAuthenticatedSession({
-        role: 'ROLE_USER',
-        userId: user.userId,
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        group: user.group,
-        deviceId: getHardwareFingerprint()
-      });
-    }
-
-    function handleAdminRotatePassword(event) {
-      event.preventDefault();
-      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
-      const p1 = document.getElementById('admin-new-pass-1')?.value || '';
-      const p2 = document.getElementById('admin-new-pass-2')?.value || '';
-
-      if (p1 !== p2) {
-        showToast('New Admin passphrases do not match.', 'error');
-        return;
-      }
-      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
-      if (!strongRegex.test(p1)) {
-        showToast('Admin passphrase must be 10+ characters with upper, lower, number, and symbol.', 'error');
-        return;
-      }
-
-      const newSalt = 'SALT-ADMIN-' + Date.now().toString(36).toUpperCase();
-      appState.adminAccount.salt = newSalt;
-      appState.adminAccount.passHash = hashPassphrase(p1, newSalt);
-      saveState();
-      logSecurityIncident('INFO', 'Admin Master passphrase rotated successfully.');
-      document.getElementById('admin-new-pass-1').value = '';
-      document.getElementById('admin-new-pass-2').value = '';
-      showToast('Admin Master passphrase updated!', 'success');
-    }
-
-    function createAuthenticatedSession(claims) {
-      const issuedAt = Date.now();
-      const rawToken = `${claims.role}|${claims.userId}|${claims.group}|${claims.deviceId}|${issuedAt}`;
-      const sig = computeMAC(rawToken);
-      currentSession = { ...claims, issuedAt, sig };
-      try {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentSession));
-      } catch (e) {}
-
-      enterPortalUI();
-      showToast(`Welcome, ${claims.name}`, 'success');
-    }
-
-    function validateActiveSession() {
-      if (!currentSession) return false;
-      const rawToken = `${currentSession.role}|${currentSession.userId}|${currentSession.group}|${currentSession.deviceId}|${currentSession.issuedAt}`;
-      const expectedSig = computeMAC(rawToken);
-      if (!constantTimeEqual(currentSession.sig, expectedSig)) {
-        logSecurityIncident('CRITICAL', 'TAMPER ALERT: Session HMAC signature mismatch detected! Terminating session.');
-        logoutSession('Security violation: tampered session terminated.');
-        return false;
-      }
-      return true;
-    }
-
-    function logoutSession(reason = 'Signed out.') {
-      stopCameraScanner();
-      currentSession = null;
-      try {
-        sessionStorage.removeItem(SESSION_KEY);
-      } catch (e) {}
-
-      document.getElementById('authenticated-portal')?.classList.add('hidden');
-      document.getElementById('auth-gate-screen')?.classList.remove('hidden');
-      const pwEl = document.getElementById('login-password');
-      if (pwEl) pwEl.value = '';
-      showToast(reason, 'info');
-    }
-
-    function enterPortalUI() {
-      if (!validateActiveSession()) return;
-
-      document.getElementById('auth-gate-screen')?.classList.add('hidden');
-      document.getElementById('authenticated-portal')?.classList.remove('hidden');
-
-      const isAdmin = currentSession.role === 'ROLE_ADMIN';
-
-      const roleBadge = document.getElementById('header-role-badge');
-      const subtitle = document.getElementById('header-user-subtitle');
-      if (roleBadge) {
-        roleBadge.textContent = isAdmin ? 'ADMIN MASTER' : currentSession.group.toUpperCase();
-        roleBadge.className = isAdmin
-          ? 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40'
-          : 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-      }
-      if (subtitle) {
-        subtitle.textContent = isAdmin
-          ? `${currentSession.deviceId} • Full Access`
-          : `${currentSession.userId} • ${currentSession.group}`;
-      }
-
-      const nameEl = document.getElementById('member-full-name');
-      const pillEl = document.getElementById('member-group-pill');
-      const avatarEl = document.getElementById('member-avatar');
-      if (nameEl) nameEl.textContent = currentSession.name;
-      if (pillEl) pillEl.textContent = isAdmin ? 'Admin Master Account • All Groups' : `${currentSession.userId} • Group: ${currentSession.group}`;
-      if (avatarEl) {
-        avatarEl.textContent = currentSession.name
-          .split(/\s+/)
-          .map((w) => w[0])
-          .join('')
-          .slice(0, 2)
-          .toUpperCase();
-      }
-
-      const navBar = document.getElementById('bottom-nav-bar');
-      const navAdminBtn = document.getElementById('nav-tab-admin');
-      if (navBar && navAdminBtn) {
-        if (isAdmin) {
-          navBar.classList.remove('grid-cols-3');
-          navBar.classList.add('grid-cols-4');
-          navAdminBtn.classList.remove('hidden');
-          navAdminBtn.classList.add('flex');
-        } else {
-          navBar.classList.remove('grid-cols-4');
-          navBar.classList.add('grid-cols-3');
-          navAdminBtn.classList.add('hidden');
-          navAdminBtn.classList.remove('flex');
-        }
-      }
-
-      const todayIso = new Date().toISOString().slice(0, 10);
-      const startEl = document.getElementById('leave-start-date');
-      const endEl = document.getElementById('leave-end-date');
-      if (startEl && !startEl.value) startEl.value = todayIso;
-      if (endEl && !endEl.value) endEl.value = todayIso;
-
-      updateCloudStatusUI();
-      switchPortalTab(isAdmin ? 'admin' : 'scan');
-      if (appState.cloudSync?.enabled && appState.cloudSync?.endpointUrl) {
-        syncWithCloudServer(false);
-      }
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-
-    // -----------------------------------------------------------------------
-    // 5. QR SCANNING, GROUP VALIDATION & MATRIX ATTENDANCE LOGGING
-    // -----------------------------------------------------------------------
-    function setScanMode(mode) {
-      activeScanMode = mode;
-      const inBtn = document.getElementById('btn-scan-in');
-      const outBtn = document.getElementById('btn-scan-out');
-      if (inBtn && outBtn) {
-        inBtn.className = mode === 'CHECK-IN'
-          ? 'py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow transition'
-          : 'py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition';
-        outBtn.className = mode === 'CHECK-OUT'
-          ? 'py-2.5 rounded-xl text-xs font-extrabold bg-amber-600 text-white shadow transition'
-          : 'py-2.5 rounded-xl text-xs font-extrabold text-slate-400 hover:text-white transition';
       }
     }
 
@@ -3546,9 +3427,9 @@
 
     // Live Clock, Automatic Month-End Check & Background Cloud Auto-Sync (every 12s)
     setInterval(() => {
+    // Automatic Month-End Check & Background Cloud Auto-Sync (every 12s)
+    setInterval(() => {
       const now = new Date();
-      const clockEl = document.getElementById('live-clock');
-      if (clockEl) clockEl.textContent = now.toTimeString().slice(0, 8);
 
       if (getMonthSheetName(now) !== appState.lastCheckedMonth) {
         ensureCurrentMonthSheetsExist(now);
@@ -3581,8 +3462,6 @@
     window.addEventListener('DOMContentLoaded', () => {
       applyMitrazFavicon();
       registerMobilePWAAndAppleIcons();
-      const fpEl = document.getElementById('login-device-fp');
-      if (fpEl) fpEl.textContent = getHardwareFingerprint();
 
       ensureCurrentMonthSheetsExist(new Date());
       refreshGPS(false);
