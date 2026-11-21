@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#020617" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="MITRAZ Attend" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>MITRAZ AttendGuard Enterprise</title>
 
@@ -23,7 +24,7 @@
   <!-- QRCode.js for Admin Signed Checkpoint QR Generation -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
-  <!-- HTML5-QRCode for Android Live Camera Scanning -->
+  <!-- HTML5-QRCode for Mobile Live Camera Scanning (Android & iPhone Safari) -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <!-- Lucide Icons -->
@@ -35,7 +36,12 @@
       background-color: #020617;
       color: #f8fafc;
       -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
       overscroll-behavior-y: none;
+      padding-top: env(safe-area-inset-top);
+    }
+    .safe-bottom-nav {
+      padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
     }
     .font-mono {
       font-family: 'JetBrains Mono', monospace;
@@ -105,7 +111,7 @@
               ENTERPRISE
             </span>
           </div>
-          <p class="text-[11px] text-slate-400 font-medium">AttendGuard Android Production Portal</p>
+          <p class="text-[11px] text-slate-400 font-medium">AttendGuard Web Portal • Android & iPhone</p>
         </div>
       </div>
       <div class="flex items-center gap-1.5">
@@ -114,7 +120,7 @@
         </button>
         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-300">
           <i data-lucide="shield-check" class="w-3 h-3"></i>
-          Production
+          iOS & Android
         </span>
       </div>
     </header>
@@ -131,7 +137,7 @@
         <div class="bg-slate-950/90 border border-slate-800/90 rounded-2xl px-3 py-2 flex items-center justify-between text-[11px]">
           <span class="text-slate-400 flex items-center gap-1.5">
             <i data-lucide="smartphone" class="w-3.5 h-3.5 text-rose-500"></i>
-            Android Device Lock ID:
+            Device Lock ID:
           </span>
           <span id="login-device-fp" class="font-mono font-bold text-slate-200">HW-INIT...</span>
         </div>
@@ -172,14 +178,14 @@
           <button type="button" onclick="handleForgotPasswordRequest()" class="text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 transition">
             Forgot Password? Notify Admin
           </button>
-          <span class="font-mono text-slate-400">v2.1 Release</span>
+          <span class="font-mono text-slate-400">v2.2 Web / iOS / Android</span>
         </div>
       </div>
     </main>
 
     <!-- Footer Security Notice -->
     <footer class="text-center text-[10px] text-slate-500 pb-2">
-      MITRAZ Enterprise Security • Geofence Lock • Cloud Sheet Sync
+      MITRAZ Enterprise Security • Geofence Lock • Auto Cloud Sheet Sync
     </footer>
   </div>
 
@@ -330,7 +336,7 @@
                 <i data-lucide="scan-line" class="w-6 h-6"></i>
               </div>
               <p class="text-xs font-semibold text-slate-300">Tap "Start Camera" & Point at Group QR</p>
-              <p class="text-[10px] text-slate-500">GPS Geofence & Hardware ID verified automatically</p>
+              <p class="text-[10px] text-slate-500">Works on Android Chrome & iPhone Safari (HTTPS)</p>
             </div>
             <div id="scanner-laser-line" class="hidden scanner-laser absolute left-4 right-4 h-0.5 bg-rose-500 shadow-[0_0_12px_#f43f5e] pointer-events-none"></div>
           </div>
@@ -795,8 +801,8 @@
           <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Live Multi-Phone Cloud Sync</h3>
-                <p class="text-[11px] text-slate-400">Syncs scans, users, leaves & holidays across all Android phones</p>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Live Multi-Device Cloud Sync</h3>
+                <p class="text-[11px] text-slate-400">Auto-polls every 12s • Syncs scans, users, leaves & holidays</p>
               </div>
               <span id="cloud-status-pill" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">
                 Offline / Local
@@ -907,7 +913,7 @@
     </main>
 
     <!-- Bottom Navigation Bar (Admin tab rendered ONLY when role === ROLE_ADMIN) -->
-    <nav id="bottom-nav-bar" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-slate-950/95 backdrop-blur-md border-t border-slate-800 p-2 grid grid-cols-3 gap-1.5 z-40">
+    <nav id="bottom-nav-bar" class="safe-bottom-nav fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-slate-950/95 backdrop-blur-md border-t border-slate-800 p-2 grid grid-cols-3 gap-1.5 z-40">
       <button id="nav-tab-scan" onclick="switchPortalTab('scan')" class="py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 bg-rose-600/20 text-rose-300 border border-rose-500/30 transition">
         <i data-lucide="qr-code" class="w-4 h-4"></i>
         <span class="text-[10px] font-bold">Scan QR</span>
@@ -920,7 +926,7 @@
         <i data-lucide="calendar-off" class="w-4 h-4"></i>
         <span class="text-[10px] font-bold">Apply Leave</span>
       </button>
-      <button id="nav-tab-admin" onclick="switchPortalTab('admin')" class="hidden py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-white transition">
+      <button id="nav-tab-admin" onclick="switchPortalTab('admin')" class="hidden py-2 rounded-xl flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-white transition">
         <i data-lucide="shield" class="w-4 h-4"></i>
         <span class="text-[10px] font-bold">Admin Console</span>
       </button>
@@ -960,9 +966,19 @@
     let pendingFirstLoginUserId = null;
     let editingHolidayId = null;
     let deferredInstallPrompt = null;
+    let isSyncInFlight = false;
+    let lastAutoSyncTick = 0;
     let currentGPS = { lat: 12.971598, lng: 77.594566, accuracy: 16, distanceMeters: 0, verified: false };
 
-    // Haversine formula to compute exact ground distance in meters
+    function isIOSDevice() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isStandaloneMode() {
+      return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    }
+
     function computeDistanceMeters(lat1, lon1, lat2, lon2) {
       const R = 6371000;
       const toRad = (deg) => (deg * Math.PI) / 180;
@@ -974,13 +990,19 @@
       return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
     }
 
-    // Dynamic Android PWA Web App Manifest
-    function registerAndroidPWAAndOfflineCache() {
+    function registerMobilePWAAndAppleIcons() {
       const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110"><rect width="120" height="110" rx="24" fill="#ffffff"/><defs><radialGradient id="g" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#FF2A36"/><stop offset="65%" stop-color="#E30613"/><stop offset="100%" stop-color="#A8000A"/></radialGradient></defs><circle cx="60" cy="13.5" r="10.5" fill="url(#g)"/><path d="M15.5 13.5 C12.5 14.5, 11.5 18, 12.5 22.5 C15.5 36.5, 22.5 48.5, 34.5 58.5 C43.5 66, 40.5 78, 34.5 89.5 C32.5 93.5, 34 97.5, 37.5 97.5 C41 97.5, 43.5 94, 45.5 89.5 C51.5 76, 53 63, 47.5 51.5 C43 42, 48.5 36, 60 36 C71.5 36, 77 42, 72.5 51.5 C67 63, 68.5 76, 74.5 89.5 C76.5 94, 79 97.5, 82.5 97.5 C86 97.5, 87.5 93.5, 85.5 89.5 C79.5 78, 76.5 66, 85.5 58.5 C97.5 48.5, 104.5 36.5, 107.5 22.5 C108.5 18, 107.5 14.5, 104.5 13.5 C101.5 12.5, 98.5 15, 95.5 18.5 C87.5 27.5, 72.5 28.5, 60 28.5 C47.5 28.5, 32.5 27.5, 24.5 18.5 C21.5 15, 18.5 12.5, 15.5 13.5 Z" fill="#E30613"/></svg>`;
+      const svgDataUrl = 'data:image/svg+xml,' + encodeURIComponent(iconSvg);
+
+      const appleIcon = document.createElement('link');
+      appleIcon.rel = 'apple-touch-icon';
+      appleIcon.href = svgDataUrl;
+      document.head.appendChild(appleIcon);
+
       const manifest = {
         name: 'MITRAZ AttendGuard Enterprise',
         short_name: 'MITRAZ Attend',
-        description: 'Zero-Trust Android Attendance & Leave Portal for MITRAZ',
+        description: 'Zero-Trust Attendance & Leave Portal for MITRAZ (Web, iPhone & Android)',
         start_url: './index.html',
         scope: './',
         display: 'standalone',
@@ -989,13 +1011,13 @@
         theme_color: '#020617',
         icons: [
           {
-            src: 'data:image/svg+xml,' + encodeURIComponent(iconSvg),
+            src: svgDataUrl,
             sizes: '192x192',
             type: 'image/svg+xml',
             purpose: 'any maskable'
           },
           {
-            src: 'data:image/svg+xml,' + encodeURIComponent(iconSvg),
+            src: svgDataUrl,
             sizes: '512x512',
             type: 'image/svg+xml',
             purpose: 'any maskable'
@@ -1006,9 +1028,13 @@
       link.rel = 'manifest';
       link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
       document.head.appendChild(link);
+
+      // Show "+ Install App" helper on iPhone Safari when not already installed
+      if (isIOSDevice() && !isStandaloneMode()) {
+        document.getElementById('btn-install-pwa')?.classList.remove('hidden');
+      }
     }
 
-    // Dynamic MITRAZ SVG Favicon
     function applyMitrazFavicon() {
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110"><rect width="120" height="110" rx="24" fill="#ffffff"/><defs><radialGradient id="g" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#FF2A36"/><stop offset="65%" stop-color="#E30613"/><stop offset="100%" stop-color="#A8000A"/></radialGradient></defs><circle cx="60" cy="13.5" r="10.5" fill="url(#g)"/><path d="M15.5 13.5 C12.5 14.5, 11.5 18, 12.5 22.5 C15.5 36.5, 22.5 48.5, 34.5 58.5 C43.5 66, 40.5 78, 34.5 89.5 C32.5 93.5, 34 97.5, 37.5 97.5 C41 97.5, 43.5 94, 45.5 89.5 C51.5 76, 53 63, 47.5 51.5 C43 42, 48.5 36, 60 36 C71.5 36, 77 42, 72.5 51.5 C67 63, 68.5 76, 74.5 89.5 C76.5 94, 79 97.5, 82.5 97.5 C86 97.5, 87.5 93.5, 85.5 89.5 C79.5 78, 76.5 66, 85.5 58.5 C97.5 48.5, 104.5 36.5, 107.5 22.5 C108.5 18, 107.5 14.5, 104.5 13.5 C101.5 12.5, 98.5 15, 95.5 18.5 C87.5 27.5, 72.5 28.5, 60 28.5 C47.5 28.5, 32.5 27.5, 24.5 18.5 C21.5 15, 18.5 12.5, 15.5 13.5 Z" fill="#E30613"/></svg>`;
       const link = document.createElement('link');
@@ -1024,14 +1050,18 @@
     });
 
     async function triggerPWAInstall() {
-      if (!deferredInstallPrompt) {
-        showToast('Open Chrome menu (⋮) and tap "Install app" or "Add to Home screen".', 'info');
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        document.getElementById('btn-install-pwa')?.classList.add('hidden');
         return;
       }
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      document.getElementById('btn-install-pwa')?.classList.add('hidden');
+      if (isIOSDevice()) {
+        showToast('On iPhone Safari: tap Share (↑) at the bottom, then tap "Add to Home Screen".', 'info');
+      } else {
+        showToast('Open browser menu (⋮) and tap "Install app" or "Add to Home screen".', 'info');
+      }
     }
 
     function escapeHTML(str) {
@@ -1079,7 +1109,6 @@
       return acc;
     }
 
-    // Real Per-Device Hardware Fingerprint Generator
     function getHardwareFingerprint() {
       try {
         let cached = localStorage.getItem(DEVICE_FP_KEY);
@@ -1100,7 +1129,7 @@
         localStorage.setItem(DEVICE_FP_KEY, cached);
         return cached;
       } catch (e) {
-        return 'HW-ANDROID-LOCK';
+        return 'HW-MOBILE-LOCK';
       }
     }
 
@@ -1242,7 +1271,7 @@
             id: 'SEC-BOOT',
             severity: 'INFO',
             time: now.toLocaleTimeString(),
-            message: 'MITRAZ AttendGuard Production Release v2.0 initialized.'
+            message: 'MITRAZ AttendGuard Web Portal (iOS & Android) initialized.'
           }
         ]
       };
@@ -1328,7 +1357,7 @@
     }
 
     // -----------------------------------------------------------------------
-    // 3B. MULTI-DEVICE CLOUD SYNC ENGINE (GOOGLE APPS SCRIPT / GOOGLE SHEETS)
+    // 3B. MULTI-DEVICE CLOUD SYNC ENGINE (AUTO-POLLING + REAL-TIME MERGE)
     // -----------------------------------------------------------------------
     function queueCloudSyncEvent(eventType, payload) {
       if (!appState.cloudSync) return;
@@ -1363,10 +1392,95 @@
       saveState();
       updateCloudStatusUI();
       logSecurityIncident('INFO', `Admin updated Cloud Sheet Sync (${enabled ? 'ENABLED' : 'DISABLED'}).`);
-      showToast(enabled ? 'Cloud Sheet Sync enabled!' : 'Cloud Sheet Sync saved (Local mode).', 'success');
+      showToast(enabled ? 'Cloud Sheet Sync enabled (auto-syncing every 12s)!' : 'Cloud Sheet Sync saved (Local mode).', 'success');
       if (enabled && endpointUrl) {
         syncWithCloudServer(true);
       }
+    }
+
+    function mergeCloudSnapshot(data) {
+      let stateChanged = false;
+
+      if (Array.isArray(data.registeredUsers)) {
+        const localById = new Map((appState.registeredUsers || []).map((u) => [u.userId, u]));
+        const mergedUsers = data.registeredUsers.map((remoteU) => {
+          const localU = localById.get(remoteU.userId);
+          return {
+            ...remoteU,
+            salt: remoteU.salt || localU?.salt || '',
+            passHash: remoteU.passHash || localU?.passHash || ''
+          };
+        });
+        if (JSON.stringify(mergedUsers) !== JSON.stringify(appState.registeredUsers)) {
+          appState.registeredUsers = mergedUsers;
+          stateChanged = true;
+        }
+
+        GROUPS.forEach((grp) => {
+          const wb = appState.workbooks[GROUP_WB_META[grp].wbId];
+          if (wb) {
+            Object.values(wb.sheets).forEach((sheet) => {
+              if (!sheet || !sheet.rows) return;
+              appState.registeredUsers
+                .filter((u) => u.group === grp)
+                .forEach((u) => {
+                  if (!sheet.rows[u.userId]) {
+                    const days = {};
+                    (sheet.dateColumns || []).forEach((col) => { days[col] = ''; });
+                    sheet.rows[u.userId] = {
+                      userId: u.userId,
+                      name: `${u.firstName} ${u.lastName}`.trim(),
+                      group: u.group,
+                      days
+                    };
+                    stateChanged = true;
+                  }
+                });
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(data.leaveRequests)) {
+        if (JSON.stringify(data.leaveRequests) !== JSON.stringify(appState.leaveRequests)) {
+          appState.leaveRequests = data.leaveRequests;
+          stateChanged = true;
+        }
+      }
+
+      if (Array.isArray(data.holidays)) {
+        if (JSON.stringify(data.holidays) !== JSON.stringify(appState.holidays)) {
+          appState.holidays = data.holidays;
+          stateChanged = true;
+        }
+      }
+
+      if (Array.isArray(data.matrixUpdates)) {
+        data.matrixUpdates.forEach((m) => {
+          const wbId = appState.groupQRs[m.group]?.wbId || GROUP_WB_META[m.group]?.wbId;
+          const wb = appState.workbooks[wbId];
+          if (wb) {
+            if (!wb.sheets[m.monthTab]) {
+              const parsedDate = new Date(`01 ${m.monthTab}`);
+              wb.sheets[m.monthTab] = createMatrixSheetForGroup(
+                Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate,
+                m.group,
+                appState.registeredUsers
+              );
+              stateChanged = true;
+            }
+            const sheet = wb.sheets[m.monthTab];
+            if (sheet && sheet.rows && sheet.rows[m.userId]) {
+              if (sheet.rows[m.userId].days[m.dateCol] !== m.cellValue) {
+                sheet.rows[m.userId].days[m.dateCol] = m.cellValue;
+                stateChanged = true;
+              }
+            }
+          }
+        });
+      }
+
+      return stateChanged;
     }
 
     async function syncWithCloudServer(manualTrigger = false) {
@@ -1377,6 +1491,9 @@
         }
         return;
       }
+
+      if (isSyncInFlight) return;
+      isSyncInFlight = true;
 
       const labelEl = document.getElementById('header-sync-label');
       if (labelEl) labelEl.textContent = 'Syncing...';
@@ -1401,42 +1518,18 @@
         cfg.pendingQueue = [];
         cfg.lastSyncAt = new Date().toLocaleTimeString();
 
-        if (Array.isArray(data.registeredUsers)) {
-          appState.registeredUsers = data.registeredUsers;
-          GROUPS.forEach((grp) => {
-            const wb = appState.workbooks[GROUP_WB_META[grp].wbId];
-            if (wb) {
-              Object.values(wb.sheets).forEach((sheet) => {
-                if (!sheet || !sheet.rows) return;
-                appState.registeredUsers
-                  .filter((u) => u.group === grp)
-                  .forEach((u) => {
-                    if (!sheet.rows[u.userId]) {
-                      const days = {};
-                      (sheet.dateColumns || []).forEach((col) => { days[col] = ''; });
-                      sheet.rows[u.userId] = {
-                        userId: u.userId,
-                        name: `${u.firstName} ${u.lastName}`.trim(),
-                        group: u.group,
-                        days
-                      };
-                    }
-                  });
-              });
-            }
-          });
-        }
-
-        if (Array.isArray(data.leaveRequests)) appState.leaveRequests = data.leaveRequests;
-        if (Array.isArray(data.holidays)) appState.holidays = data.holidays;
-
+        const changed = mergeCloudSnapshot(data);
         saveState();
         updateCloudStatusUI();
-        renderAllViews();
+        if (changed || manualTrigger) {
+          renderAllViews();
+        }
         if (manualTrigger) showToast('Synced live with MITRAZ Master Google Sheet!', 'success');
       } catch (err) {
         updateCloudStatusUI(true);
         if (manualTrigger) showToast(`Cloud Sync queued offline: ${err.message}`, 'warning');
+      } finally {
+        isSyncInFlight = false;
       }
     }
 
@@ -1451,10 +1544,10 @@
       const lastSyncEl = document.getElementById('cloud-last-sync-time');
 
       if (labelEl) {
-        labelEl.textContent = !active ? 'Local' : hasError ? `Queue (${qLen})` : qLen > 0 ? `Sync (${qLen})` : 'Cloud Live';
+        labelEl.textContent = !active ? 'Local' : hasError ? `Queue (${qLen})` : qLen > 0 ? `Sync (${qLen})` : 'Live Auto';
       }
       if (pillEl) {
-        pillEl.textContent = !active ? 'Offline / Local' : hasError ? 'Queued (Retry)' : 'Connected Live';
+        pillEl.textContent = !active ? 'Offline / Local' : hasError ? 'Queued (Retry)' : 'Connected Auto';
         pillEl.className = !active
           ? 'text-[10px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-400'
           : hasError
@@ -1528,7 +1621,6 @@
       const password = document.getElementById('login-password')?.value || '';
       const currentHw = getHardwareFingerprint();
 
-      // 1. Admin Master Login
       if (identifier.toUpperCase() === 'ADMIN') {
         const expectedHash = appState.adminAccount.passHash;
         const actualHash = hashPassphrase(password, appState.adminAccount.salt);
@@ -1547,7 +1639,6 @@
         return;
       }
 
-      // 2. Lookup Admin-Enrolled Standard User
       const user = appState.registeredUsers.find(
         (u) => u.userId.toLowerCase() === identifier.toLowerCase() || u.email.toLowerCase() === identifier.toLowerCase()
       );
@@ -1558,7 +1649,6 @@
         return;
       }
 
-      // 3. Verify Salted Passphrase
       const userHash = hashPassphrase(password, user.salt);
       if (!constantTimeEqual(userHash, user.passHash)) {
         logSecurityIncident('WARNING', `Invalid passphrase for ${user.userId} from ${currentHw}.`);
@@ -1566,7 +1656,6 @@
         return;
       }
 
-      // 4. Enforce Strict 1-Device-Per-User Anti-Proxy Lock
       const otherUserOnPhone = appState.registeredUsers.find(
         (u) => u.boundDeviceId === currentHw && u.userId !== user.userId
       );
@@ -1577,7 +1666,7 @@
         );
         showLoginError(
           'Proxy Attempt Blocked (Shared Device)',
-          `This Android device (${currentHw}) is permanently bound to ${otherUserOnPhone.firstName} (${otherUserOnPhone.userId}). Logging in for a colleague is blocked.`
+          `This mobile device (${currentHw}) is permanently bound to ${otherUserOnPhone.firstName} (${otherUserOnPhone.userId}). Logging in for a colleague is blocked.`
         );
         return;
       }
@@ -1588,7 +1677,7 @@
           `PROXY BLOCKED: ${user.userId} (bound to ${user.boundDeviceId}) attempted login from ${currentHw}.`
         );
         showLoginError(
-          'Proxy Attempt Blocked (Unrecognized Phone)',
+          'Proxy Attempt Blocked (Unrecognized Device)',
           `${user.firstName}'s account is locked to ${user.boundDeviceId}. Contact Admin to unbind if you changed phones.`
         );
         return;
@@ -1791,6 +1880,9 @@
 
       updateCloudStatusUI();
       switchPortalTab(isAdmin ? 'admin' : 'scan');
+      if (appState.cloudSync?.enabled && appState.cloudSync?.endpointUrl) {
+        syncWithCloudServer(false);
+      }
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
@@ -1837,7 +1929,10 @@
         const label = document.getElementById('camera-btn-label');
         if (label) label.textContent = 'Stop Camera';
       } catch (err) {
-        showToast('Camera permission denied. Enable camera access in Android settings.', 'error');
+        const msg = isIOSDevice()
+          ? 'iPhone Safari blocked camera: enable Camera in iOS Settings → Safari, or open over HTTPS.'
+          : 'Camera permission denied. Enable camera permission in your phone browser settings.';
+        showToast(msg, 'error');
       }
     }
 
@@ -1867,7 +1962,6 @@
         return;
       }
 
-      // 1. Verify QR HMAC Signature
       const expectedSig = computeMAC(`${parsed.qrId}|${parsed.group}|${parsed.wbId}|${parsed.checkpoint}`);
       if (parsed.org !== 'MITRAZ' || !constantTimeEqual(String(parsed.sig || ''), expectedSig)) {
         logSecurityIncident('CRITICAL', `FORGED QR BLOCKED: ${currentSession.userId} scanned invalid signature.`);
@@ -1875,7 +1969,6 @@
         return;
       }
 
-      // 2. Enforce Group Isolation
       if (currentSession.role === 'ROLE_USER' && parsed.group !== currentSession.group) {
         logSecurityIncident(
           'WARNING',
@@ -1885,7 +1978,6 @@
         return;
       }
 
-      // 3. Enforce Strict GPS Geofence Perimeter Lock
       const policy = appState.securityPolicy || { geofenceEnforced: true, maxRadiusMeters: 250 };
       if (policy.geofenceEnforced && (!currentGPS.verified || currentGPS.distanceMeters > policy.maxRadiusMeters)) {
         logSecurityIncident(
@@ -1894,7 +1986,7 @@
         );
         showToast(
           !currentGPS.verified
-            ? 'GPS Location Required: Enable Android Location / GPS and tap Refresh before scanning.'
+            ? 'GPS Location Required: Enable Location Services and tap Refresh before scanning.'
             : `Geofence Blocked: You are ${currentGPS.distanceMeters}m from campus (limit ${policy.maxRadiusMeters}m).`,
           'error'
         );
@@ -2012,7 +2104,12 @@
         () => {
           currentGPS.verified = false;
           updateGPSLabel();
-          if (notify) showToast('Unable to get GPS lock. Turn on Android Location services.', 'error');
+          if (notify) {
+            const msg = isIOSDevice()
+              ? 'Unable to read GPS: allow Location in iPhone Settings → Privacy & Security → Location Services.'
+              : 'Unable to get GPS lock. Turn on phone Location services.';
+            showToast(msg, 'error');
+          }
         },
         { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
       );
@@ -2348,6 +2445,117 @@
       event.target.value = '';
     }
 
+    function toggleNewWorkbookForm() {
+      const form = document.getElementById('new-workbook-form');
+      if (form) form.classList.toggle('hidden');
+    }
+
+    function handleCreateCustomWorkbook(event) {
+      event.preventDefault();
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      let rawName = (document.getElementById('custom-wb-name')?.value || '').trim();
+      const targetGroup = document.getElementById('custom-wb-group')?.value || 'Employees';
+      if (!rawName) return;
+      if (!rawName.toLowerCase().endsWith('.xlsx')) rawName += '.xlsx';
+
+      const wbId = 'wb_custom_' + Date.now().toString(36);
+      const now = new Date();
+      const monthTab = getMonthSheetName(now);
+
+      appState.workbooks[wbId] = {
+        id: wbId,
+        group: targetGroup,
+        fileName: rawName,
+        sheets: {
+          [monthTab]: createMatrixSheetForGroup(now, targetGroup, appState.registeredUsers)
+        }
+      };
+
+      if (appState.groupQRs[targetGroup]) {
+        appState.groupQRs[targetGroup].wbId = wbId;
+        const qrObj = appState.groupQRs[targetGroup];
+        qrObj.sig = computeMAC(`${qrObj.qrId}|${qrObj.group}|${wbId}|${qrObj.checkpoint}`);
+      }
+
+      appState.activeWorkbookId = wbId;
+      appState.selectedSheetTab = monthTab;
+      saveState();
+      logSecurityIncident('INFO', `Admin created custom Excel workbook [${rawName}] & linked to [${targetGroup}].`);
+
+      const nameInput = document.getElementById('custom-wb-name');
+      if (nameInput) nameInput.value = '';
+      toggleNewWorkbookForm();
+      renderAllViews();
+      showToast(`Created & switched to ${rawName} for [${targetGroup}]!`, 'success');
+    }
+
+    function handleImportCustomWorkbook(event) {
+      if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
+      const file = event.target?.files?.[0];
+      if (!file) return;
+      if (typeof XLSX === 'undefined') {
+        showToast('Excel parser still loading...', 'warning');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const parsedWb = XLSX.read(data, { type: 'array' });
+          const wbId = 'wb_import_' + Date.now().toString(36);
+          const now = new Date();
+          const fallbackMonth = getMonthSheetName(now);
+          const sheets = {};
+
+          parsedWb.SheetNames.forEach((sName) => {
+            const aoa = XLSX.utils.sheet_to_json(parsedWb.Sheets[sName], { header: 1 });
+            const matrix = createMatrixSheetForGroup(now, 'Employees', appState.registeredUsers);
+            if (aoa.length > 1) {
+              const headerRow = aoa[0].map((h) => String(h || '').trim());
+              const dateCols = headerRow.slice(3).filter((h) => h && !['Present (P)', 'Leaves (L)', 'Holidays (H)', 'Attendance %', 'Status Flag'].includes(h));
+              if (dateCols.length > 0) matrix.dateColumns = dateCols;
+              matrix.rows = {};
+              for (let r = 1; r < aoa.length; r++) {
+                const rowArr = aoa[r] || [];
+                const uId = String(rowArr[0] || `IMP-${r}`).trim();
+                if (uId === 'SUMMARY') continue;
+                const uName = String(rowArr[1] || `Member ${r}`).trim();
+                const uGrp = String(rowArr[2] || 'Employees').trim();
+                const days = {};
+                matrix.dateColumns.forEach((col, cIdx) => {
+                  days[col] = String(rowArr[3 + cIdx] || '').trim();
+                });
+                matrix.rows[uId] = { userId: uId, name: uName, group: uGrp, days };
+              }
+            }
+            sheets[sName] = matrix;
+          });
+
+          if (Object.keys(sheets).length === 0) {
+            sheets[fallbackMonth] = createMatrixSheetForGroup(now, 'Employees', appState.registeredUsers);
+          }
+
+          appState.workbooks[wbId] = {
+            id: wbId,
+            group: 'Employees',
+            fileName: file.name,
+            sheets
+          };
+          appState.activeWorkbookId = wbId;
+          appState.selectedSheetTab = Object.keys(sheets)[0];
+          saveState();
+          logSecurityIncident('INFO', `Admin imported external Excel workbook [${file.name}].`);
+          renderAllViews();
+          showToast(`Loaded workbook ${file.name}!`, 'success');
+        } catch (err) {
+          showToast('Could not parse Excel file. Ensure valid .xlsx format.', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      event.target.value = '';
+    }
+
     function assignActiveWorkbookToGroup() {
       if (!validateActiveSession() || currentSession.role !== 'ROLE_ADMIN') return;
       const activeWb = appState.workbooks[appState.activeWorkbookId];
@@ -2407,25 +2615,76 @@
       const wb = XLSX.utils.book_new();
       Object.entries(activeWb.sheets).forEach(([sheetName, sheetObj]) => {
         const dateCols = sheetObj.dateColumns || [];
-        const header = ['Member ID', 'Full Name', 'Group', ...dateCols, 'Total Present', 'Attendance %'];
-        const rows = Object.values(sheetObj.rows || {}).map((r) => {
-          const present = dateCols.filter((d) => String(r.days[d] || '').startsWith('P')).length;
-          const pct = dateCols.length ? Math.round((present / dateCols.length) * 100) : 0;
+        const header = [
+          'Member ID',
+          'Full Name',
+          'Group',
+          ...dateCols,
+          'Present (P)',
+          'Leaves (L)',
+          'Holidays (H)',
+          'Attendance %',
+          'Status Flag'
+        ];
+        const rowObjects = Object.values(sheetObj.rows || {});
+        const rows = rowObjects.map((r) => {
+          let present = 0;
+          let leaves = 0;
+          let holidays = 0;
+          const dayCells = dateCols.map((d) => {
+            const rawCell = String(r.days[d] || '');
+            if (rawCell.startsWith('P')) present++;
+            else if (rawCell.startsWith('L')) leaves++;
+            else if (rawCell.startsWith('H')) holidays++;
+            return sanitizeExcelCell(rawCell);
+          });
+          const effectiveDays = Math.max(1, dateCols.length - holidays);
+          const pct = Math.round(((present + leaves) / effectiveDays) * 100);
+          const flag = pct >= 90 ? 'EXCELLENT' : pct >= 75 ? 'NORMAL' : 'LOW ATTENDANCE';
           return [
             sanitizeExcelCell(r.userId),
             sanitizeExcelCell(r.name),
             sanitizeExcelCell(r.group),
-            ...dateCols.map((d) => sanitizeExcelCell(r.days[d] || '')),
+            ...dayCells,
             present,
-            `${pct}%`
+            leaves,
+            holidays,
+            `${pct}%`,
+            flag
           ];
         });
-        const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+
+        const dailyPresentRow = [
+          'SUMMARY',
+          `Daily Headcount (${sheetName})`,
+          activeWb.group || '',
+          ...dateCols.map((d) =>
+            rowObjects.filter((r) => String(r.days[d] || '').startsWith('P')).length
+          ),
+          '',
+          '',
+          '',
+          '',
+          ''
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet([header, ...rows, dailyPresentRow]);
+        ws['!cols'] = [
+          { wch: 12 },
+          { wch: 24 },
+          { wch: 13 },
+          ...dateCols.map(() => ({ wch: 16 })),
+          { wch: 13 },
+          { wch: 12 },
+          { wch: 13 },
+          { wch: 14 },
+          { wch: 18 }
+        ];
         XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
       });
 
       XLSX.writeFile(wb, activeWb.fileName);
-      showToast(`Downloaded ${activeWb.fileName}`, 'success');
+      showToast(`Downloaded ${activeWb.fileName} with attendance summaries`, 'success');
     }
 
     function exportUsersDirectoryXLSX() {
@@ -2443,6 +2702,10 @@
         sanitizeExcelCell(u.enrolledAt)
       ]);
       const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+      ws['!cols'] = [
+        { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 13 },
+        { wch: 18 }, { wch: 28 }, { wch: 18 }, { wch: 24 }
+      ];
       XLSX.utils.book_append_sheet(wb, ws, 'Enrolled_Users');
       XLSX.writeFile(wb, 'MITRAZ_Registered_Users_Directory.xlsx');
       showToast('Downloaded MITRAZ_Registered_Users_Directory.xlsx', 'success');
@@ -2996,6 +3259,7 @@
                 <th class="py-2 px-2.5 sticky left-14 bg-slate-900 z-10">Name</th>
                 ${dateCols.map((d) => `<th class="py-2 px-2 whitespace-nowrap text-center">${escapeHTML(d)}</th>`).join('')}
                 <th class="py-2 px-2.5 text-center text-emerald-300">Present</th>
+                <th class="py-2 px-2.5 text-center text-sky-300">Att %</th>
               </tr>
             `;
           }
@@ -3003,10 +3267,14 @@
           if (tbody) {
             tbody.innerHTML =
               rowsArr.length === 0
-                ? `<tr><td colspan="${dateCols.length + 3}" class="py-5 text-center text-slate-500">No members enrolled in this group yet.</td></tr>`
+                ? `<tr><td colspan="${dateCols.length + 4}" class="py-5 text-center text-slate-500">No members enrolled in this group yet.</td></tr>`
                 : rowsArr
                     .map((r) => {
                       const presentCount = dateCols.filter((d) => String(r.days[d] || '').startsWith('P')).length;
+                      const leaveCount = dateCols.filter((d) => String(r.days[d] || '').startsWith('L')).length;
+                      const holidayCount = dateCols.filter((d) => String(r.days[d] || '').startsWith('H')).length;
+                      const denom = Math.max(1, dateCols.length - holidayCount);
+                      const pct = Math.round(((presentCount + leaveCount) / denom) * 100);
                       return `
                         <tr>
                           <td class="py-2 px-2.5 font-mono text-indigo-300 font-bold sticky left-0 bg-slate-950 whitespace-nowrap">${escapeHTML(r.userId)}</td>
@@ -3022,6 +3290,7 @@
                             })
                             .join('')}
                           <td class="py-2 px-2.5 font-mono font-bold text-center text-emerald-300">${presentCount}</td>
+                          <td class="py-2 px-2.5 font-mono font-bold text-center ${pct >= 75 ? 'text-sky-300' : 'text-rose-400'}">${pct}%</td>
                         </tr>
                       `;
                     })
@@ -3275,19 +3544,43 @@
       }, 3200);
     }
 
+    // Live Clock, Automatic Month-End Check & Background Cloud Auto-Sync (every 12s)
     setInterval(() => {
       const now = new Date();
       const clockEl = document.getElementById('live-clock');
       if (clockEl) clockEl.textContent = now.toTimeString().slice(0, 8);
+
       if (getMonthSheetName(now) !== appState.lastCheckedMonth) {
         ensureCurrentMonthSheetsExist(now);
         renderAllViews();
       }
+
+      const nowMs = Date.now();
+      if (
+        appState.cloudSync?.enabled &&
+        appState.cloudSync?.endpointUrl &&
+        document.visibilityState !== 'hidden' &&
+        nowMs - lastAutoSyncTick >= 12000
+      ) {
+        lastAutoSyncTick = nowMs;
+        syncWithCloudServer(false);
+      }
     }, 1000);
+
+    document.addEventListener('visibilitychange', () => {
+      if (
+        document.visibilityState === 'visible' &&
+        appState.cloudSync?.enabled &&
+        appState.cloudSync?.endpointUrl
+      ) {
+        lastAutoSyncTick = Date.now();
+        syncWithCloudServer(false);
+      }
+    });
 
     window.addEventListener('DOMContentLoaded', () => {
       applyMitrazFavicon();
-      registerAndroidPWAAndOfflineCache();
+      registerMobilePWAAndAppleIcons();
       const fpEl = document.getElementById('login-device-fp');
       if (fpEl) fpEl.textContent = getHardwareFingerprint();
 
